@@ -1,3 +1,4 @@
+import { STATISTICS_DISTRIBUTION_SIZES } from '@/constants/sizes';
 import type { LabelAnchor, Point, RadarLayout } from './types';
 
 // The maths of the Muscle distribution radar: one spoke per muscle, the first
@@ -7,12 +8,13 @@ import type { LabelAnchor, Point, RadarLayout } from './types';
 export function radarLayout(width: number): RadarLayout {
   const size = width - 32;
   const height = size * 0.8;
+  const { labelRoomSide, labelRoomEnds } = STATISTICS_DISTRIBUTION_SIZES;
   return {
     size,
     height,
     cx: size / 2,
     cy: height / 2,
-    radius: Math.min(size / 2 - 78, height / 2 - 26),
+    radius: Math.min(size / 2 - labelRoomSide, height / 2 - labelRoomEnds),
   };
 }
 
