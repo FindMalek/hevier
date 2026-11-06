@@ -78,10 +78,10 @@ After adding, moving or renaming files, restart Metro with
   twice:
 
   ```ts
-  // constants/football.ts
-  export const FOOTBALL_RATINGS = ['easy', 'normal', 'hard'] as const;
-  // types/football.ts
-  export type FootballRating = (typeof FOOTBALL_RATINGS)[number];
+  // constants/workout.ts
+  export const SET_TYPES = ['warmup', 'normal', 'failure'] as const;
+  // types/workout.ts
+  export type SetType = (typeof SET_TYPES)[number];
   ```
 
 - **SQL text lives only in `db/<topic>/queries.ts`**, row shapes in

@@ -1,27 +1,85 @@
-# Hevier
+<p align="center">
+  <img src="docs/images/banner.png" alt="Hevier: workout tracker for Android" width="760">
+</p>
 
-A personal workout tracker for Android, built with Expo and React Native.
-Everything lives on the phone (SQLite), with an optional backup to your own PC
-over Wi-Fi. No accounts, no cloud, no ads.
+<p align="center">
+  <a href="https://github.com/hamzaamry/hevier/actions/workflows/check.yml"><img src="https://github.com/hamzaamry/hevier/actions/workflows/check.yml/badge.svg" alt="Checks"></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=hamzaamry_hevier"><img src="https://sonarcloud.io/api/project_badges/measure?project=hamzaamry_hevier&metric=alert_status" alt="Quality gate"></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=hamzaamry_hevier"><img src="https://sonarcloud.io/api/project_badges/measure?project=hamzaamry_hevier&metric=coverage" alt="Coverage"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-008CFF" alt="License: AGPL-3.0"></a>
+  <img src="https://img.shields.io/badge/platform-Android-1C1C1E" alt="Platform: Android">
+</p>
+
+<p align="center">
+  <b>Log your sets fast, follow a training cycle, and see what your training does to each muscle.</b><br>
+  Everything stays on your phone. No account, no ads, no subscription.
+</p>
 
 > **Unofficial.** Hevier is a hobby project inspired by the Hevy app. It is not
 > affiliated with, endorsed by or connected to Hevy or its makers. "Hevy" is
 > their trademark. Hevier contains no Hevy code or assets.
 
+## Why Hevier
+
+- **Every feature is free.** Long-range charts, set counts per muscle and the
+  advanced statistics often sit behind a subscription elsewhere. Here they're
+  part of the app, and the code is open.
+- **Your data stays yours.** It lives on the phone in a SQLite database. No
+  sign-up, no cloud, no tracking. Back it up to your own PC when you want.
+- **Numbers with sources.** How sets are counted and how long a muscle stays
+  tired come from published studies, each one cited in
+  [`docs/science/`](docs/science/).
+- **It works with the app closed.** The rest timer runs in the notification, with
+  buttons, and four home-screen widgets keep your week in view.
+
 ## Features
 
-- Log workouts: sets, warm-up / failure sets, rest timer, clock (timer and
-  stopwatch), live PR medals, "reps left" after the last set
-- Routines and folders, drag to reorder, and a **Cycle** that suggests the next
-  routine
-- Workout history, calendar, and a page for each workout with its muscle split
-- Statistics: body heat map, muscle distribution, push/pull balance, recovery
-  estimate, main exercises, monthly report
-- Exercise library of 5,600+ exercises (from [openGym](#credits))
-- Ongoing-workout notification with rest controls, home-screen widgets
-- Import your history from a Hevy CSV export
-- **Hevier Sync**: a small PC program that keeps a backup of the phone and can
-  restore it
+### Logging
+- Sets with weight and reps, time or distance; **warm-up** and **failure** sets
+- **Rest timer** per exercise, with a buzz and a chime when it's over
+- **Live PR medals** the moment a set beats your best: heaviest weight,
+  estimated 1RM, best set volume, most reps, longest time or distance
+- **"Reps left"** after your last set, so the app knows how hard it was
+- **Per-hand weight** for dumbbell exercises
+- A **clock** with a timer and a stopwatch, and Keep Awake while you train
+- Edit, copy or delete a past workout, save one as a routine, or log a workout
+  for a past day from the calendar
+
+### Routines and cycle
+- Routines in folders, reordered by drag and drop
+- A **training cycle** (Upper A → Lower A → Upper B → …) that tells you what's
+  next, on Home and in a widget
+- After a workout, offers to update the routine with what you actually did
+
+### Statistics <sub>all free</sub>
+- **Body heat map**: this week's sets per muscle, in zones from below
+  maintenance to growth
+- **Recovery map**: how recovered each muscle is right now
+- **Muscle distribution** radar, compared with the period before
+- **Push / pull balance**, with a warning when one side runs far ahead
+- **Set count per muscle group**, main exercises and a **monthly report**
+- Profile chart of duration, volume or reps over the last 15 or 30 days, 3 or
+  6 months, a year or all time
+- Exercise pages with progress charts, personal records and history
+
+### Cardio counts too
+Cardio sessions feed a **Conditioning** card that tracks your weekly minutes
+against the WHO guideline (75 minutes of vigorous activity a week, or twice
+that at a moderate pace). It shows when you've met it, without pushing for more.
+
+### Notification and widgets
+- An ongoing **workout notification** shows the next set and the rest
+  countdown, with **Complete Set**, **Skip**, **-15s** and **+15s** buttons that
+  work even when the app is in the background
+- **Home-screen widgets**: this month's calendar, weekly volume, next in cycle,
+  and the recovery map
+
+### Your data
+- **Import** your history from a Hevy CSV export
+- **Hevier Sync**: a small PC program that keeps a backup of the phone over
+  Wi-Fi or a USB cable, and can restore it
+- An exercise library of **5,600+ exercises** with muscles and instructions
+  (from [openGym](#credits))
 
 ## Getting started
 
