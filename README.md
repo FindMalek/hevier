@@ -19,6 +19,14 @@
 > affiliated with, endorsed by or connected to Hevy or its makers. "Hevy" is
 > their trademark. Hevier contains no Hevy code or assets.
 
+<table align="center">
+  <tr>
+    <td align="center" valign="top"><img src="docs/images/screens/home.png" alt="Home: next workout in your cycle and your feed" width="230"><br><sub><b>Home</b> · next in your cycle</sub></td>
+    <td align="center" valign="top"><img src="docs/images/screens/log-workout.png" alt="Log Workout with the rest timer running" width="230"><br><sub><b>Log Workout</b> · rest timer, last session's numbers</sub></td>
+    <td align="center" valign="top"><img src="docs/images/screens/recovery.png" alt="Recovery map: which muscles are ready" width="230"><br><sub><b>Recovery map</b> · what's ready to train</sub></td>
+  </tr>
+</table>
+
 ## Why Hevier
 
 - **Every feature is free.** Long-range charts, set counts per muscle and the
@@ -51,9 +59,18 @@
   next, on Home and in a widget
 - After a workout, offers to update the routine with what you actually did
 
-### Statistics <sub>all free</sub>
-- **Body heat map**: this week's sets per muscle, in zones from below
-  maintenance to growth
+### Statistics, all free
+
+<table align="center">
+  <tr>
+    <td align="center" valign="top"><img src="docs/images/screens/statistics.png" alt="Body graph: sets per muscle this week in research-based zones" width="230"><br><sub><b>Body graph</b> · sets per muscle this week</sub></td>
+    <td align="center" valign="top"><img src="docs/images/screens/distribution.png" alt="Muscle distribution radar, compared with the period before, and push/pull balance" width="230"><br><sub><b>Muscle distribution</b> · vs. the period before</sub></td>
+    <td align="center" valign="top"><img src="docs/images/screens/advanced-statistics.png" alt="Advanced statistics: all open, no subscription" width="230"><br><sub><b>Advanced statistics</b> · no lock icons</sub></td>
+  </tr>
+</table>
+
+- **Body graph**: this week's sets per muscle, in zones from below maintenance
+  to growth
 - **Recovery map**: how recovered each muscle is right now
 - **Muscle distribution** radar, compared with the period before
 - **Push / pull balance**, with a warning when one side runs far ahead
@@ -62,24 +79,70 @@
   6 months, a year or all time
 - Exercise pages with progress charts, personal records and history
 
+### Based on research, not guesses
+
+<img src="docs/images/screens/how-sets-count.png" alt="How sets are counted, explained in the app" width="230" align="right">
+
+Most apps count every set the same. Hevier counts what builds muscle, and
+every rule names the study it comes from ([`docs/science/`](docs/science/)):
+
+- **Hard sets count.** A set at failure or within 3 reps of it counts fully;
+  easier sets count less (Robinson et al. 2024). Warm-ups get a small credit.
+- **Helper muscles count half.** Your triceps in a bench press get half a set,
+  the way that best fits 67 studies (Pelland et al. 2024).
+- **Zones with sources.** 3 hard sets a week **maintains** a muscle (Bickel et
+  al. 2011); 4 or more is the smallest dose shown to make it **grow**
+  (Pelland et al. 2024).
+- **Recovery windows from recovery studies.** One hard set leaves a muscle
+  tired for about a day, four or more for up to three days.
+
+It's an estimate, and the app says so. Where the research has gaps, the notes
+say that too.
+
+<br clear="right">
+
+### 5,600+ exercises
+
+<img src="docs/images/screens/exercises.png" alt="Exercise search: many variations of each movement" width="230" align="right">
+
+The library has **5,600+ exercises** with their muscles and step-by-step
+instructions (from [openGym](#credits)): every common movement in barbell,
+dumbbell, cable, machine, band and bodyweight versions. Search by name, filter
+by equipment or muscle, and each one gets its own page with your progress
+chart, records and history.
+
+<br clear="right">
+
 ### Cardio counts too
 Cardio sessions feed a **Conditioning** card that tracks your weekly minutes
 against the WHO guideline (75 minutes of vigorous activity a week, or twice
 that at a moderate pace). It shows when you've met it, without pushing for more.
 
 ### Notification and widgets
+
+<p align="center">
+  <img src="docs/images/screens/notification.png" alt="Workout notification with rest countdown and Skip, -15s, +15s buttons" width="480">
+</p>
+
 - An ongoing **workout notification** shows the next set and the rest
   countdown, with **Complete Set**, **Skip**, **-15s** and **+15s** buttons that
   work even when the app is in the background
 - **Home-screen widgets**: this month's calendar, weekly volume, next in cycle,
   and the recovery map
 
+<p align="center">
+  <img src="docs/images/screens/widgets.png" alt="Four home-screen widgets: calendar, weekly volume, next in cycle, recovery" width="480">
+</p>
+
 ### Your data
 - **Import** your history from a Hevy CSV export
 - **Hevier Sync**: a small PC program that keeps a backup of the phone over
   Wi-Fi or a USB cable, and can restore it
-- An exercise library of **5,600+ exercises** with muscles and instructions
-  (from [openGym](#credits))
+- Everything lives on the phone: no account, no server, no tracking
+
+<sub>Screenshots use demo data. Exercise pictures aren't part of this repository
+(see [Exercise pictures](#exercise-pictures)), so the app shows a placeholder
+instead.</sub>
 
 ## Getting started
 
