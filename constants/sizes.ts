@@ -387,6 +387,10 @@ export const STATISTICS_DISTRIBUTION_SIZES = {
   cardHeight: 97.5,
   splitHeight: 6,
   labelGap: 12,
+  // Room around the radar for its labels: on the sides for "Hamstrings" (about
+  // 74 wide at FONT_SIZES.small) plus labelGap, above and below for one line.
+  labelRoomSide: 92,
+  labelRoomEnds: 26,
 };
 
 // app/statistics/exercises.tsx

@@ -17,7 +17,8 @@ export function DistributionInfoSheet({ visible, onDismiss }: DistributionInfoSh
         </Text>
         <Text style={styles.infoText}>
           Blue is this period, the dashed line the one before. The outer ring is {RADAR_EDGE_SETS} sets a
-          week. Tap a muscle to see its numbers.
+          week, or more when a muscle goes past it: the number at the top shows it. Tap a muscle to see
+          its numbers.
         </Text>
         <Text style={styles.infoText}>The Sets card counts every set, warm-ups included.</Text>
         <Text style={styles.infoText}>
