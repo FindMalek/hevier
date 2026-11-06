@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- The notification channel, as Android's app settings show it. -->
+  <string name="workout_channel_name">Workout in progress</string>
+  <string name="workout_channel_description">The workout you\'re logging: next set and rest timer</string>
+</resources>

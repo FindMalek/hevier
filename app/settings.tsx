@@ -1,0 +1,57 @@
+import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
+import { CaretRight } from 'phosphor-react-native/src/icons/CaretRight';
+import { Desktop } from 'phosphor-react-native/src/icons/Desktop';
+
+import { InnerHeader } from '@/components/ui/InnerHeader';
+import { COLORS, TYPE } from '@/constants/theme';
+import { LAYOUT, SPACE } from '@/constants/layout';
+import { ICON_SIZES, SETTINGS_SIZES, SIZES } from '@/constants/sizes';
+import { Screen } from '@/components/ui/Screen';
+
+// Settings, opened from the gear on
+// Profile. Only our own row for now: Sync with PC.
+export default function SettingsScreen() {
+  const router = useRouter();
+  return (
+    <Screen>
+      <Stack.Screen options={{ headerShown: false }} />
+      <InnerHeader title="Settings" />
+      <ScrollView>
+        <Text style={styles.section}>Data</Text>
+        <Pressable style={({ pressed }) => [styles.row, pressed && styles.pressed]} onPress={() => router.push('/sync')}>
+          <Desktop size={ICON_SIZES.xxl} color={COLORS.text} />
+          <Text style={styles.title}>Sync with PC</Text>
+          <CaretRight size={ICON_SIZES.md} color={COLORS.textSecondary} />
+        </Pressable>
+      </ScrollView>
+    </Screen>
+  );
+}
+
+// Measured on settings.jpg (2.625 px/dp): black 53dp section band with a grey
+// label, 60dp grey rows, icon at 16, title at 57.
+const styles = StyleSheet.create({
+  section: {
+    height: SETTINGS_SIZES.sectionHeight,
+    paddingHorizontal: LAYOUT.screenMargin,
+    textAlignVertical: 'center',
+    ...TYPE.row,
+    color: COLORS.textSecondary,
+  },
+  row: {
+    height: SIZES.settingsRowHeight,
+    paddingHorizontal: LAYOUT.screenMargin,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+  },
+  pressed: {
+    opacity: 0.7,
+  },
+  title: {
+    flex: 1,
+    marginLeft: SPACE.lg,
+    ...TYPE.row,
+  },
+});

@@ -1,0 +1,117 @@
+import { describe, expect, it } from 'vitest';
+
+import type { ActiveSet } from '@/types/workout';
+import type { Bests } from '@/types/records';
+import { epley1RM, setRecords, workoutRecordCounts, workoutRecords } from './records';
+
+const set = (weight: string, reps: string, done = true, extra: Partial<ActiveSet> = {}): ActiveSet => ({
+  key: `${weight}x${reps}`,
+  setType: 'normal',
+  weight,
+  reps,
+  km: '',
+  time: '',
+  done,
+  ...extra,
+});
+
+// The user's best Lat Pulldown before: 80kg x 8.
+const bests: Bests = { weightKg: 80, oneRmKg: epley1RM(80, 8), volumeKg: 640, reps: 8, durationSeconds: null, distanceKm: null };
+
+describe('personal records', () => {
+  it('estimates 1RM with Epley (80kg x 10 = 106.67)', () => {
+    expect(epley1RM(80, 10)).toBeCloseTo(106.667, 3);
+    expect(epley1RM(100, 1)).toBe(100);
+  });
+
+  it('more reps at the same weight: Best 1RM and Best Set Volume', () => {
+    const s = set('80', '10');
+    expect(setRecords('weight_reps', bests, [s], s.key)).toEqual([
+      { kind: 'oneRm', label: 'Best 1RM', value: '106.67 kg' },
+      { kind: 'volume', label: 'Best Set Volume', value: '800 kg' },
+    ]);
+  });
+
+  it('a heavier weight: Best Weight too', () => {
+    const s = set('85', '8');
+    expect(setRecords('weight_reps', bests, [s], s.key).map((r) => r.label)).toEqual([
+      'Best Weight',
+      'Best 1RM',
+      'Best Set Volume',
+    ]);
+  });
+
+  it('equalling a record is not a record', () => {
+    const s = set('80', '8');
+    expect(setRecords('weight_reps', bests, [s], s.key)).toEqual([]);
+  });
+
+  it('an earlier completed set in this workout raises the bar', () => {
+    const first = set('80', '10');
+    const second = { ...set('80', '9'), key: 'second' };
+    expect(setRecords('weight_reps', bests, [first, second], 'second')).toEqual([]);
+    // Not done yet, so it does not count.
+    const undone = { ...first, done: false };
+    expect(setRecords('weight_reps', bests, [undone, second], 'second').map((r) => r.kind)).toEqual(['oneRm', 'volume']);
+  });
+
+  it('no history, no records: the first time is not a PR', () => {
+    const s = set('80', '10');
+    expect(setRecords('weight_reps', null, [s], s.key)).toEqual([]);
+  });
+
+  it('an unfinished set has no records', () => {
+    const s = set('90', '10', false);
+    expect(setRecords('weight_reps', bests, [s], s.key)).toEqual([]);
+  });
+
+  it('reps only, timed and distance exercises', () => {
+    expect(setRecords('reps_only', bests, [set('', '12')], 'x12')).toEqual([
+      { kind: 'reps', label: 'Most Reps', value: '12' },
+    ]);
+    const timed: Bests = { ...bests, durationSeconds: 300 };
+    expect(setRecords('duration', timed, [set('', '', true, { key: 't', time: '06:00' })], 't')).toEqual([
+      { kind: 'duration', label: 'Longest Duration', value: '06:00' },
+    ]);
+    const run: Bests = { ...bests, distanceKm: 5 };
+    expect(setRecords('distance_duration', run, [set('', '', true, { key: 'd', km: '5.5' })], 'd')).toEqual([
+      { kind: 'distance', label: 'Longest Distance', value: '5.5 km' },
+    ]);
+  });
+});
+
+describe('records per saved workout', () => {
+  const s = (workoutId: string, weightKg: number, reps: number, exerciseId = 'bench') => ({
+    workoutId,
+    exerciseId,
+    type: 'weight_reps' as const,
+    weightKg,
+    reps,
+    durationSeconds: null,
+    distanceKm: null,
+  });
+
+  it('counts each kind an exercise beat once; the first time is not a record', () => {
+    const counts = workoutRecordCounts([
+      s('w1', 80, 10),
+      s('w2', 85, 5), // weight only (1RM 99.2 < 106.7, volume 425 < 800)
+      s('w2', 86, 5), // weight again: still one record
+      s('w3', 80, 12), // 1RM 112 and volume 960
+      s('w3', 60, 10, 'squat'), // first squat: nothing
+    ]);
+    expect([...counts]).toEqual([
+      ['w1', 0],
+      ['w2', 1],
+      ['w3', 2],
+    ]);
+  });
+  it('lists what each workout beat, with the new best (the PR cards)', () => {
+    const { records } = workoutRecords([s('w1', 80, 10), s('w2', 85, 5), s('w2', 86, 5), s('w3', 80, 12)]);
+    expect(records.get('w1')).toBeUndefined();
+    expect(records.get('w2')).toEqual([{ exerciseId: 'bench', kind: 'weight', value: 86 }]);
+    expect(records.get('w3')).toEqual([
+      { exerciseId: 'bench', kind: 'oneRm', value: 112 },
+      { exerciseId: 'bench', kind: 'volume', value: 960 },
+    ]);
+  });
+});

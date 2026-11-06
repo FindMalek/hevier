@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Runs before every commit: types, lint, tests. Turned on by `npm install`
+# (the "prepare" script sets git's core.hooksPath to .githooks).
+# Skip once with `git commit --no-verify` (CI still runs the same checks).
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+step() { printf '\n▶ %s\n' "$1"; }
+
+step "Types (tsc)"
+npx tsc --noEmit
+
+step "Lint (eslint, warnings fail)"
+npx eslint . --max-warnings 0
+
+step "Tests (vitest)"
+npx vitest run --reporter=dot
+
+printf '\n✔ All checks passed\n'

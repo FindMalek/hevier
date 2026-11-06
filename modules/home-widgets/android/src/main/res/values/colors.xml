@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widgets' colours. Mirrors constants/theme.ts (same names); change both together. -->
+<resources>
+  <color name="widget_primary">#008CFF</color>
+  <color name="widget_surface">#1C1C1E</color>
+  <color name="widget_text">#FFFFFF</color>
+  <color name="widget_text_secondary">#84898F</color>
+  <color name="widget_white">#FFFFFF</color>
+</resources>

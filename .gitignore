@@ -1,0 +1,65 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
+.superpowers/
+
+# openGym exercise media: licensed by Gym visual for openGym only, never commit or publish
+catalogue/media/
+
+# Hevy reference screenshots (contain other users' photos), local only
+docs/hevy-screens/
+
+# Design notes measured from Hevy screenshots, and AI planning notes: local only
+docs/hevy-spec/
+docs/superpowers/
+
+# Editor settings
+.idea/
+
+# Build output of our local native modules
+modules/*/android/build/
+
+# Scripts only the maintainer uses (release to their phone, desktop shortcut, perf tests)
+scripts/local/
+
+# Test coverage report (npm run test:coverage)
+coverage/

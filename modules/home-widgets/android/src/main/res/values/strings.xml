@@ -1,0 +1,10 @@
+<resources>
+    <string name="widget_calendar_label">Calendar</string>
+    <string name="widget_calendar_description">This month, workout days in blue</string>
+    <string name="widget_volume_label">Volume</string>
+    <string name="widget_volume_description">This week\'s volume next to last week\'s</string>
+    <string name="widget_cycle_label">Next in Cycle</string>
+    <string name="widget_cycle_description">The next routine of your cycle</string>
+    <string name="widget_recovery_label">Recovery</string>
+    <string name="widget_recovery_description">Which muscles are ready to train</string>
+</resources>

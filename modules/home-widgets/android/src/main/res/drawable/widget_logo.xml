@@ -1,0 +1,13 @@
+<!-- The Workout tab's dumbbell (components/TabIcons.tsx), as the widgets' corner mark. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M3.8,9h0.5a1.2,1.2 0,0 1,1.2 1.2v3.6a1.2,1.2 0,0 1,-1.2 1.2h-0.5a1.2,1.2 0,0 1,-1.2 -1.2v-3.6a1.2,1.2 0,0 1,1.2 -1.2zM6.8,7h0.6a1.3,1.3 0,0 1,1.3 1.3v7.4a1.3,1.3 0,0 1,-1.3 1.3h-0.6a1.3,1.3 0,0 1,-1.3 -1.3v-7.4a1.3,1.3 0,0 1,1.3 -1.3zM8.7,12h6.6M16.6,7h0.6a1.3,1.3 0,0 1,1.3 1.3v7.4a1.3,1.3 0,0 1,-1.3 1.3h-0.6a1.3,1.3 0,0 1,-1.3 -1.3v-7.4a1.3,1.3 0,0 1,1.3 -1.3zM19.7,9h0.5a1.2,1.2 0,0 1,1.2 1.2v3.6a1.2,1.2 0,0 1,-1.2 1.2h-0.5a1.2,1.2 0,0 1,-1.2 -1.2v-3.6a1.2,1.2 0,0 1,1.2 -1.2z"
+        android:strokeWidth="2"
+        android:strokeColor="@color/widget_white"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+</vector>

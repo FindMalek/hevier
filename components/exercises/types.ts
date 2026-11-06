@@ -1,0 +1,63 @@
+import type { ReactNode } from 'react';
+import type { EquipmentGroup } from '@/types/equipment';
+import type { MuscleGroup } from '@/types/muscles';
+
+// Props of the exercises components (components/exercises/).
+
+export interface ExerciseThumbProps {
+  catalogueId: string | null;
+  size?: number;
+}
+
+export interface FilterIconProps {
+  children: React.ReactNode;
+  figure?: boolean;
+}
+
+export interface EquipmentIconProps {
+  group: EquipmentGroup;
+}
+
+export interface MuscleIconProps {
+  group: MuscleGroup;
+}
+
+export interface FigureProps {
+  view: 'front' | 'back';
+  highlight: MuscleGroup | 'all' | null;
+}
+
+export interface FilterOption<K extends string> {
+  key: K;
+  icon: ReactNode;
+}
+
+export type Region = MuscleGroup | 'base';
+
+export type Shape = { region: Region } & (
+  | { kind: 'rect'; x: number; y: number; w: number; h: number; r: number }
+  | { kind: 'circle'; cx: number; cy: number; r: number }
+  | { kind: 'path'; d: string }
+);
+
+// A titled group of options in a filter sheet (Upper Body, Lower Body…).
+export interface FilterSection<K extends string> {
+  title?: string;
+  options: FilterOption<K>[];
+}
+
+export interface FilterSheetProps<K extends string> {
+  title: string;
+  sections: FilterSection<K>[];
+  visible: boolean;
+  selected: K[];
+  countFor: (picks: K[]) => number;
+  onApply: (picks: K[]) => void;
+  onDismiss: () => void;
+}
+
+export interface ShowButtonProps<K extends string> {
+  picks: K[];
+  countFor: (picks: K[]) => number;
+  onApply: (picks: K[]) => void;
+}

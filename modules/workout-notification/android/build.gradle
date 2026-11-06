@@ -1,0 +1,21 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.hevier'
+version = '1.0.0'
+
+android {
+  namespace "expo.modules.workoutnotification"
+  defaultConfig {
+    versionCode 1
+    versionName '1.0.0'
+  }
+}
+
+// The notification layout uses TextAppearance.Compat.Notification from
+// androidx.core; release builds check library resources and need it declared.
+dependencies {
+  implementation "androidx.core:core-ktx:1.17.0"
+}

@@ -1,0 +1,43 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <receiver
+            android:name="expo.modules.homewidgets.CalendarWidget"
+            android:label="@string/widget_calendar_label"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_calendar_info"/>
+        </receiver>
+        <receiver
+            android:name="expo.modules.homewidgets.VolumeWidget"
+            android:label="@string/widget_volume_label"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_volume_info"/>
+        </receiver>
+        <receiver
+            android:name="expo.modules.homewidgets.CycleWidget"
+            android:label="@string/widget_cycle_label"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_cycle_info"/>
+        </receiver>
+        <receiver
+            android:name="expo.modules.homewidgets.RecoveryWidget"
+            android:label="@string/widget_recovery_label"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_recovery_info"/>
+        </receiver>
+        <receiver
+            android:name="expo.modules.homewidgets.MidnightReceiver"
+            android:exported="false"/>
+    </application>
+</manifest>

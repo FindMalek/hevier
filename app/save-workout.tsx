@@ -1,0 +1,202 @@
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Stack } from 'expo-router';
+import { CalendarDots } from 'phosphor-react-native/src/icons/CalendarDots';
+import { CaretRight } from 'phosphor-react-native/src/icons/CaretRight';
+import { X } from 'phosphor-react-native/src/icons/X';
+
+import { updateActiveWorkout, useActiveWorkout, useNow } from '@/stores/activeWorkoutStore';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { DurationSheet } from '@/components/workout/DurationSheet';
+import { HeaderPillButton, InnerHeader } from '@/components/ui/InnerHeader';
+import { MediaStrip } from '@/components/workout/MediaStrip';
+import { elapsedLabel } from '@/lib/format/duration';
+import { deleteMediaFiles, pickMedia } from '@/lib/workoutMedia';
+import { COLORS, TYPE } from '@/constants/theme';
+import { elapsedSeconds, workoutStats } from '@/lib/workout/activeWorkout';
+import { HIT_SLOPS, RADIUS, SPACE } from '@/constants/layout';
+import { ICON_SIZES, SAVE_WORKOUT_SIZES, SIZES } from '@/constants/sizes';
+import { dateTimeLabel } from '@/lib/format/date';
+import { volumeLabel } from '@/lib/format/weight';
+import { Screen } from '@/components/ui/Screen';
+import { Divider } from '@/components/ui/Divider';
+import { SCREEN_STYLES } from '@/components/ui/screenStyles';
+import { Stat } from '@/components/ui/Stat';
+import { UpdateRoutineSheet } from '@/components/save-workout/UpdateRoutineSheet';
+import { useSaveGuard } from '@/hooks/useSaveGuard';
+
+// Save Workout after Finish: title, Duration / Volume / Sets, photos /
+// videos, description, date, Discard. The clock stands still while here and runs on
+// again if the user goes back to Log Workout (hooks/useSaveGuard.ts). Nothing
+// is saved before Save.
+export default function SaveWorkout() {
+  const workout = useActiveWorkout();
+  const now = useNow(false);
+  const [timeOpen, setTimeOpen] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
+  const { update, closeUpdate, save, finish, discard } = useSaveGuard(workout);
+
+  if (!workout) return <Screen />;
+  const stats = workoutStats(workout);
+  const start = new Date(workout.startTime);
+
+  return (
+    <Screen>
+      <Stack.Screen options={{ headerShown: false }} />
+      <InnerHeader title="Save Workout" right={<HeaderPillButton label="Save" onPress={save} />} />
+      <ScrollView contentContainerStyle={SCREEN_STYLES.content} keyboardShouldPersistTaps="handled">
+        <View style={styles.titleRow}>
+          <TextInput
+            style={styles.title}
+            value={workout.title}
+            onChangeText={(title) => updateActiveWorkout((w) => ({ ...w, title }))}
+            placeholder="Workout title"
+            placeholderTextColor={COLORS.textSecondary}
+          />
+          {workout.title.length > 0 && (
+            <Pressable style={styles.clear} onPress={() => updateActiveWorkout((w) => ({ ...w, title: '' }))} hitSlop={HIT_SLOPS.md}>
+              <X size={ICON_SIZES.xs} weight="bold" color={COLORS.text} />
+            </Pressable>
+          )}
+        </View>
+
+        <View style={styles.stats}>
+          <Stat
+            label="Duration"
+            value={elapsedLabel(elapsedSeconds(workout, now))}
+            size="large"
+            blue
+            onPress={() => setTimeOpen(true)}
+            style={styles.stat}
+          />
+          <Stat label="Volume" value={volumeLabel(stats.volumeKg)} size="large" style={styles.stat} />
+          <Stat label="Sets" value={String(stats.sets)} size="large" style={styles.stat} />
+        </View>
+        <Divider />
+
+        <View style={styles.media}>
+          <MediaStrip
+            media={workout.media ?? []}
+            onAdd={async () => {
+              try {
+                const picked = await pickMedia();
+                if (picked) updateActiveWorkout((w) => ({ ...w, media: [...(w.media ?? []), ...picked] }));
+              } catch (e) {
+                console.warn('[media] pick failed', e);
+              }
+            }}
+            onRemove={(file) => {
+              deleteMediaFiles([file]);
+              updateActiveWorkout((w) => ({ ...w, media: (w.media ?? []).filter((m) => m.file !== file) }));
+            }}
+          />
+        </View>
+
+        <Text style={styles.label}>Description</Text>
+        <TextInput
+          style={styles.description}
+          value={workout.description ?? ''}
+          onChangeText={(description) => updateActiveWorkout((w) => ({ ...w, description }))}
+          placeholder="How did your workout go? Leave some notes here..."
+          placeholderTextColor={COLORS.textSecondary}
+          multiline
+        />
+        <Divider />
+
+        <Pressable style={styles.row} onPress={() => setTimeOpen(true)}>
+          <CalendarDots size={ICON_SIZES.xxl} color={COLORS.text} />
+          <Text style={styles.rowLabel}>Date</Text>
+          <Text style={styles.rowValue}>{dateTimeLabel(start)}</Text>
+          <CaretRight size={ICON_SIZES.sm} color={COLORS.textSecondary} />
+        </Pressable>
+        <Divider />
+
+        <Pressable style={styles.discard} onPress={() => setDiscarding(true)} hitSlop={HIT_SLOPS.md}>
+          <Text style={styles.discardLabel}>Discard Workout</Text>
+        </Pressable>
+      </ScrollView>
+
+      <DurationSheet workout={workout} visible={timeOpen} onDismiss={() => setTimeOpen(false)} noPause />
+      <UpdateRoutineSheet update={update} onUpdate={(routine) => finish(routine)} onKeep={() => finish()} onDismiss={closeUpdate} />
+      <ConfirmDialog
+        visible={discarding}
+        message="Are you sure you want to discard the workout in progress?"
+        confirmLabel="Discard Workout"
+        cancelLabel="Cancel"
+        onConfirm={() => {
+          setDiscarding(false);
+          discard();
+        }}
+        onCancel={() => setDiscarding(false)}
+      />
+    </Screen>
+  );
+}
+
+// Measured on save-workout.jpg (2.625 px/dp).
+const styles = StyleSheet.create({
+  titleRow: {
+    marginTop: SPACE.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  title: {
+    flex: 1,
+    padding: 0,
+    ...TYPE.headlineBold,
+  },
+  clear: {
+    width: SIZES.smallButton,
+    height: SIZES.smallButton,
+    borderRadius: RADIUS.round,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.separator,
+  },
+  stats: {
+    marginTop: SPACE.xl,
+    paddingBottom: SPACE.lg,
+    flexDirection: 'row',
+  },
+  stat: {
+    width: SAVE_WORKOUT_SIZES.statWidth,
+  },
+  media: {
+    marginTop: SPACE.lg,
+  },
+  label: {
+    marginTop: SPACE.xl,
+    ...TYPE.caption,
+    color: COLORS.textSecondary,
+  },
+  description: {
+    marginTop: SPACE.xs,
+    marginBottom: SPACE.md,
+    padding: 0,
+    minHeight: SAVE_WORKOUT_SIZES.descriptionMinHeight,
+    ...TYPE.body,
+  },
+  row: {
+    height: SAVE_WORKOUT_SIZES.rowHeight,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rowLabel: {
+    flex: 1,
+    marginLeft: SPACE.md,
+    ...TYPE.row,
+  },
+  rowValue: {
+    marginRight: SPACE.xs,
+    ...TYPE.body,
+    color: COLORS.textSecondary,
+  },
+  discard: {
+    marginTop: SPACE.xl,
+    alignSelf: 'center',
+  },
+  discardLabel: {
+    ...TYPE.row,
+    color: COLORS.danger,
+  },
+});
