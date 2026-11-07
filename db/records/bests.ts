@@ -20,6 +20,7 @@ export async function getExerciseBestsFor(exerciseIds: string[]): Promise<Map<st
   return exerciseBests(
     rows.map((r) => ({
       exerciseId: r.exercise_id,
+      setType: r.set_type,
       weightKg: r.weight_kg,
       reps: r.reps,
       durationSeconds: r.duration_seconds,
