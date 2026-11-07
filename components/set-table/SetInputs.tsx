@@ -1,4 +1,5 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { useSelectAllOnFocus } from '@/hooks/useSelectAllOnFocus';
 import { COLORS, FONTS, TYPE } from '@/constants/theme';
 import { BORDER_WIDTHS, RADIUS } from '@/constants/layout';
 import { SET_TABLE_SIZES, SIZES } from '@/constants/sizes';
@@ -21,6 +22,12 @@ export function PreviousCell({
       {previousLabel(type, previous, perHand)}
     </Text>
   );
+}
+
+// A REPS / KM / TIME box: what's in it is selected on tap (useSelectAllOnFocus).
+function SetTextBox(props: TextInputProps & { value: string }) {
+  const { ref, onFocus } = useSelectAllOnFocus(props.value);
+  return <TextInput {...props} ref={ref} onFocus={onFocus} />;
 }
 
 // The value boxes of one set (KG and REPS, KM and TIME, …), in their columns.
@@ -52,12 +59,11 @@ export function SetInputs({ type, set, perHand, layout, done, timer, onChange }:
               placeholderTextColor={COLORS.textSecondary}
               selectionColor={COLORS.primary}
               cursorColor={COLORS.primary}
-              selectTextOnFocus
             />
           );
         }
         return (
-          <TextInput
+          <SetTextBox
             key={f.field}
             style={[styles.input, column, done && styles.done]}
             value={set[f.field]}
@@ -67,7 +73,6 @@ export function SetInputs({ type, set, perHand, layout, done, timer, onChange }:
             placeholderTextColor={COLORS.textSecondary}
             selectionColor={COLORS.primary}
             cursorColor={COLORS.primary}
-            selectTextOnFocus
           />
         );
       })}

@@ -57,6 +57,14 @@ export function totalText(perHand: string): string {
   return n === null ? '' : String(Math.round(n * 200) / 100);
 }
 
+// What the KG box shows for the total `value`. Per hand, the text being typed
+// (`typed`) is kept while it still gives that total, so "12." or "0" stays on
+// screen until the next key; otherwise one dumbbell's weight.
+export function weightBoxText(value: string, typed: string | null, perHand: boolean): string {
+  if (!perHand) return value;
+  return typed !== null && totalText(typed) === value ? typed : perHandText(value);
+}
+
 // Grey PREVIOUS column: "120kg x 10", "x 12", "07:50", "2.5km 15:00".
 // Per hand: the one dumbbell, like the KG box next to it.
 export function previousLabel(type: ExerciseType, s: SetValues | undefined, perHand = false): string {
