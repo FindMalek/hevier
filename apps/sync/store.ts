@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { checkAccept, filesToSend } from '../shared/sync-protocol';
-import type { BeginRequest, BeginResponse, Manifest, Refusal } from '../shared/sync-types';
+import { checkAccept, filesToSend } from '@hevier/shared/sync-protocol';
+import type { BeginRequest, BeginResponse, Manifest, Refusal } from '@hevier/shared/sync-types';
 
 // The one copy on the PC:
 //   key.txt     the secret the phone must send (made on first run)

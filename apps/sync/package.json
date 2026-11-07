@@ -1,0 +1,30 @@
+{
+  "name": "@hevier/sync",
+  "private": true,
+  "scripts": {
+    "start": "tsx main.ts",
+    "test": "vitest run",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@hevier/config-eslint": "workspace:*",
+    "@hevier/config-typescript": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/qrcode": "^1.5.6",
+    "eslint": "catalog:",
+    "tsx": "^4.20.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "dependencies": {
+    "@hevier/shared": "workspace:*",
+    "qrcode": "^1.5.4"
+  },
+  "version": "1.0.0",
+  "license": "AGPL-3.0-only",
+  "exports": {
+    "./server": "./server.ts",
+    "./store": "./store.ts"
+  }
+}

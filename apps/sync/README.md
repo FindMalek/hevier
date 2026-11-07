@@ -7,12 +7,12 @@ back from there (Restore) after a reset or on a new phone.
 
 ## Run it
 
-Node.js 22 or newer (as the app). This folder is its own package, so install it once:
+Node.js 22 or newer (as the app). It is a package of the repo's pnpm workspace (`@hevier/sync`), so install once
+from the repo root and start it:
 
 ```bash
-cd backup-server
-npm install
-npm start
+pnpm install
+pnpm sync       # same as: pnpm --filter @hevier/sync start
 ```
 
 The window shows a QR code. On the phone, scan it from Sync with PC to pair;
@@ -24,8 +24,8 @@ The phone and the PC must be on the same Wi-Fi, or use the USB cable: with
 a phone plugged in can use "Sync over USB cable" (the window maps the phone's
 port to the PC's with `adb reverse`), Wi-Fi or not.
 
-`npm test` runs its tests. The messages the phone and the PC send each other are
-in `../shared/` (both sides import them).
+`pnpm --filter @hevier/sync test` runs its tests. The messages the phone and the PC send each other are
+in `packages/shared/` (`@hevier/shared`, both sides import them).
 
 ## Settings
 

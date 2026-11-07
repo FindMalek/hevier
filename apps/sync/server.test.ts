@@ -5,8 +5,8 @@ import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { createServer } from './server';
 import { createStore, type Store } from './store';
-import { KEY_HEADER } from '../shared/sync-protocol';
-import type { BeginRequest, Manifest } from '../shared/sync-types';
+import { KEY_HEADER } from '@hevier/shared/sync-protocol';
+import type { BeginRequest, Manifest } from '@hevier/shared/sync-types';
 
 let dir: string;
 let store: Store;

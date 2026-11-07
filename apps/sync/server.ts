@@ -1,8 +1,8 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import { pipeline } from 'node:stream/promises';
-import { KEY_HEADER, isValidPath } from '../shared/sync-protocol';
-import type { BeginRequest, Manifest } from '../shared/sync-types';
+import { KEY_HEADER, isValidPath } from '@hevier/shared/sync-protocol';
+import type { BeginRequest, Manifest } from '@hevier/shared/sync-types';
 import { StoreError, type Store } from './store';
 
 // What the window prints as it happens (main.ts).
