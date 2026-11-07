@@ -25,10 +25,10 @@ describe('importCsvToDatabase (sample CSV)', () => {
   it('imports every workout, exercise and set', async () => {
     const { one } = await importSample();
     expect(one('SELECT COUNT(*) FROM workouts')).toBe(6);
-    // 8 exercises in the CSV, plus Football, which every database gets (migration 006).
+    // 8 exercises in the CSV, but "Running" is the built-in Run; every database gets Run and Football (migrations 006, 015).
     expect(one('SELECT COUNT(*) FROM exercises')).toBe(9);
     expect(one('SELECT COUNT(*) FROM sets')).toBe(16);
-    expect(one('PRAGMA user_version')).toBe(14);
+    expect(one('PRAGMA user_version')).toBe(15);
     expect(one('SELECT COUNT(*) FROM routines')).toBe(0);
   });
 
@@ -38,7 +38,17 @@ describe('importCsvToDatabase (sample CSV)', () => {
     expect(types['Squat (Machine)']).toBe('weight_reps');
     expect(types['Pull Up']).toBe('reps_only');
     expect(types['Warm Up']).toBe('duration');
-    expect(types['Running']).toBe('distance_duration');
+    expect(types['Run']).toBe('distance_duration');
+  });
+
+  it('files the Running sets under the built-in Run, with their distance and time', async () => {
+    const { all, one } = await importSample(loadCatalogue());
+    expect(one("SELECT COUNT(*) FROM exercises WHERE name IN ('Run', 'Running')")).toBe(1);
+    expect(
+      all(`SELECT e.name, s.distance_km, s.duration_seconds FROM sets s
+           JOIN workout_exercises we ON we.id = s.workout_exercise_id JOIN exercises e ON e.id = we.exercise_id
+           WHERE e.name = 'Run'`)
+    ).toEqual([['Run', 5.2, 1800]]);
   });
 
   it('keeps set types, RPE, notes and the description', async () => {
@@ -73,8 +83,10 @@ describe('importCsvToDatabase (sample CSV)', () => {
     expect(one("SELECT catalogue_id FROM exercises WHERE name = 'Squat (Machine)'")).toBe('1875');
     expect(one("SELECT type FROM exercises WHERE name = 'Pull Up'")).toBe('reps_only');
     expect(one("SELECT is_custom FROM exercises WHERE name = 'Warm Up'")).toBe(1);
-    expect(one('SELECT COUNT(DISTINCT catalogue_id) FROM exercises WHERE catalogue_id IS NOT NULL')).toBe(catalogue.length);
-    // 8 CSV exercises + Football + the catalogue minus the 7 entries they link to.
-    expect(one('SELECT COUNT(*) FROM exercises')).toBe(8 + 1 + catalogue.length - 7);
+    // Every entry but the catalogue's own run: Run is built in.
+    expect(one('SELECT COUNT(DISTINCT catalogue_id) FROM exercises WHERE catalogue_id IS NOT NULL')).toBe(catalogue.length - 1);
+    // 7 CSV exercises + Run + Football + the catalogue minus the 7 entries left out
+    // (6 linked to the CSV's exercises, and the catalogue's run).
+    expect(one('SELECT COUNT(*) FROM exercises')).toBe(7 + 2 + catalogue.length - 7);
   });
 });

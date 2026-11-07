@@ -51,7 +51,7 @@ describe('runMigrations', () => {
     ]);
 
     const version = rawDb.exec('PRAGMA user_version')[0].values[0][0];
-    expect(version).toBe(14);
+    expect(version).toBe(15);
   });
 
   it('is idempotent: running twice does not error or duplicate', async () => {
@@ -75,7 +75,7 @@ describe('runMigrations', () => {
 
     const row = rawDb.exec("SELECT is_custom, catalogue_id FROM exercises WHERE id = 'e1'")[0].values[0];
     expect(row).toEqual([1, null]);
-    expect(rawDb.exec('PRAGMA user_version')[0].values[0][0]).toBe(14);
+    expect(rawDb.exec('PRAGMA user_version')[0].values[0][0]).toBe(15);
   });
 
   it('allows warm-up sets and keeps the existing sets', async () => {
@@ -154,6 +154,34 @@ describe('runMigrations', () => {
     ]);
     const football = rawDb.exec("SELECT name, type FROM exercises WHERE id = 'football'")[0].values;
     expect(football).toEqual([['Football', 'duration']]);
+  });
+
+  it('adds Run and leaves history under other names alone', async () => {
+    const rawDb = new SQL.Database();
+    for (const m of MIGRATIONS.slice(0, 14)) rawDb.exec(m.sql);
+    rawDb.exec('PRAGMA user_version = 14');
+    rawDb.exec(`
+      INSERT INTO exercises (id, name, type) VALUES ('r1', 'Running', 'distance_duration');
+      INSERT INTO workouts (id, title, start_time) VALUES ('a', 'Morning run', '2026-10-05T07:00:00Z');
+      INSERT INTO workout_exercises (id, workout_id, exercise_id, order_index) VALUES ('wa', 'a', 'r1', 0);
+    `);
+
+    await runMigrations(wrap(rawDb));
+
+    expect(rawDb.exec('SELECT exercise_id FROM workout_exercises')[0].values).toEqual([['r1']]);
+    expect(rawDb.exec("SELECT id, type FROM exercises WHERE name = 'Run'")[0].values).toEqual([['run', 'distance_duration']]);
+  });
+
+  it('keeps a Run the user already made as it is, whatever its type', async () => {
+    const rawDb = new SQL.Database();
+    for (const m of MIGRATIONS.slice(0, 14)) rawDb.exec(m.sql);
+    rawDb.exec('PRAGMA user_version = 14');
+    rawDb.exec("INSERT INTO exercises (id, name, type) VALUES ('mine', 'Run', 'weight_reps')");
+
+    await runMigrations(wrap(rawDb));
+
+    expect(rawDb.exec("SELECT id, type FROM exercises WHERE name = 'Run'")[0].values).toEqual([['mine', 'weight_reps']]);
+    expect(rawDb.exec('PRAGMA user_version')[0].values[0][0]).toBe(15);
   });
 
   it('adds the indexes the history lookups use', async () => {
