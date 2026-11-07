@@ -5,18 +5,36 @@ import initSqlJs, { type Database } from 'sql.js';
 import { MIGRATIONS } from '../db/migrations';
 import { moveFootballSql } from '../db/migrations/006_football';
 import { INSERT_SET, INSERT_WORKOUT, INSERT_WORKOUT_EXERCISE } from '../db/workouts/queries';
+import { MAX_SKIPPED_SHARE, SHOWN_SKIPPED_ROWS, TIME_ZONE_ENV } from '@/constants/import';
 import { parseCsvText, transformRows } from './import/parseCsv';
+import { checkTimeZone, machineTimeZone } from './import/parseHevyDate';
 import { catalogueExerciseType, toHevyName } from './import/catalogue';
 import { HEVY_CATALOGUE_MAP } from './import/hevyCatalogueMap';
 import { HEVY_OFFICIAL_NAMES } from './import/hevyOfficialNames';
-import type { CatalogueEntry } from '@/types/import';
+import type { CatalogueEntry, ImportResult, SkippedRow, TransformOptions } from '@/types/import';
+
+// One line per skipped row, the first few only.
+export function describeSkipped(skipped: SkippedRow[], shown = SHOWN_SKIPPED_ROWS): string[] {
+  const lines = skipped.slice(0, shown).map(({ row, reason }) => `  row ${row}: ${reason}`);
+  if (skipped.length > shown) lines.push(`  ...and ${skipped.length - shown} more`);
+  return lines;
+}
 
 export async function importCsvToDatabase(
   csvText: string,
-  catalogue: CatalogueEntry[] = []
-): Promise<Uint8Array> {
-  const rows = parseCsvText(csvText);
-  const { exerciseTypes, workouts } = transformRows(rows);
+  catalogue: CatalogueEntry[] = [],
+  options: TransformOptions = {}
+): Promise<ImportResult> {
+  const parsed = parseCsvText(csvText);
+  const transformed = transformRows(parsed.rows, options);
+  const { exerciseTypes, workouts } = transformed;
+  const skipped = [...parsed.skipped, ...transformed.skipped].sort((a, b) => a.row - b.row);
+  const total = parsed.rows.length + parsed.skipped.length;
+  if (workouts.length === 0 || skipped.length > total * MAX_SKIPPED_SHARE) {
+    const reading = workouts.length === 0 ? 'No workouts could be read from the CSV' : 'Too many CSV rows could not be read';
+    const count = total === 0 ? 'the CSV has no rows' : `${skipped.length} of ${total} rows skipped`;
+    throw new Error([`${reading} (${count}).`, ...describeSkipped(skipped)].join('\n'));
+  }
 
   const SQL = await initSqlJs();
   const db = new SQL.Database();
@@ -63,7 +81,7 @@ export async function importCsvToDatabase(
   }
 
   db.exec(moveFootballSql);
-  return db.export();
+  return { bytes: db.export(), skipped };
 }
 
 // Links the user's own exercises to their catalogue entry (keeping the user's
@@ -134,11 +152,17 @@ async function main() {
   }
   const csvText = fs.readFileSync(csvPath, 'utf-8');
   const catalogue = JSON.parse(fs.readFileSync(CATALOGUE_PATH, 'utf-8')) as CatalogueEntry[];
-  const bytes = await importCsvToDatabase(csvText, catalogue);
+  const timeZone = checkTimeZone(process.env[TIME_ZONE_ENV] || machineTimeZone());
+  console.log(`Workout times are read in ${timeZone} (set ${TIME_ZONE_ENV}, for example Europe/Paris, to change).`);
+  const { bytes, skipped } = await importCsvToDatabase(csvText, catalogue, { timeZone });
   fs.writeFileSync(outPath, Buffer.from(bytes));
-  console.log(`Wrote ${outPath} (${bytes.length} bytes)`);
+  console.log(`Wrote ${outPath} (${bytes.length} bytes).`);
+  if (skipped.length > 0) console.warn([`Skipped ${skipped.length} CSV rows:`, ...describeSkipped(skipped)].join('\n'));
 }
 
 if (require.main === module) {
-  main();
+  main().catch((error: Error) => {
+    console.error(error.message);
+    process.exit(1);
+  });
 }

@@ -1,81 +1,150 @@
 import { parse } from 'csv-parse/sync';
+import {
+  CONVERTED_DECIMALS,
+  CSV_COLUMNS,
+  DISTANCE_COLUMNS,
+  KG_PER_LB,
+  KM_PER_MILE,
+  WEIGHT_COLUMNS,
+} from '@/constants/import';
 import type { ExerciseType } from '@/types/exercise';
 import type { SetType } from '@/types/workout';
-import type { TransformedWorkout, TransformedWorkoutExercise } from '@/types/import';
+import type {
+  CsvRow,
+  ParsedCsv,
+  RawRow,
+  SkippedRow,
+  TransformOptions,
+  TransformedWorkout,
+  TransformedWorkoutExercise,
+} from '@/types/import';
+import { machineTimeZone, parseHevyDate } from './parseHevyDate';
 
 // Hevy also has drop sets; Hevier doesn't, so they come in as normal sets.
 function toSetType(value: string): SetType {
   return value === 'failure' || value === 'warmup' ? value : 'normal';
 }
 
-export interface CsvRow {
-  title: string;
-  start_time: string;
-  end_time: string;
-  description: string;
-  exercise_title: string;
-  superset_id: string;
-  exercise_notes: string;
-  set_index: string;
-  set_type: string;
-  weight_kg: string;
-  reps: string;
-  distance_km: string;
-  duration_seconds: string;
-  rpe: string;
+// A number column in the unit the app uses: Hevy's imperial exports have
+// weight_lbs and distance_miles instead of weight_kg and distance_km.
+function metricColumn(row: RawRow, metric: string, imperial: string, perUnit: number): string {
+  if (metric in row) return row[metric] ?? '';
+  const raw = (row[imperial] ?? '').trim();
+  if (raw === '') return '';
+  const n = Number(raw);
+  return Number.isNaN(n) ? raw : String(Number((n * perUnit).toFixed(CONVERTED_DECIMALS)));
 }
 
-export function parseCsvText(text: string): CsvRow[] {
-  return parse(text, { columns: true, skip_empty_lines: true }) as CsvRow[];
+function missingColumns(header: string[]): string[] {
+  const missing: string[] = CSV_COLUMNS.filter((c) => !header.includes(c));
+  if (!header.includes(WEIGHT_COLUMNS.kg) && !header.includes(WEIGHT_COLUMNS.lbs)) missing.push(WEIGHT_COLUMNS.kg);
+  if (!header.includes(DISTANCE_COLUMNS.km) && !header.includes(DISTANCE_COLUMNS.miles)) missing.push(DISTANCE_COLUMNS.km);
+  return missing;
+}
+
+// A line with more or fewer fields than the header is left out, never read
+// with its fields shifted into the wrong columns.
+export function parseCsvText(text: string): ParsedCsv {
+  const lines = parse(text, { skip_empty_lines: true, bom: true, relax_column_count: true }) as string[][];
+  if (lines.length === 0) return { rows: [], skipped: [] };
+  const [header, ...records] = lines;
+  if (header.length === 1 && header[0].includes(';')) {
+    throw new Error('This looks like a semicolon-separated file: export a comma-separated CSV');
+  }
+  const repeated = header.filter((name, i) => header.indexOf(name) !== i);
+  if (repeated.length > 0) throw new Error(`CSV repeats the columns: ${[...new Set(repeated)].join(', ')}`);
+  const missing = missingColumns(header);
+  if (missing.length > 0) throw new Error(`CSV is missing columns: ${missing.join(', ')}`);
+  const rows: CsvRow[] = [];
+  const skipped: SkippedRow[] = [];
+  records.forEach((record, i) => {
+    const rowNumber = i + 1;
+    if (record.every((field) => field.trim() === '')) return;
+    if (record.length !== header.length) {
+      skipped.push({ row: rowNumber, reason: `Expected ${header.length} fields, got ${record.length}` });
+      return;
+    }
+    const raw: RawRow = Object.fromEntries(header.map((name, k) => [name, record[k]]));
+    rows.push({
+      ...(Object.fromEntries(CSV_COLUMNS.map((c) => [c, raw[c] ?? ''])) as unknown as CsvRow),
+      weight_kg: metricColumn(raw, WEIGHT_COLUMNS.kg, WEIGHT_COLUMNS.lbs, KG_PER_LB),
+      distance_km: metricColumn(raw, DISTANCE_COLUMNS.km, DISTANCE_COLUMNS.miles, KM_PER_MILE),
+      rowNumber,
+    });
+  });
+  return { rows, skipped };
 }
 
 function toNullableNumber(value: string): number | null {
   const trimmed = value.trim();
   if (trimmed === '') return null;
   const n = Number(trimmed);
-  if (Number.isNaN(n)) throw new Error(`Expected a number, got: "${value}"`);
+  if (!Number.isFinite(n)) throw new Error(`Expected a number, got: "${value}"`);
   return n;
 }
 
-function parseHevyDate(value: string): string {
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) throw new Error(`Could not parse date: "${value}"`);
-  return d.toISOString();
-}
-
-function inferExerciseType(rowsForExercise: CsvRow[]): ExerciseType {
+function inferExerciseType(rowsForExercise: CsvRow[]): ExerciseType | null {
   const hasDistance = rowsForExercise.some((r) => r.distance_km.trim() !== '');
   const hasDuration = rowsForExercise.some((r) => r.duration_seconds.trim() !== '');
   const hasWeight = rowsForExercise.some((r) => r.weight_kg.trim() !== '');
   const hasReps = rowsForExercise.some((r) => r.reps.trim() !== '');
-  if (hasDistance && hasDuration) return 'distance_duration';
+  if (hasDistance && (hasDuration || !(hasWeight || hasReps))) return 'distance_duration';
   if (hasDuration) return 'duration';
   if (hasWeight) return 'weight_reps';
   if (hasReps) return 'reps_only';
-  throw new Error(`Cannot infer exercise type for "${rowsForExercise[0].exercise_title}"`);
+  return null;
 }
 
 export interface TransformResult {
   exerciseTypes: Map<string, ExerciseType>;
   workouts: TransformedWorkout[];
+  skipped: SkippedRow[];
 }
 
-export function transformRows(rows: CsvRow[]): TransformResult {
+// Throws what is wrong with a row: a value that is not a number or a date.
+function checkRow(r: CsvRow, timeZone: string): void {
+  if (r.set_index.trim() === '' || !Number.isFinite(Number(r.set_index))) {
+    throw new Error(`Expected a set number, got: "${r.set_index}"`);
+  }
+  for (const value of [r.weight_kg, r.reps, r.distance_km, r.duration_seconds, r.rpe]) toNullableNumber(value);
+  parseHevyDate(r.start_time, timeZone);
+  if (r.end_time.trim() !== '') parseHevyDate(r.end_time, timeZone);
+}
+
+// Rows with a bad value, or of an exercise with no weight, reps, time or
+// distance at all, are left out and reported in `skipped`.
+export function transformRows(allRows: CsvRow[], { timeZone = machineTimeZone() }: TransformOptions = {}): TransformResult {
+  const skipped: SkippedRow[] = [];
+  const valid: { r: CsvRow; n: number }[] = [];
+  allRows.forEach((r, i) => {
+    try {
+      checkRow(r, timeZone);
+      valid.push({ r, n: r.rowNumber ?? i + 1 });
+    } catch (error) {
+      skipped.push({ row: r.rowNumber ?? i + 1, reason: (error as Error).message });
+    }
+  });
   const rowsByExerciseName = new Map<string, CsvRow[]>();
-  for (const r of rows) {
+  for (const { r } of valid) {
     const list = rowsByExerciseName.get(r.exercise_title) ?? [];
     list.push(r);
     rowsByExerciseName.set(r.exercise_title, list);
   }
   const exerciseTypes = new Map<string, ExerciseType>();
   for (const [name, exerciseRows] of rowsByExerciseName) {
-    exerciseTypes.set(name, inferExerciseType(exerciseRows));
+    const type = inferExerciseType(exerciseRows);
+    if (type) exerciseTypes.set(name, type);
+  }
+  const typed: CsvRow[] = [];
+  for (const { r, n } of valid) {
+    if (exerciseTypes.has(r.exercise_title)) typed.push(r);
+    else skipped.push({ row: n, reason: `No weight, reps, time or distance for "${r.exercise_title}"` });
   }
 
   // group rows into sessions keyed by (title, start_time), preserving first-seen order
   const sessionOrder: string[] = [];
   const sessionRows = new Map<string, CsvRow[]>();
-  for (const r of rows) {
+  for (const r of typed) {
     const key = `${r.title}\u0000${r.start_time}`;
     if (!sessionRows.has(key)) {
       sessionOrder.push(key);
@@ -119,12 +188,12 @@ export function transformRows(rows: CsvRow[]): TransformResult {
 
     return {
       title: first.title,
-      startTime: parseHevyDate(first.start_time),
-      endTime: first.end_time.trim() === '' ? null : parseHevyDate(first.end_time),
+      startTime: parseHevyDate(first.start_time, timeZone),
+      endTime: first.end_time.trim() === '' ? null : parseHevyDate(first.end_time, timeZone),
       description: first.description.trim() === '' ? null : first.description,
       exercises,
     };
   });
 
-  return { exerciseTypes, workouts };
+  return { exerciseTypes, workouts, skipped: skipped.sort((a, b) => a.row - b.row) };
 }

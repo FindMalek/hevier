@@ -57,6 +57,54 @@ export interface TransformedWorkoutExercise {
   sets: TransformedSet[];
 }
 
+// One CSV row as the import reads it, in the app's units.
+export interface CsvRow {
+  title: string;
+  start_time: string;
+  end_time: string;
+  description: string;
+  exercise_title: string;
+  superset_id: string;
+  exercise_notes: string;
+  set_index: string;
+  set_type: string;
+  weight_kg: string;
+  reps: string;
+  distance_km: string;
+  duration_seconds: string;
+  rpe: string;
+  rowNumber?: number; // counted from 1 in the file, header not included
+}
+
+// The CSV's rows, and the lines left out (scripts/import/parseCsv.ts).
+export interface ParsedCsv {
+  rows: CsvRow[];
+  skipped: SkippedRow[];
+}
+
+// A CSV row the import left out, and why. `row` counts data rows from 1.
+export interface SkippedRow {
+  row: number;
+  reason: string;
+}
+
+export interface TransformOptions {
+  // IANA name ("Europe/Paris") Hevy's time-zone-less dates are written in;
+  // the machine's when left out.
+  timeZone?: string;
+}
+
+// A date's pieces, month counted from 0 (scripts/import/parseHevyDate.ts).
+export type DateParts = [year: number, month: number, day: number, hour: number, minute: number, second: number];
+
+// A CSV record by column name, before the units are converted.
+export type RawRow = Record<string, string | undefined>;
+
+export interface ImportResult {
+  bytes: Uint8Array;
+  skipped: SkippedRow[];
+}
+
 export interface TransformedWorkout {
   title: string;
   startTime: string;
