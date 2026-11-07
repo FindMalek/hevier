@@ -230,7 +230,7 @@ apps/
     modules/         native Kotlin: workout notification, home-screen widgets
     scripts/         import, device loading, design tools
   sync/              Hevier Sync, the PC backup program
-  web/               landing page (not built yet)
+  web/               landing page (Next.js, static export)
 packages/
   shared/            the sync protocol, used by the app and Hevier Sync
   catalogue/         the exercise catalogue from openGym

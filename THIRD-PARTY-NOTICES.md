@@ -54,7 +54,8 @@ using them to train, prompt or feed any AI system.
 `components/body/MuscleMapBody.tsx` draws the path data of
 [@musclemap/assets](https://github.com/Jsplice/MuscleMap), and
 `apps/mobile/assets/images/musclemap-male-front.webp` / `musclemap-male-back.webp` are its
-body photos turned grey:
+body photos turned grey. `apps/web/src/components/body-map.tsx` draws the same path data on the
+landing page (same licence):
 
 ```
 MIT License
@@ -86,6 +87,8 @@ SOFTWARE.
   [Lucide](https://lucide.dev), ISC licence, Copyright (c) Lucide Contributors.
 - Header icons: [Phosphor](https://phosphoricons.com) via `phosphor-react-native`
   (MIT).
+- Landing page (`apps/web`): [Geist](https://github.com/vercel/geist-font) font via the `geist` package, SIL Open Font
+  License 1.1.
 - [Figtree](https://github.com/erikdkennedy/figtree) font via
   `@expo-google-fonts/figtree`, SIL Open Font License 1.1.
 
