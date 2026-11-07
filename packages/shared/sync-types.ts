@@ -1,5 +1,5 @@
-// The messages of the sync protocol (shared/sync-protocol.ts), used by the app
-// and backup-server.
+// The messages of the sync protocol (packages/shared/sync-protocol.ts), used by the app
+// and apps/sync.
 
 export type FileEntry = { path: string; size: number };
 

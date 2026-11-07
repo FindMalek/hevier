@@ -1,6 +1,6 @@
 # Draws the README banner (docs/images/banner.png) at 2x and saves it at 1x.
 #   python3 scripts/design/banner.py
-# Needs Pillow and the app's fonts (npm install).
+# Needs Pillow and the app's fonts (pnpm install).
 import os
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')  # apps/mobile

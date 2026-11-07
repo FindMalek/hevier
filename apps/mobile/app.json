@@ -55,8 +55,7 @@
           }
         }
       ],
-      "./plugins/withHevierRelease",
-      "expo-asset"
+      "./plugins/withHevierRelease"
     ],
     "experiments": {
       "typedRoutes": true

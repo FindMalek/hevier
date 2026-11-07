@@ -1,5 +1,5 @@
 // Hevy exercise title (as it appears in the CSV export) -> openGym catalogue id
-// (catalogue/exercises.json). Started from openGym's hevy-id-map.js, then
+// (packages/catalogue/exercises.json). Started from openGym's hevy-id-map.js, then
 // reviewed by hand. Titles with no faithful catalogue match are custom
 // exercises; we still record their muscles so stats and the body map work.
 

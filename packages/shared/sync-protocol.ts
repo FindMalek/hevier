@@ -1,4 +1,4 @@
-// What the phone and the PC program (backup-server/) say to each other. Both
+// What the phone and the PC program (apps/sync/) say to each other. Both
 // import it (the app from lib/sync), so keep it free of Node imports.
 // Its types are in sync-types.ts.
 

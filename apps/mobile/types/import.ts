@@ -1,6 +1,6 @@
 import type { SetType } from './workout';
 
-// One entry of catalogue/exercises.json (copied from openGym's catalogue).
+// One entry of packages/catalogue/exercises.json (copied from openGym's catalogue).
 export interface CatalogueEntry {
   id: string;
   name: string;

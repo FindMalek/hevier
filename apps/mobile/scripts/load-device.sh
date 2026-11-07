@@ -6,9 +6,10 @@
 #   apps/mobile/scripts/load-device.sh <workouts.csv> emulator-5554   # a specific device (see: adb devices)
 set -euo pipefail
 
+CSV=${1:?usage: apps/mobile/scripts/load-device.sh <workouts.csv> [device]}
+CSV=$(cd "$(dirname "$CSV")" && pwd)/$(basename "$CSV") # absolute, before the cd below
 cd "$(dirname "$0")/.."
 MEDIA=../../packages/catalogue/media
-CSV=${1:?usage: apps/mobile/scripts/load-device.sh <workouts.csv> [device]}
 ADB="${ANDROID_HOME:-$HOME/Android/Sdk}/platform-tools/adb"
 DEVICE_ARGS=()
 [ $# -ge 2 ] && DEVICE_ARGS=(-s "$2")

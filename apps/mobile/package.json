@@ -50,7 +50,6 @@
     "@vitest/coverage-v8": "catalog:",
     "csv-parse": "^7.0.3",
     "eslint": "catalog:",
-    "eslint-config-expo": "~57.0.2",
     "sql.js": "^1.14.2",
     "typescript": "catalog:",
     "vitest": "catalog:"
@@ -61,7 +60,6 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit"
   },

@@ -1,4 +1,4 @@
-// Links exercises to the openGym catalogue (catalogue/exercises.json) and
+// Links exercises to the openGym catalogue (packages/catalogue/exercises.json) and
 // carries its muscle/equipment/instruction data. Exercises that came from the
 // imported Hevy CSV and have no catalogue match stay is_custom = 1.
 export const sql = `
