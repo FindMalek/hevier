@@ -1,0 +1,22 @@
+{
+  "name": "@hevier/shared",
+  "version": "1.0.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "exports": {
+    "./sync-protocol": "./sync-protocol.ts",
+    "./sync-types": "./sync-types.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@hevier/config-eslint": "workspace:*",
+    "@hevier/config-typescript": "workspace:*",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
