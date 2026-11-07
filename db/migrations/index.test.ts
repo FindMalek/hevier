@@ -51,7 +51,7 @@ describe('runMigrations', () => {
     ]);
 
     const version = rawDb.exec('PRAGMA user_version')[0].values[0][0];
-    expect(version).toBe(13);
+    expect(version).toBe(14);
   });
 
   it('is idempotent: running twice does not error or duplicate', async () => {
@@ -75,7 +75,7 @@ describe('runMigrations', () => {
 
     const row = rawDb.exec("SELECT is_custom, catalogue_id FROM exercises WHERE id = 'e1'")[0].values[0];
     expect(row).toEqual([1, null]);
-    expect(rawDb.exec('PRAGMA user_version')[0].values[0][0]).toBe(13);
+    expect(rawDb.exec('PRAGMA user_version')[0].values[0][0]).toBe(14);
   });
 
   it('allows warm-up sets and keeps the existing sets', async () => {
@@ -191,5 +191,28 @@ describe('runMigrations', () => {
       '4214',
       '["lats","biceps","rhomboids","rear deltoids"]',
     ]);
+  });
+
+  it('relinks Lat Pulldown to the bar lateral pulldown, keeping its name and history, and drops the female copy', async () => {
+    const rawDb = new SQL.Database();
+    for (const m of MIGRATIONS.slice(0, 13)) rawDb.exec(m.sql);
+    rawDb.exec(`
+      INSERT INTO exercises (id, name, type, catalogue_id, target_muscle, secondary_muscles) VALUES
+        ('lp', 'Lat Pulldown (Cable)', 'weight_reps', '2330', 'lats', '["biceps"]'),
+        ('cat', 'Bar Lateral Pulldown (Cable)', 'weight_reps', '0150', 'lats', '["biceps","upper back","trapezius"]'),
+        ('fem', 'Wide Grip Lat Pulldown (Cable)', 'weight_reps', '2291', 'lats', '[]');
+      INSERT INTO workouts (id, title, start_time) VALUES ('w', 'UPPER A', '2026-11-01T10:00:00Z');
+      INSERT INTO workout_exercises (id, workout_id, exercise_id, order_index) VALUES ('we', 'w', 'lp', 0);
+    `);
+
+    rawDb.exec(MIGRATIONS[13].sql);
+
+    expect(rawDb.exec("SELECT name, catalogue_id, secondary_muscles FROM exercises WHERE id = 'lp'")[0].values[0]).toEqual([
+      'Lat Pulldown (Cable)',
+      '0150',
+      '["biceps","upper back","trapezius"]',
+    ]);
+    expect(rawDb.exec("SELECT exercise_id FROM workout_exercises WHERE id = 'we'")[0].values[0]).toEqual(['lp']);
+    expect(rawDb.exec("SELECT id FROM exercises WHERE catalogue_id = '2291'")).toEqual([]); // the female copy left
   });
 });

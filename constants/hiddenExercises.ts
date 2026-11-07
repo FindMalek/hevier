@@ -28,4 +28,5 @@ export const HIDDEN_EXERCISES: Record<string, string> = {
   '0119': '0120', // Upright Row V2 (Barbell) -> Upright Row (Barbell)
   '4250': '3336', // V Up V2 (Dumbbell) -> V Up (Dumbbell)
   '2544': '1325', // Wide Grip Rear Pulldown Behind Neck V2 (Cable) -> Wide Grip Rear Pulldown Behind Neck (Cable)
+  '2291': '0150', // Wide Grip Lat Pulldown (Cable), a female figure -> Bar Lateral Pulldown (Cable) (migration 014)
 };

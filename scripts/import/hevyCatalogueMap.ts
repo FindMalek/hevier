@@ -35,7 +35,7 @@ export const HEVY_CATALOGUE_MAP: Record<string, CatalogueMapping> = {
   'Incline Chest Press (Machine)': '1299',
   'Iso-Lateral Chest Press (Machine)': '0576', // lever chest press
   'Iso-Lateral Low Row': '4214', // lever low row (plate loaded)
-  'Lat Pulldown (Cable)': '2330',
+  'Lat Pulldown (Cable)': '0150', // cable bar lateral pulldown (2330 was full range of motion: wrong clip)
   'Lat Pulldown - Close Grip (Cable)': '2616',
   'Lateral Raise (Dumbbell)': '0334',
   'Leg Extension (Machine)': '0585',
