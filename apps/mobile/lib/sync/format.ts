@@ -1,4 +1,4 @@
-import type { Manifest } from '@/shared/sync-types';
+import type { Manifest } from '@hevier/shared/sync-types';
 import { clock24, compactDateTime } from '@/lib/format/date';
 import type { SyncResult } from '@/types/sync';
 

@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import path from 'node:path';
 import initSqlJs, { type Database } from 'sql.js';
 import { MIGRATIONS } from '../db/migrations';
 import { moveFootballSql } from '../db/migrations/006_football';
@@ -9,6 +8,7 @@ import { parseCsvText, transformRows } from './import/parseCsv';
 import { catalogueExerciseType, toHevyName } from './import/catalogue';
 import { HEVY_CATALOGUE_MAP } from './import/hevyCatalogueMap';
 import { HEVY_OFFICIAL_NAMES } from './import/hevyOfficialNames';
+import catalogueJson from '@hevier/catalogue/exercises.json';
 import type { CatalogueEntry } from '@/types/import';
 
 export async function importCsvToDatabase(
@@ -124,7 +124,7 @@ function catalogueColumns(e: CatalogueEntry) {
   ];
 }
 
-const CATALOGUE_PATH = path.join(__dirname, '..', 'catalogue', 'exercises.json');
+const CATALOGUE = catalogueJson as unknown as CatalogueEntry[];
 
 async function main() {
   const [csvPath, outPath] = process.argv.slice(2);
@@ -133,8 +133,7 @@ async function main() {
     process.exit(1);
   }
   const csvText = fs.readFileSync(csvPath, 'utf-8');
-  const catalogue = JSON.parse(fs.readFileSync(CATALOGUE_PATH, 'utf-8')) as CatalogueEntry[];
-  const bytes = await importCsvToDatabase(csvText, catalogue);
+  const bytes = await importCsvToDatabase(csvText, CATALOGUE);
   fs.writeFileSync(outPath, Buffer.from(bytes));
   console.log(`Wrote ${outPath} (${bytes.length} bytes)`);
 }

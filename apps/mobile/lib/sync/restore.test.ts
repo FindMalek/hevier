@@ -4,9 +4,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createServer } from '@/backup-server/server';
-import { createStore, type Store } from '@/backup-server/store';
-import { KEY_HEADER } from '@/shared/sync-protocol';
+import { createServer } from '@hevier/sync/server';
+import { createStore, type Store } from '@hevier/sync/store';
+import { KEY_HEADER } from '@hevier/shared/sync-protocol';
 
 vi.mock('@react-native-async-storage/async-storage', () => ({
   default: { getItem: async () => null, setItem: async () => {} },

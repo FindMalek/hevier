@@ -8,6 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { toHevyName } from './import/catalogue';
+import catalogueJson from '@hevier/catalogue/exercises.json';
 import type { CatalogueEntry } from '@/types/import';
 
 const words = (s: string) => new Set(s.toLowerCase().match(/[a-z0-9]+/g) ?? []);
@@ -32,7 +33,7 @@ function main() {
     process.exit(1);
   }
   const root = path.join(__dirname, '..');
-  const catalogue = JSON.parse(fs.readFileSync(path.join(root, 'catalogue/exercises.json'), 'utf-8')) as CatalogueEntry[];
+  const catalogue = catalogueJson as unknown as CatalogueEntry[];
   const converted = new Map(catalogue.map((e) => [e.id, toHevyName(e.name)]));
 
   const titlesById = new Map<string, string[]>();

@@ -3,7 +3,8 @@
 # Needs Pillow and the app's fonts (npm install).
 import os
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')  # apps/mobile
+REPO = os.path.join(ROOT, '..', '..')
 F = os.path.join(ROOT, 'node_modules/@expo-google-fonts/figtree/')
 def font(w, size): return ImageFont.truetype(f'{F}{w}/Figtree_{w}.ttf', size)
 K = 2
@@ -48,4 +49,4 @@ d.text((x, 214 * K), 'Workout tracker for Android', font=font('700Bold', 40 * K)
 d.text((x, 278 * K), 'no paywall · no account · recovery map · cardio-aware · PC backup',
        font=font('500Medium', 27 * K), fill=(104, 110, 124))
 
-img.resize((W // K, H // K), Image.LANCZOS).save(os.path.join(ROOT, 'docs/images/banner.png'), optimize=True)
+img.resize((W // K, H // K), Image.LANCZOS).save(os.path.join(REPO, 'docs/images/banner.png'), optimize=True)

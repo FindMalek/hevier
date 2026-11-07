@@ -4,8 +4,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createServer } from '@/backup-server/server';
-import { createStore, type Store } from '@/backup-server/store';
+import { createServer } from '@hevier/sync/server';
+import { createStore, type Store } from '@hevier/sync/store';
 
 const stored = new Map<string, string>();
 vi.mock('@react-native-async-storage/async-storage', () => ({

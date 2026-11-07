@@ -2,12 +2,13 @@
 # Loads your Hevy history + exercise library (and the exercise media) into the
 # Hevier app on a connected emulator/phone. REPLACES the app's current data.
 #
-#   scripts/load-device.sh <workouts.csv>                 # the only connected device
-#   scripts/load-device.sh <workouts.csv> emulator-5554   # a specific device (see: adb devices)
+#   apps/mobile/scripts/load-device.sh <workouts.csv>                 # the only connected device
+#   apps/mobile/scripts/load-device.sh <workouts.csv> emulator-5554   # a specific device (see: adb devices)
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
-CSV=${1:?usage: scripts/load-device.sh <workouts.csv> [device]}
+MEDIA=../../packages/catalogue/media
+CSV=${1:?usage: apps/mobile/scripts/load-device.sh <workouts.csv> [device]}
 ADB="${ANDROID_HOME:-$HOME/Android/Sdk}/platform-tools/adb"
 DEVICE_ARGS=()
 [ $# -ge 2 ] && DEVICE_ARGS=(-s "$2")
@@ -29,14 +30,14 @@ adb shell rm -f /data/local/tmp/hevier-seed.db
 
 # The media isn't in the repo (licence: see THIRD-PARTY-NOTICES.md); without it
 # the app shows a placeholder instead of each exercise's picture.
-if [ ! -d catalogue/media ]; then
-  echo "4/4  No catalogue/media folder: skipping exercise pictures"
+if [ ! -d "$MEDIA" ]; then
+  echo "4/4  No packages/catalogue/media folder: skipping exercise pictures"
   echo "Done. Open Hevier on the device."
   exit 0
 fi
 echo "4/4  Copying exercise media (~200 MB)"
 adb shell rm -rf /data/local/tmp/catalogue
-adb push catalogue/media /data/local/tmp/catalogue >/dev/null
+adb push "$MEDIA" /data/local/tmp/catalogue >/dev/null
 adb shell "run-as $APP sh -c 'rm -rf files/catalogue && cp -r /data/local/tmp/catalogue files/catalogue'"
 adb shell rm -rf /data/local/tmp/catalogue
 

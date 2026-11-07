@@ -1,5 +1,5 @@
-import { KEY_HEADER } from '@/shared/sync-protocol';
-import type { BeginRequest, BeginResponse, Refusal, StatusResponse } from '@/shared/sync-types';
+import { KEY_HEADER } from '@hevier/shared/sync-protocol';
+import type { BeginRequest, BeginResponse, Refusal, StatusResponse } from '@hevier/shared/sync-types';
 import { baseUrl, getPairing, setLastSynced } from './pairing';
 import { SYNC_TIMEOUTS } from '@/constants/motion';
 import { SYNC_HOSTS } from '@/constants/storage';

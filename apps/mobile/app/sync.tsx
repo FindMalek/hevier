@@ -4,7 +4,7 @@ import { reloadAppAsync } from 'expo';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { CaretRight } from 'phosphor-react-native/src/icons/CaretRight';
 
-import type { Manifest } from '@/shared/sync-types';
+import type { Manifest } from '@hevier/shared/sync-types';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { InnerHeader } from '@/components/ui/InnerHeader';
 import { fetchStatus, getLastRefusal, onRefusalChange, overUsb, syncNow } from '@/lib/sync/client';

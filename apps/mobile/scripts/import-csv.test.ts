@@ -2,11 +2,12 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import initSqlJs from 'sql.js';
 import { importCsvToDatabase } from './import-csv';
+import catalogueJson from '@hevier/catalogue/exercises.json';
 import type { CatalogueEntry } from '@/types/import';
 
 const SAMPLE = `${__dirname}/fixtures/sample-workouts.csv`;
 const loadCatalogue = () =>
-  JSON.parse(fs.readFileSync(`${__dirname}/../catalogue/exercises.json`, 'utf-8')) as CatalogueEntry[];
+  catalogueJson as unknown as CatalogueEntry[];
 
 async function importSample(catalogue: CatalogueEntry[] = []) {
   const bytes = await importCsvToDatabase(fs.readFileSync(SAMPLE, 'utf-8'), catalogue);

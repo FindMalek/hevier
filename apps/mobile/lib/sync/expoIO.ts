@@ -1,6 +1,6 @@
 import { Directory, File, Paths } from 'expo-file-system';
 
-import type { FileEntry } from '@/shared/sync-types';
+import type { FileEntry } from '@hevier/shared/sync-types';
 import { closeDb } from '@/db/client';
 import { countWorkouts, getDeviceId, makeSnapshot } from '@/db/sync/sync';
 import { STORAGE_FILES, STORAGE_FOLDERS, SYNC_FOLDERS } from '@/constants/storage';

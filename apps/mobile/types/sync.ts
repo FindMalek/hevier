@@ -1,4 +1,4 @@
-import type { FileEntry, Refusal } from '@/shared/sync-types';
+import type { FileEntry, Refusal } from '@hevier/shared/sync-types';
 
 // Where the PC's Hevier Sync window is, and its key (lib/sync/pairing.ts).
 export type Pairing = { host: string; port: number; key: string };

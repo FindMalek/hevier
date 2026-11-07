@@ -1,4 +1,4 @@
-import { KEY_HEADER } from '@/shared/sync-protocol';
+import { KEY_HEADER } from '@hevier/shared/sync-protocol';
 import { fetchStatus } from './client';
 import { baseUrl } from './pairing';
 import type { Pairing, SyncFailure, SyncIO } from '@/types/sync';

@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { PickerExercise } from '@/types/exercise';
+import catalogueJson from '@hevier/catalogue/exercises.json';
 import { filterExercises, pickerCount, pickerSections, recentExercises, searchExercises, suggestedExercises } from './exerciseSearch';
 
 const ex = (name: string, extra: Partial<PickerExercise> = {}): PickerExercise => ({
@@ -129,7 +129,7 @@ describe('picker sections', () => {
 
 describe('search on the whole catalogue', () => {
   it('finds and orders exactly as before', () => {
-    const catalogue = JSON.parse(readFileSync(`${__dirname}/../../catalogue/exercises.json`, 'utf-8')) as { id: string; name: string }[];
+    const catalogue = catalogueJson as { id: string; name: string }[];
     // Same names in other cases and with accents, duplicates, and some done
     // a few times, in the database's order (NOCASE) rather than localeCompare's.
     const all = [
