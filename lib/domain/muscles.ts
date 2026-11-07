@@ -7,9 +7,17 @@ import type { MuscleGroup } from '@/types/muscles';
 // turned into the app's groups. The tables are in constants/muscles.ts and
 // constants/equipment.ts.
 
+// The muscle an exercise works. A "full body" move (clean, thruster…) still
+// has a main muscle; only one without a known muscle counts as Full Body.
 export function muscleGroup(target: string | null, bodyPart: string | null): MuscleGroup {
-  if (bodyPart === 'full body') return 'Full Body';
-  return (target && MUSCLE_OF_TARGET[target]) || 'Other';
+  const group = target ? MUSCLE_OF_TARGET[target] : undefined;
+  if (group) return group;
+  return bodyPart === 'full body' ? 'Full Body' : 'Other';
+}
+
+// The picker's muscle filter, which keeps every full body move under Full Body.
+export function pickerMuscleGroup(target: string | null, bodyPart: string | null): MuscleGroup {
+  return bodyPart === 'full body' ? 'Full Body' : muscleGroup(target, bodyPart);
 }
 
 export function equipmentGroup(equipment: string | null): EquipmentGroup {

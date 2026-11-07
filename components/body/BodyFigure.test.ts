@@ -27,6 +27,13 @@ describe('body figure', () => {
     expect(zoneColor(25)).toBe('#0A66FF');
   });
 
+  it('outer thigh: shows the quads unless abductors were trained', () => {
+    const quadsOnly = groupColors(volumeView(new Map([['Quadriceps', 6]])).shades);
+    expect(quadsOnly.get('ABDUCTORS')).toBe('#0A66FF');
+    const both = groupColors(volumeView(new Map([['Quadriceps', 6], ['Abductors', 1]])).shades);
+    expect(both.get('ABDUCTORS')).toBe('#B8DCFF');
+  });
+
   it('recovery: traffic lights; one muscle can light several groups', () => {
     const colorOf = groupColors(
       recoveryView(

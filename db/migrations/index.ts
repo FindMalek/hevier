@@ -12,6 +12,7 @@ import { sql as migration009 } from './009_warmup_sets';
 import { sql as migration010 } from './010_iso_lateral_low_row';
 import { sql as migration011 } from './011_body_weights';
 import { sql as migration012 } from './012_device_id_out_of_database';
+import { sql as migration013 } from './013_opengym_catalogue_update';
 import type { Migration, MigratableDb } from './types';
 
 export const MIGRATIONS: Migration[] = [
@@ -27,6 +28,7 @@ export const MIGRATIONS: Migration[] = [
   { version: 10, sql: migration010 },
   { version: 11, sql: migration011 },
   { version: 12, sql: migration012 },
+  { version: 13, sql: migration013 },
 ];
 
 

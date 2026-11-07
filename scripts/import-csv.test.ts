@@ -27,7 +27,7 @@ describe('importCsvToDatabase (sample CSV)', () => {
     // 8 exercises in the CSV, plus Football, which every database gets (migration 006).
     expect(one('SELECT COUNT(*) FROM exercises')).toBe(9);
     expect(one('SELECT COUNT(*) FROM sets')).toBe(16);
-    expect(one('PRAGMA user_version')).toBe(12);
+    expect(one('PRAGMA user_version')).toBe(13);
     expect(one('SELECT COUNT(*) FROM routines')).toBe(0);
   });
 
