@@ -123,3 +123,12 @@ export interface PrEvent {
   catalogueId: string | null;
   records: SetRecord[];
 }
+
+// A past workout with its totals (db/sessions/sessions.ts): the Profile tab and
+// the routine page. Volume as lib/volume.ts counts it.
+export interface WorkoutSession {
+  startTime: string;
+  durationSeconds: number;
+  volumeKg: number;
+  reps: number;
+}

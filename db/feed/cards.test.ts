@@ -17,6 +17,7 @@ const row = (workout: string, we: string, name: string, set: string | null, weig
   reps,
   duration_seconds: null,
   distance_km: null,
+  body_weight_kg: null,
 });
 
 describe('workout cards', () => {

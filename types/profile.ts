@@ -1,12 +1,9 @@
 import type { PROFILE_METRICS, PROFILE_RANGES } from '@/constants/profile';
+import type { WorkoutSession } from './workout';
 
-// The Profile tab (db/profile/profile.ts): one past workout, for the chart.
-export interface ProfileSession {
-  startTime: string;
-  durationSeconds: number;
-  volumeKg: number; // Σ weight × reps
-  reps: number;
-}
+// The Profile tab (db/profile/profile.ts): one past workout with its totals
+// (db/sessions/sessions.ts), for the chart.
+export type ProfileSession = WorkoutSession;
 
 export interface Profile {
   name: string;

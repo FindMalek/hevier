@@ -38,6 +38,7 @@ describe('runMigrations', () => {
     )[0].values.map((row) => row[0]);
     expect(tables).toEqual([
       'app_state',
+      'body_weights',
       'exercises',
       'routine_exercises',
       'routine_folders',
@@ -50,7 +51,7 @@ describe('runMigrations', () => {
     ]);
 
     const version = rawDb.exec('PRAGMA user_version')[0].values[0][0];
-    expect(version).toBe(10);
+    expect(version).toBe(11);
   });
 
   it('is idempotent: running twice does not error or duplicate', async () => {
@@ -61,7 +62,7 @@ describe('runMigrations', () => {
     const tables = rawDb.exec(
       "SELECT name FROM sqlite_master WHERE type='table'"
     )[0].values;
-    expect(tables.length).toBe(10);
+    expect(tables.length).toBe(11);
   });
 
   it('upgrades a version-1 database by adding the catalogue columns', async () => {
@@ -74,7 +75,7 @@ describe('runMigrations', () => {
 
     const row = rawDb.exec("SELECT is_custom, catalogue_id FROM exercises WHERE id = 'e1'")[0].values[0];
     expect(row).toEqual([1, null]);
-    expect(rawDb.exec('PRAGMA user_version')[0].values[0][0]).toBe(10);
+    expect(rawDb.exec('PRAGMA user_version')[0].values[0][0]).toBe(11);
   });
 
   it('allows warm-up sets and keeps the existing sets', async () => {

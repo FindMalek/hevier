@@ -22,6 +22,7 @@ export const CHART_DEFAULTS = {
   routineMetric: 'volume', // routine page chart
   routinePeriod: PERIOD_LABELS.last3Months, // routine page chart
   exercisePeriod: PERIOD_LABELS.last3Months, // exercise page chart
+  bodyWeightPeriod: PERIOD_LABELS.allTime, // Profile → Body weight chart (weights are logged now and then)
   setCountPeriod: PERIOD_LABELS.last30Days, // Statistics → Set Count
   distributionPeriod: PERIOD_LABELS.last30Days, // Statistics → Muscle Distribution
 } as const;

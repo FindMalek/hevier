@@ -5,6 +5,7 @@ import { round2 } from '@/lib/format/weight';
 import type { ActiveSet } from '@/types/workout';
 import type { ExerciseType } from '@/types/exercise';
 import type { Bests, HistorySet, Measures, RecordKind, SetRecord, WorkoutRecord } from '@/types/records';
+import { setVolumeKg } from '@/lib/volume';
 
 // Personal records while logging:
 // a completed set that beats the exercise's history, and every set completed
@@ -34,7 +35,7 @@ function measure(weight: number | null, reps: number | null, seconds: number | n
   if (weight && weight > 0 && reps && reps > 0) {
     m.weight = weight;
     m.oneRm = epley1RM(weight, reps);
-    m.volume = weight * reps;
+    m.volume = setVolumeKg(weight, reps);
   }
   if (reps && reps > 0) m.reps = reps;
   if (seconds && seconds > 0) m.duration = seconds;

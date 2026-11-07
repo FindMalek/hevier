@@ -4,6 +4,7 @@ import { round2 } from '@/lib/format/weight';
 import { epley1RM } from '@/lib/stats/records';
 import type { ExerciseSession, ExerciseType, Metric, Unit } from '@/types/exercise';
 import type { WorkoutSet } from '@/types/workout';
+import { setVolumeKg } from '@/lib/volume';
 
 // The exercise page's maths: the chart's metrics, the Personal Records under it,
 // and how values, axis ticks and sets are written.
@@ -23,8 +24,8 @@ export const METRICS: Record<ExerciseType, Metric[]> = {
   weight_reps: [
     { label: EXERCISE_CHART_LABELS.heaviestWeight, unit: 'kg', value: (s) => max(lifted(s).map((x) => x.weightKg)) },
     { label: EXERCISE_CHART_LABELS.oneRepMax, unit: 'kg', value: (s) => max(lifted(s).map((x) => epley1RM(x.weightKg!, x.reps!))) },
-    { label: EXERCISE_CHART_LABELS.bestSetVolume, unit: 'kg', value: (s) => max(lifted(s).map((x) => x.weightKg! * x.reps!)) },
-    { label: EXERCISE_CHART_LABELS.sessionVolume, unit: 'kg', value: (s) => sum(lifted(s).map((x) => x.weightKg! * x.reps!)) },
+    { label: EXERCISE_CHART_LABELS.bestSetVolume, unit: 'kg', value: (s) => max(lifted(s).map((x) => setVolumeKg(x.weightKg, x.reps))) },
+    { label: EXERCISE_CHART_LABELS.sessionVolume, unit: 'kg', value: (s) => sum(lifted(s).map((x) => setVolumeKg(x.weightKg, x.reps))) },
   ],
   reps_only: [
     { label: EXERCISE_CHART_LABELS.mostRepsSet, unit: 'reps', value: (s) => max(s.map((x) => x.reps)) },

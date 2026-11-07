@@ -2,11 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { SET_FIELDS } from '@/constants/setFields';
 import { DEFAULT_WORKOUT_SETTINGS } from '@/constants/defaults';
 import { FOOTBALL } from '@/constants/football';
-import type { ActiveExercise, ActiveSet } from '@/types/workout';
+import type { ActiveExercise, ActiveSet, ActiveWorkout } from '@/types/workout';
 
 let nextId = 0;
 vi.mock('expo-crypto', () => ({ randomUUID: () => `id${++nextId}` }));
-const { newSet, nextSetLike, orderByKeys, shouldAskRating, shouldAskRepsLeft } = await import('./activeWorkout');
+const { needsBodyWeight, newSet, nextSetLike, orderByKeys, shouldAskRating, shouldAskRepsLeft, workoutStats } = await import('./activeWorkout');
 
 const set = (from: Partial<ActiveSet>) => newSet(from);
 const exercise = (name: string, sets: ActiveSet[]) => ({ key: name, name, sets }) as unknown as ActiveExercise;
@@ -50,5 +50,25 @@ describe('shouldAskRating', () => {
     expect(shouldAskRating(exercise(FOOTBALL, [set({ done: true })]))).toBe(true);
     expect(shouldAskRating(exercise(FOOTBALL, [set({ done: false })]))).toBe(false);
     expect(shouldAskRating(exercise('Squat', [set({ done: true })]))).toBe(false);
+  });
+});
+
+describe('body weight exercises', () => {
+  const pullUps = { ...exercise('Pull Up', [set({ reps: '10', done: true }), set({ reps: '8', done: false })]), exerciseId: 'pu' };
+  const bench = { ...exercise('Bench', [set({ weight: '100', reps: '5', done: true })]), exerciseId: 'bp' };
+  const workout = { exercises: [pullUps, bench] } as unknown as ActiveWorkout;
+  const ids = new Set(['pu']);
+
+  it('counts the body weight for done sets of body weight exercises', () => {
+    expect(workoutStats(workout, { weightKg: 80, exerciseIds: ids })).toEqual({ volumeKg: 800 + 500, sets: 2 });
+    expect(workoutStats(workout, { weightKg: null, exerciseIds: ids }).volumeKg).toBe(500);
+    expect(workoutStats(workout).volumeKg).toBe(500);
+  });
+
+  it('asks for the body weight only when none is logged and a body weight exercise is done', () => {
+    expect(needsBodyWeight(workout, { weightKg: null, exerciseIds: ids })).toBe(true);
+    expect(needsBodyWeight(workout, { weightKg: 80, exerciseIds: ids })).toBe(false);
+    expect(needsBodyWeight(workout, { weightKg: null, exerciseIds: new Set() })).toBe(false);
+    expect(needsBodyWeight(workout, null)).toBe(false);
   });
 });
