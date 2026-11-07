@@ -22,10 +22,10 @@ export interface ExerciseActions {
   repsLeftInfo: () => void;
 }
 
-// A set's ▶ countdown.
+// A set's ▶ stopwatch.
 export interface SetTimer {
   setKey: string;
-  endsAt: number;
+  startedAt: number;
 }
 
 export interface LogHeaderProps {
@@ -65,12 +65,12 @@ export interface SetRowProps {
   medal: boolean;
   // ▶ beside a lone TIME box.
   showPlay: boolean;
-  timerEndsAt: number | null;
+  timerStartedAt: number | null;
   actions: ExerciseActions;
 }
 
 export interface SetTimerTextProps {
-  endsAt: number;
+  startedAt: number;
 }
 
 export interface RestBarProps {

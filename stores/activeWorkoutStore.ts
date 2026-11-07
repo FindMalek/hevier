@@ -9,6 +9,8 @@ import type { WorkoutSettings } from '@/types/workoutSettings';
 import { celebratePr } from '@/lib/prFeedback';
 import { deleteMediaFiles } from '@/lib/workoutMedia';
 import { CLOCK_TICKS } from '@/constants/motion';
+import { secondsSince } from '@/lib/date';
+import { clock } from '@/lib/format/duration';
 import type { ActiveWorkout, WorkoutSource, PrEvent } from '@/types/workout';
 
 // One shared copy of the workout in progress, for the Log Workout screen and
@@ -54,7 +56,6 @@ function commit(workout: ActiveWorkout | null) {
   current = workout;
   persist(workout);
   emit();
-  armSetTimer();
 }
 
 // One load shared by every caller, so a late one can't overwrite changes made
@@ -65,10 +66,9 @@ function ensureLoaded(): Promise<void> {
     (workout) => {
       // A workout started or ended meanwhile wins over the stored draft.
       if (loaded) return;
-      current = workout;
+      current = dropOldSetTimer(workout);
       loaded = true;
       emit();
-      armSetTimer();
     },
     (e) => {
       console.warn('[activeWorkout] load failed', e);
@@ -219,35 +219,29 @@ export function completeSet(exerciseKey: string, setKey: string) {
   return markSet(exerciseKey, setKey, true, false, true);
 }
 
-// The ▶ countdown on a timed set: at zero it completes the set (and starts
-// the rest), wherever the user is in the app. Armed again on every change.
-let setTimerHandle: ReturnType<typeof setTimeout> | null = null;
-let armedFor: { setKey: string; endsAt: number } | null = null;
-
-function armSetTimer() {
-  const timer = current?.setTimer ?? null;
-  if (timer?.setKey === armedFor?.setKey && timer?.endsAt === armedFor?.endsAt) return;
-  if (setTimerHandle) clearTimeout(setTimerHandle);
-  setTimerHandle = null;
-  armedFor = timer;
-  if (timer) setTimerHandle = setTimeout(fireSetTimer, Math.max(0, timer.endsAt - Date.now()));
+// A draft saved by the old ▶ countdown ({ endsAt }) has no stopwatch to resume.
+function dropOldSetTimer(workout: ActiveWorkout | null): ActiveWorkout | null {
+  if (!workout?.setTimer || typeof workout.setTimer.startedAt === 'number') return workout;
+  return { ...workout, setTimer: null };
 }
 
-function fireSetTimer() {
-  setTimerHandle = null;
-  armedFor = null;
+// ■ on a timed set's ▶ stopwatch: its time goes into TIME and the set is
+// completed (rest timer, record check), as ✓ does. Stopped at 0s: just ends.
+export async function stopSetTimer() {
+  await ensureLoaded();
   const timer = current?.setTimer;
   if (!timer) return;
-  // Woken a little early: wait for the rest of it.
-  if (Date.now() < timer.endsAt) {
-    armSetTimer();
-    return;
-  }
+  const seconds = secondsSince(timer.startedAt, Date.now());
   const exercise = current?.exercises.find((e) => e.sets.some((s) => s.key === timer.setKey));
-  updateActiveWorkout((w) => ({ ...w, setTimer: null }));
-  if (exercise) {
-    markSet(exercise.key, timer.setKey, true, true, true).catch((e) => console.warn('[activeWorkout] set timer failed', e));
-  }
+  updateActiveWorkout((w) => ({
+    ...w,
+    setTimer: null,
+    exercises:
+      seconds > 0
+        ? w.exercises.map((e) => ({ ...e, sets: e.sets.map((s) => (s.key === timer.setKey ? { ...s, time: clock(seconds) } : s)) }))
+        : w.exercises,
+  }));
+  if (exercise && seconds > 0) await markSet(exercise.key, timer.setKey, true, true, false);
 }
 
 // The rest timer's -15 / +15 in Log Workout. -15 past zero ends the rest, as
@@ -275,17 +269,12 @@ export function skipRest() {
 // workout in progress the user chose to discard.
 export async function beginWorkout(source: WorkoutSource, day?: Date) {
   await ensureLoaded();
-  // The old workout's ▶ countdown must not fire (and save it again) while the new one starts.
-  if (setTimerHandle) clearTimeout(setTimerHandle);
-  setTimerHandle = null;
-  armedFor = null;
   if (current?.media?.length) deleteMediaFiles(current.media.map((m) => m.file));
   // Writes still queued for the old workout must not land on the new one.
   await writes;
   current = await startWorkout(source, new Date(), day);
   loaded = true;
   emit();
-  armSetTimer();
 }
 
 // After Finish (finishWorkout already cleared the stored draft).

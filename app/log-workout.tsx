@@ -10,6 +10,7 @@ import {
   onPr,
   peekActiveWorkout,
   reloadWorkoutSettings,
+  stopSetTimer,
   toggleSetDone,
   useActiveWorkout,
   useUntil,
@@ -31,7 +32,6 @@ import {
   playSet,
   removeSet,
   reorderExercises,
-  stopSetTimer,
   updateExercise,
   updateSet,
 } from '@/components/log-workout/workoutOps';
@@ -83,7 +83,7 @@ export default function LogWorkout() {
   );
   useKeepAwake(settings.keepAwake, KEEP_AWAKE_TAGS.logWorkout);
 
-  // A record on ✓ or at the end of a ▶ countdown (the store decides, PR alerts on).
+  // A record on ✓ or on a ▶ stopwatch's ■ (the store decides, PR alerts on).
   useEffect(() => onPr((pr) => setPrToast({ id: Date.now(), ...pr })), []);
 
   // Rows call these with their keys; the same functions on every render, so
@@ -99,7 +99,7 @@ export default function LogWorkout() {
       toggleDone: (exerciseKey, setKey) =>
         toggleSetDone(exerciseKey, setKey).catch((e) => console.warn('[logWorkout] ✓ failed', e)),
       play: playSet,
-      stop: stopSetTimer,
+      stop: () => stopSetTimer().catch((e) => console.warn('[logWorkout] ■ failed', e)),
       deleteSet: removeSet,
       addSet,
       repsLeftInfo: () => setRepsLeftInfo(true),

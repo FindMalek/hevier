@@ -1,5 +1,6 @@
 import { updateActiveWorkout } from '@/stores/activeWorkoutStore';
 import { parseClock } from '@/lib/format/setFormat';
+import { MS_PER_SECOND } from '@/constants/time';
 import { patchSet, removeByKey, updateByKey } from '@/components/set-table/draftOps';
 import { nextSetLike, orderByKeys } from '@/lib/workout/activeWorkout';
 import type { ActiveExercise, ActiveSet } from '@/types/workout';
@@ -32,13 +33,9 @@ export function reorderExercises(keys: string[]) {
   updateActiveWorkout((w) => ({ ...w, exercises: orderByKeys(w.exercises, keys) }));
 }
 
-// ▶ on a TIME box: count its time down.
+// ▶ on a TIME box: a stopwatch that carries on from the box's time (00:00 when
+// empty), so ■ then ▶ resumes rather than resets (■ is stopSetTimer in the store).
 export function playSet(setKey: string, time: string) {
-  const seconds = parseClock(time);
-  if (!seconds) return;
-  updateActiveWorkout((w) => ({ ...w, setTimer: { setKey, endsAt: Date.now() + seconds * 1000 } }));
-}
-
-export function stopSetTimer() {
-  updateActiveWorkout((w) => ({ ...w, setTimer: null }));
+  const already = parseClock(time) ?? 0;
+  updateActiveWorkout((w) => ({ ...w, setTimer: { setKey, startedAt: Date.now() - already * MS_PER_SECOND } }));
 }

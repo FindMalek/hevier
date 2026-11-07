@@ -23,7 +23,7 @@ export function WorkoutStatsRow({ workout, onDuration }: WorkoutStatsRowProps) {
 }
 
 // The only part of the page that changes every second (with the rest bar and a
-// ▶ countdown), so it ticks on its own.
+// ▶ stopwatch), so it ticks on its own.
 function DurationStat({ workout, onPress }: DurationStatProps) {
   const now = useNow();
   return <Stat label="Duration" value={elapsedLabel(elapsedSeconds(workout, now))} blue onPress={onPress} style={styles.stat} />;

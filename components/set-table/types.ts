@@ -62,7 +62,7 @@ export interface SetInputsProps {
   layout: SetTableLayout;
   // A ticked set's boxes have no border.
   done?: boolean;
-  // Shown instead of the TIME box (Log Workout's running ▶ countdown).
+  // Shown instead of the TIME box (Log Workout's running ▶ stopwatch).
   timer?: ReactNode;
   onChange: (change: Partial<SetText>) => void;
 }
