@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { catalogueUpdate, fromOpenGym } from './import/catalogueUpdate';
+import { catalogueUpdate, femaleDrawings, fromOpenGym } from './import/catalogueUpdate';
 import type { CatalogueEntry, OpenGymEntry } from '@/types/import';
 
 // Brings catalogue/exercises.json up to date with an openGym checkout and
@@ -35,6 +35,16 @@ function main() {
     `// Made by scripts/update-catalogue.ts: openGym's newer catalogue data for\n` +
       `// exercises already installed (with constants/muscleRules.ts on top), and its\n// female copies of an exercise removed.\n` +
       `export const sql = [\n${lines}\n].join('\\n');\n`
+  );
+  const drawings = Object.entries(femaleDrawings(files, after))
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .map(([id, female]) => `  '${id}': '${female}',`)
+    .join('\n');
+  fs.writeFileSync(
+    path.join(ROOT, 'constants', 'femaleDrawings.ts'),
+    `// Made by scripts/update-catalogue.ts from openGym's femaleVariant links:\n` +
+      `// catalogue id -> the same exercise drawn on a female figure (its media id).\n` +
+      `export const FEMALE_DRAWINGS: Record<string, string> = {\n${drawings}\n};\n`
   );
   console.log(`${after.length} exercises, ${sql.length - (removedIds.length ? 1 : 0)} updated, ${removedIds.length} removed`);
   console.log(`Wrote ${path.relative(ROOT, file)}`);

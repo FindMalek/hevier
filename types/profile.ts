@@ -34,3 +34,13 @@ export interface ProfileFieldProps {
   placeholder: string;
   autoCapitalize?: 'none';
 }
+
+// Which figure the exercise pictures show (Settings, onboarding).
+export type Drawings = 'male' | 'female';
+
+// What the first-launch questions collected; null = skipped.
+export interface OnboardingAnswers {
+  name: string | null;
+  drawings: Drawings | null;
+  bodyWeightKg: number | null;
+}

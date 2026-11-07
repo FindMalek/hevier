@@ -36,6 +36,14 @@ export const SIZES = {
   avatarLarge: 86, // profile photo on Profile and Edit Profile
 };
 
+// app/onboarding.tsx
+export const ONBOARDING_SIZES = {
+  progressHeight: 4, // the step bars at the top
+  inputHeight: 56, // name / body weight box
+  choiceHeight: 120, // a Male / Female card
+  choiceIcon: 40,
+};
+
 // components/ui/ActionBar.tsx
 export const ACTION_BAR_SIZES = {
   barHeight: 48.1,

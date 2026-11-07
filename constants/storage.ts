@@ -14,6 +14,8 @@ export const STORAGE_KEYS = {
   profileName: 'profile.name',
   profileUsername: 'profile.username',
   profilePhoto: 'profile.photo', // file name in documents/profile (stores/profilePhoto.ts)
+  profileDrawings: 'profile.drawings', // 'male' or 'female' exercise pictures (stores/drawings.ts)
+  onboardingDone: 'onboarding.done', // the first-launch questions were answered or skipped (db/onboarding)
   routinesUnfiledCollapsed: 'routines.unfiledCollapsed', // the routines list's unfiled section folded
 };
 

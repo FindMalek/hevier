@@ -20,6 +20,7 @@ import type { Cycle } from '@/types/routine';
 import { Screen } from '@/components/ui/Screen';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useScrolledDivider } from '@/hooks/useScrolledDivider';
+import { useOnboardingGate } from '@/hooks/useOnboardingGate';
 
 // The Home feed: your own workouts as cards, newest first. No social
 // features (search, notifications, likes, comments).
@@ -30,6 +31,7 @@ export default function HomeTab() {
   const [cycle, setCycle] = useState<Cycle | null>(null);
   const { start, dialog: startDialog } = useStartWorkout();
   const { scrolled, onScroll } = useScrolledDivider();
+  useOnboardingGate();
 
   // "2h ago" is worked out from this, not from the (cached) cards: refreshed on every visit.
   const [now, setNow] = useState(() => Date.now());

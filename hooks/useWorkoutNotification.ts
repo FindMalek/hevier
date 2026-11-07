@@ -11,6 +11,8 @@ import { NOTIFICATION_BUTTON_LABELS } from '@/constants/labels';
 import { NOTIFICATION_BUTTON_IDS } from '@/constants/notification';
 import { completeSet, getActiveWorkout, setRest, useActiveWorkoutSelect } from '@/stores/activeWorkoutStore';
 import { stillUri } from '@/components/exercises/ExerciseThumb';
+import { mediaIdFor } from '@/lib/domain/drawings';
+import { currentDrawings } from '@/stores/drawings';
 import { perHandOn } from '@/stores/perHand';
 import { nextSet, notificationContent, sameNotification } from '@/lib/workoutNotification';
 import type { ActiveWorkout } from '@/types/workout';
@@ -80,7 +82,7 @@ export function useWorkoutNotification() {
       restText: c.restText,
       restEndsAt: c.restEndsAt,
       restTotal: c.restTotal,
-      image: c.catalogueId ? stillUri(c.catalogueId) : null,
+      image: c.catalogueId ? stillUri(mediaIdFor(c.catalogueId, currentDrawings())) : null,
       setButtons: SET_BUTTONS,
       restButtons: REST_BUTTONS,
     });

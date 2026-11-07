@@ -10,10 +10,12 @@ import { COLORS } from '@/constants/theme';
 import { HIT_SLOPS, RADIUS } from '@/constants/layout';
 import { EXERCISE_PAGE_SIZES, ICON_SIZES } from '@/constants/sizes';
 import { STORAGE_FOLDERS } from '@/constants/storage';
+import { mediaIdFor } from '@/lib/domain/drawings';
+import { useDrawings } from '@/stores/drawings';
 import type { CatalogueMediaKind, ClipVideoProps, ExerciseClipProps } from './types';
 
-function mediaUri(kind: CatalogueMediaKind, catalogueId: string, ext: string): string | null {
-  const file = new File(Paths.document, STORAGE_FOLDERS.catalogue, kind, `${catalogueId}.${ext}`);
+function mediaUri(kind: CatalogueMediaKind, mediaId: string, ext: string): string | null {
+  const file = new File(Paths.document, STORAGE_FOLDERS.catalogue, kind, `${mediaId}.${ext}`);
   return file.exists ? file.uri : null;
 }
 
@@ -45,8 +47,10 @@ function ClipVideo({ uri }: ClipVideoProps) {
 // clip, a plain barbell for custom exercises.
 // Memoized: it checks the files on disk, so not on every chart tap.
 export const ExerciseClip = memo(function ExerciseClip({ catalogueId }: ExerciseClipProps) {
-  const clip = catalogueId ? mediaUri('clip', catalogueId, 'mp4') : null;
-  const still = catalogueId ? mediaUri('still', catalogueId, 'webp') : null;
+  const drawings = useDrawings();
+  const mediaId = catalogueId ? mediaIdFor(catalogueId, drawings) : null;
+  const clip = mediaId ? mediaUri('clip', mediaId, 'mp4') : null;
+  const still = mediaId ? mediaUri('still', mediaId, 'webp') : null;
   return (
     <View style={styles.clip}>
       {clip ? (

@@ -20,6 +20,7 @@ export type OpenGymEntry = Partial<CatalogueEntry> & {
   id: string;
   variantOf?: string;
   maleVariant?: string;
+  femaleVariant?: string;
 };
 
 // A muscle fix for one movement (constants/muscleRules.ts).

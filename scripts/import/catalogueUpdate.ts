@@ -25,6 +25,15 @@ export function fromOpenGym(files: OpenGymEntry[]): CatalogueEntry[] {
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
 
+// Each exercise's female drawing (openGym's femaleVariant), for users who pick
+// female drawings (lib/exercises/drawings.ts).
+export function femaleDrawings(files: OpenGymEntry[], kept: CatalogueEntry[]): Record<string, string> {
+  const ids = new Set(kept.map((e) => e.id));
+  const out: Record<string, string> = {};
+  for (const e of files) if (e.femaleVariant && ids.has(e.id)) out[e.id] = e.femaleVariant;
+  return out;
+}
+
 // Catalogue fields and the exercises column each one fills.
 const COLUMNS: [keyof CatalogueEntry, string][] = [
   ['bodyPart', 'body_part'],

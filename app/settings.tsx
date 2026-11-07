@@ -2,22 +2,33 @@ import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { CaretRight } from 'phosphor-react-native/src/icons/CaretRight';
 import { Desktop } from 'phosphor-react-native/src/icons/Desktop';
+import { PersonSimple } from 'phosphor-react-native/src/icons/PersonSimple';
 
 import { InnerHeader } from '@/components/ui/InnerHeader';
 import { COLORS, TYPE } from '@/constants/theme';
 import { LAYOUT, SPACE } from '@/constants/layout';
 import { ICON_SIZES, SETTINGS_SIZES, SIZES } from '@/constants/sizes';
 import { Screen } from '@/components/ui/Screen';
+import { setDrawings, useDrawings } from '@/stores/drawings';
 
-// Settings, opened from the gear on
-// Profile. Only our own row for now: Sync with PC.
+// Settings, opened from the gear on Profile: which figure the exercise
+// pictures show (a tap switches it), and Sync with PC.
 export default function SettingsScreen() {
   const router = useRouter();
+  const drawings = useDrawings();
   return (
     <Screen>
       <Stack.Screen options={{ headerShown: false }} />
       <InnerHeader title="Settings" />
       <ScrollView>
+        <Text style={styles.section}>Exercises</Text>
+        <Pressable
+          style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+          onPress={() => setDrawings(drawings === 'male' ? 'female' : 'male')}>
+          <PersonSimple size={ICON_SIZES.xxl} color={COLORS.text} />
+          <Text style={styles.title}>Exercise pictures</Text>
+          <Text style={styles.value}>{drawings === 'male' ? 'Male' : 'Female'}</Text>
+        </Pressable>
         <Text style={styles.section}>Data</Text>
         <Pressable style={({ pressed }) => [styles.row, pressed && styles.pressed]} onPress={() => router.push('/sync')}>
           <Desktop size={ICON_SIZES.xxl} color={COLORS.text} />
@@ -53,5 +64,9 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: SPACE.lg,
     ...TYPE.row,
+  },
+  value: {
+    ...TYPE.row,
+    color: COLORS.textSecondary,
   },
 });

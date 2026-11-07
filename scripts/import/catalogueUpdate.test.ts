@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import initSqlJs from 'sql.js';
 import { MIGRATIONS } from '../../db/migrations';
-import { catalogueUpdate, fromOpenGym } from './catalogueUpdate';
+import { catalogueUpdate, femaleDrawings, fromOpenGym } from './catalogueUpdate';
 import type { CatalogueEntry } from '@/types/import';
 
 function entry(overrides: Partial<CatalogueEntry>): CatalogueEntry {
@@ -29,6 +29,13 @@ describe('fromOpenGym', () => {
       entry({ id: '0121', name: 'barbell upright row v. 3' }),
     ]);
     expect(out.map((e) => e.id)).toEqual(['0739', '2802']);
+  });
+});
+
+describe('femaleDrawings', () => {
+  it("links each kept exercise to its female drawing", () => {
+    const files = [{ ...entry({ id: '0289' }), femaleVariant: '2254' }, { id: '2254', variantOf: '0289' }, { ...entry({ id: '0980' }), femaleVariant: '4035' }];
+    expect(femaleDrawings(files, [entry({ id: '0289' })])).toEqual({ '0289': '2254' });
   });
 });
 
