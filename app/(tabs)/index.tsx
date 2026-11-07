@@ -18,6 +18,7 @@ import { idKey, noop } from '@/lib/misc';
 import type { WorkoutCardData } from '@/types/feed';
 import type { Cycle } from '@/types/routine';
 import { Screen } from '@/components/ui/Screen';
+import { WorkoutPill } from '@/components/ui/WorkoutPill';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useScrolledDivider } from '@/hooks/useScrolledDivider';
 import { useOnboardingGate } from '@/hooks/useOnboardingGate';
@@ -99,6 +100,7 @@ export default function HomeTab() {
           removeClippedSubviews
         />
       )}
+      <WorkoutPill />
       {menu}
       {startDialog}
     </Screen>

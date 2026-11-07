@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The native tab bar (app/(tabs)/_layout.tsx) sized like Hevy's: 51 dp bar, a 55x29 dp pill 7 dp from the top.
+     Overrides Material's own sizes (80 dp bar, 64x32 pill, 24 dp icons). Copied in by plugins/withHevierTabBar.js. -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+  <dimen name="m3_bottom_nav_min_height" tools:override="true">51dp</dimen>
+  <dimen name="design_bottom_navigation_height" tools:override="true">51dp</dimen>
+  <dimen name="m3_bottom_nav_item_padding_top" tools:override="true">7dp</dimen>
+  <dimen name="m3_bottom_nav_item_padding_bottom" tools:override="true">0dp</dimen>
+  <dimen name="m3_bottom_nav_item_active_indicator_width" tools:override="true">55dp</dimen>
+  <dimen name="m3_bottom_nav_item_active_indicator_height" tools:override="true">29dp</dimen>
+  <dimen name="mtrl_navigation_bar_item_default_icon_size" tools:override="true">26dp</dimen>
+  <dimen name="design_bottom_navigation_icon_size" tools:override="true">26dp</dimen>
+</resources>

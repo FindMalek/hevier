@@ -427,8 +427,8 @@ export const SYNC_SCAN_SIZES = {
   hintRight: 16,
 };
 
-// components/ui/TabBar.tsx
-export const TAB_BAR_SIZES = {
+// components/ui/WorkoutPill.tsx
+export const WORKOUT_PILL_SIZES = {
   workoutPillLeft: 12.4,
   workoutPillRight: 12.4,
   workoutPillHeight: 70.9,
@@ -436,9 +436,6 @@ export const TAB_BAR_SIZES = {
   pillButtonHeight: 46.6,
   pillDotWidth: 8.3,
   pillDotHeight: 8.3,
-  tabHeight: 51,
-  iconSlotWidth: 55,
-  iconSlotHeight: 29,
 };
 
 // components/ui/TabHeader.tsx

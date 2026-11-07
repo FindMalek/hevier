@@ -4,7 +4,7 @@ import { CalendarDots } from 'phosphor-react-native/src/icons/CalendarDots';
 import { ChartLineUp } from 'phosphor-react-native/src/icons/ChartLineUp';
 import { PersonSimple } from 'phosphor-react-native/src/icons/PersonSimple';
 
-import { WorkoutIcon } from '@/components/ui/TabIcons';
+import { WorkoutIcon } from '@/components/ui/WorkoutIcon';
 import { COLORS, TYPE } from '@/constants/theme';
 import { RADIUS, SPACE } from '@/constants/layout';
 import { ICON_SIZES, PROFILE_TAB_SIZES } from '@/constants/sizes';
@@ -30,7 +30,7 @@ export function DashboardTiles() {
           label="Statistics"
           onPress={() => router.push('/statistics')}
         />
-        <Tile icon={<WorkoutIcon color={COLORS.text} active={false} />} label="Exercises" onPress={() => router.push('/exercises')} />
+        <Tile icon={<WorkoutIcon color={COLORS.text} />} label="Exercises" onPress={() => router.push('/exercises')} />
       </View>
       <View style={[styles.tiles, styles.tilesBelow]}>
         <Tile icon={<PersonSimple size={ICON_SIZES.xxl} weight="light" color={COLORS.text} />} label="Body weight" onPress={() => router.push('/body-weight')} />
