@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import initSqlJs, { type Database } from 'sql.js';
 import { runMigrations } from '@/db/migrations';
 
-// The device id and workout count sent with each copy to the PC.
+// The workout count and last workout sent with each copy to the PC.
 let raw: Database;
 
 function rows<T>(sqlText: string, params: unknown[] = []): T[] {
@@ -32,20 +32,17 @@ const fakeDb = {
   },
 };
 
-let nextId = 0;
 vi.mock('@/db/client', () => ({ getDb: async () => fakeDb }));
-vi.mock('expo-crypto', () => ({ randomUUID: () => `id${++nextId}` }));
-const { countWorkouts, getDeviceId } = await import('./sync');
+const { countWorkouts, lastWorkoutStart } = await import('./sync');
 const SQL = await initSqlJs();
 
 describe('sync', () => {
-  it('makes the device id once and keeps it in the database', async () => {
+  it('finds when the newest workout started', async () => {
     raw = new SQL.Database();
     await runMigrations(fakeDb);
-    const id = await getDeviceId();
-    expect(id).toBe('id1');
-    expect(await getDeviceId()).toBe('id1');
-    expect(rows<{ value: string }>("SELECT value FROM app_state WHERE key = 'sync.deviceId'")[0].value).toBe('id1');
+    expect(await lastWorkoutStart()).toBeNull();
+    raw.exec(`INSERT INTO workouts (id, title, start_time) VALUES ('a', 'A', '2026-11-06T15:31:57.722Z'), ('b', 'B', '2026-10-15T18:00:00Z')`);
+    expect(await lastWorkoutStart()).toBe('2026-11-06T15:31:57.722Z');
   });
 
   it('counts saved workouts', async () => {

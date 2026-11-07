@@ -11,6 +11,7 @@ import { sql as migration008 } from './008_indexes';
 import { sql as migration009 } from './009_warmup_sets';
 import { sql as migration010 } from './010_iso_lateral_low_row';
 import { sql as migration011 } from './011_body_weights';
+import { sql as migration012 } from './012_device_id_out_of_database';
 import type { Migration, MigratableDb } from './types';
 
 export const MIGRATIONS: Migration[] = [
@@ -25,6 +26,7 @@ export const MIGRATIONS: Migration[] = [
   { version: 9, sql: migration009 },
   { version: 10, sql: migration010 },
   { version: 11, sql: migration011 },
+  { version: 12, sql: migration012 },
 ];
 
 

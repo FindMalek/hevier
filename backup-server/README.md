@@ -57,9 +57,12 @@ There is one copy, not a history: copy the folder elsewhere if you want more.
   then has to pair again).
 - **Which files:** only `hevier.db` and files straight inside `media/` or
   `profile/` can be written or read, so no request can reach outside the copy.
-- **No accidental overwrite:** a copy from another phone, or one with fewer
-  workouts than the copy on the PC (a wiped phone), is refused unless you
-  confirm it on the phone.
+- **No accidental overwrite:** the PC keeps the newest data. A copy from
+  another phone, one with fewer workouts than the copy on the PC (a wiped
+  phone), or one whose last workout is older than the PC copy's (old data), is
+  refused unless you confirm it on the phone. The phone's id is kept outside
+  its database, so a database copied onto another device (an emulator) counts
+  as another phone; a Restore from the PC keeps the copy's id.
 - **Not encrypted:** it is plain HTTP on your local network. Anyone on the same
   Wi-Fi who can watch the traffic could read the key and the data. Use it on a
   network you trust, or over the USB cable.

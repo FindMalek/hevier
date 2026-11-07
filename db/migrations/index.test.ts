@@ -51,7 +51,7 @@ describe('runMigrations', () => {
     ]);
 
     const version = rawDb.exec('PRAGMA user_version')[0].values[0][0];
-    expect(version).toBe(11);
+    expect(version).toBe(12);
   });
 
   it('is idempotent: running twice does not error or duplicate', async () => {
@@ -75,7 +75,7 @@ describe('runMigrations', () => {
 
     const row = rawDb.exec("SELECT is_custom, catalogue_id FROM exercises WHERE id = 'e1'")[0].values[0];
     expect(row).toEqual([1, null]);
-    expect(rawDb.exec('PRAGMA user_version')[0].values[0][0]).toBe(11);
+    expect(rawDb.exec('PRAGMA user_version')[0].values[0][0]).toBe(12);
   });
 
   it('allows warm-up sets and keeps the existing sets', async () => {

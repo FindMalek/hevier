@@ -15,13 +15,13 @@ export const STORAGE_KEYS = {
   profileUsername: 'profile.username',
   profilePhoto: 'profile.photo', // file name in documents/profile (stores/profilePhoto.ts)
   routinesUnfiledCollapsed: 'routines.unfiledCollapsed', // the routines list's unfiled section folded
-  syncDeviceId: 'sync.deviceId', // this phone's id for the PC backup (db/sync/sync.ts)
 };
 
 // AsyncStorage keys (kept outside the database, so a restore leaves them).
 export const ASYNC_STORAGE_KEYS = {
   syncPairing: 'hevier.sync.pairing', // the PC paired with (lib/sync/pairing.ts)
   syncLast: 'hevier.sync.last', // time of the last good sync
+  syncDeviceId: 'hevier.sync.deviceId', // this phone's id for the PC copy (lib/sync/deviceId.ts)
 };
 
 // File names.
