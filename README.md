@@ -146,24 +146,25 @@ instead.</sub>
 
 ## Getting started
 
-You need Node.js 22+, the Android SDK, and an emulator or an Android phone with
+You need Node.js 22+, [pnpm](https://pnpm.io) (`corepack enable` gives you the
+right version), the Android SDK, and an emulator or an Android phone with
 USB debugging on. The app has its own native modules, so it doesn't run in
 Expo Go: build it once with
 
 ```bash
-npm install
-npx expo run:android
+pnpm install
+pnpm android        # expo run:android, from apps/mobile
 ```
 
-After that, `npx expo start` serves code changes to the installed app.
+After that, `pnpm mobile` (`expo start`) serves code changes to the installed app.
 
-Checks (types, lint, tests):
+Checks (types, lint, tests, for every package through Turborepo):
 
 ```bash
-npm run check
+pnpm check
 ```
 
-They also run before every commit: `npm install` turns on the git hook in
+They also run before every commit: `pnpm install` turns on the git hook in
 `.githooks/pre-commit`.
 
 ### Import your Hevy history (optional)
@@ -171,7 +172,7 @@ They also run before every commit: `npm install` turns on the git hook in
 In Hevy, export your workouts as CSV, then with the device connected:
 
 ```bash
-scripts/load-device.sh path/to/workouts.csv
+apps/mobile/scripts/load-device.sh path/to/workouts.csv
 ```
 
 This **replaces** the app's data on the device. Hevy's export has workouts
@@ -181,24 +182,24 @@ only, so make your routines in the app.
 
 The exercise stills and clips are licensed by Gym visual to openGym only, so
 they are **not** in this repository. Without them the app shows a placeholder.
-If you have your own licensed copy, put it in `catalogue/media/` and
-`scripts/load-device.sh` copies it onto the device.
+If you have your own licensed copy, put it in `packages/catalogue/media/` and
+`apps/mobile/scripts/load-device.sh` copies it onto the device.
 
 ### Hevier Sync (PC backup)
 
 ```bash
-cd backup-server
-npm install
-npm start
+pnpm install
+pnpm sync
 ```
 
 Scan the QR code it shows from the app (Profile → Settings → Sync with PC).
 Backups go to `~/HevierBackup`. Settings, what it keeps and its safety model:
-[backup-server/README.md](backup-server/README.md).
+[apps/sync/README.md](apps/sync/README.md).
 
 ### Release build on your phone
 
 ```bash
+cd apps/mobile
 npx expo prebuild --platform android
 (cd android && ./gradlew assembleRelease)
 adb install -r android/app/build/outputs/apk/release/app-release.apk
@@ -211,23 +212,30 @@ doesn't exist. Keep your key safe: an update signed with another key can't be
 installed over the old app, and uninstalling wipes its data.
 
 A release build isn't debuggable unless you prebuild with `HEVIER_DEBUGGABLE=1`.
-`scripts/load-device.sh` needs that to copy data in, but it also lets anyone
+`apps/mobile/scripts/load-device.sh` needs that to copy data in, but it also lets anyone
 with the phone on USB read the app's data.
 
 ## Project layout
 
 ```
-app/           screens (Expo Router)
-components/    screen pieces, by feature; shared ones in components/ui/
-lib/           plain logic: formatting, stats, training maths
-db/            database access by topic, and migrations
-constants/     colours, sizes, labels, training numbers
-types/         every type and interface
-hooks/ stores/ React hooks and shared state
-modules/       native Kotlin: workout notification, home-screen widgets
-backup-server/ Hevier Sync, the PC backup program
-shared/        code used by both the app and backup-server
-scripts/       import, device loading, design tools
+apps/
+  mobile/            the Android app (Expo)
+    app/             screens (Expo Router)
+    components/      screen pieces, by feature; shared ones in components/ui/
+    lib/             plain logic: formatting, stats, training maths
+    db/              database access by topic, and migrations
+    constants/       colours, sizes, labels, training numbers
+    types/           every type and interface
+    hooks/ stores/   React hooks and shared state
+    modules/         native Kotlin: workout notification, home-screen widgets
+    scripts/         import, device loading, design tools
+  sync/              Hevier Sync, the PC backup program
+  web/               landing page (not built yet)
+packages/
+  shared/            the sync protocol, used by the app and Hevier Sync
+  catalogue/         the exercise catalogue from openGym
+  config-typescript/ shared tsconfig
+  config-eslint/     shared eslint config
 ```
 
 ## Contributing
