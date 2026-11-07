@@ -48,7 +48,7 @@ export default function SaveWorkout() {
 
   function onSave() {
     if (workout && needsBodyWeight(workout, bodyWeight)) setAskingBodyWeight(true);
-    else save();
+    else void save(); // never rejects: useSaveGuard logs a failed save
   }
   const start = new Date(workout.startTime);
 
@@ -147,11 +147,11 @@ export default function SaveWorkout() {
           } catch (e) {
             console.warn('[body weight] save failed', e);
           }
-          save();
+          void save();
         }}
         onCancel={() => {
           setAskingBodyWeight(false);
-          save();
+          void save();
         }}
         onDismiss={() => setAskingBodyWeight(false)}
       />

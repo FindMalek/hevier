@@ -48,7 +48,10 @@ export default function BodyWeight() {
   const change = bodyWeightChange(shownEntries);
 
   const reload = useCallback(() => {
-    getBodyWeights().then(setEntries);
+    // A failed read keeps the list already shown.
+    getBodyWeights()
+      .then(setEntries)
+      .catch((e) => console.warn('[body weight] load failed', e));
   }, []);
   useFocusEffect(reload);
 

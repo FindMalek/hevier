@@ -37,5 +37,6 @@ export function reorderExercises(keys: string[]) {
 // empty), so ■ then ▶ resumes rather than resets (■ is stopSetTimer in the store).
 export function playSet(setKey: string, time: string) {
   const already = parseClock(time) ?? 0;
-  updateActiveWorkout((w) => ({ ...w, setTimer: { setKey, startedAt: Date.now() - already * MS_PER_SECOND } }));
+  // Never rejects: a failed draft load is logged in the store.
+  void updateActiveWorkout((w) => ({ ...w, setTimer: { setKey, startedAt: Date.now() - already * MS_PER_SECOND } }));
 }

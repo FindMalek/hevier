@@ -233,7 +233,7 @@ export async function stopSetTimer() {
   if (!timer) return;
   const seconds = secondsSince(timer.startedAt, Date.now());
   const exercise = current?.exercises.find((e) => e.sets.some((s) => s.key === timer.setKey));
-  updateActiveWorkout((w) => ({
+  await updateActiveWorkout((w) => ({
     ...w,
     setTimer: null,
     exercises:

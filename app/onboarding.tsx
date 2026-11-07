@@ -45,14 +45,20 @@ export default function Onboarding() {
   const weightKg = parseBodyWeight(weight);
   const answered = [name.trim() !== '', drawings !== null, weightKg !== null][step];
 
+  // A failed save keeps the screen open with Done working again, to retry.
   async function finish(skipCurrent: boolean) {
     setBusy(true);
-    await finishOnboarding({
-      name: name.trim() || null,
-      drawings,
-      bodyWeightKg: skipCurrent ? null : weightKg,
-    });
-    router.back(); // Home reloads the name when it shows again
+    try {
+      await finishOnboarding({
+        name: name.trim() || null,
+        drawings,
+        bodyWeightKg: skipCurrent ? null : weightKg,
+      });
+      router.back(); // Home reloads the name when it shows again
+    } catch (e) {
+      console.warn('[onboarding] save failed', e);
+      setBusy(false);
+    }
   }
 
   function next(skipCurrent = false) {
@@ -60,7 +66,7 @@ export default function Onboarding() {
       if (step === 0) setName('');
       if (step === 1) setDrawings(null);
     }
-    if (last) finish(skipCurrent);
+    if (last) void finish(skipCurrent);
     else setStep(step + 1);
   }
 
