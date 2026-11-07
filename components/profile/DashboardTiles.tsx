@@ -4,25 +4,22 @@ import { CalendarDots } from 'phosphor-react-native/src/icons/CalendarDots';
 import { ChartLineUp } from 'phosphor-react-native/src/icons/ChartLineUp';
 import { PersonSimple } from 'phosphor-react-native/src/icons/PersonSimple';
 
-import { WorkoutIcon } from '@/components/ui/TabIcons';
+import { WorkoutIcon } from '@/components/ui/WorkoutIcon';
 import { COLORS, TYPE } from '@/constants/theme';
 import { RADIUS, SPACE } from '@/constants/layout';
 import { ICON_SIZES, PROFILE_TAB_SIZES } from '@/constants/sizes';
 import type { TileProps } from './types';
 
-function Tile({ icon, label, onPress, soon }: TileProps) {
+function Tile({ icon, label, onPress }: TileProps) {
   return (
     <Pressable style={({ pressed }) => [styles.tile, pressed && onPress && styles.pressed]} onPress={onPress}>
       <View style={styles.tileIcon}>{icon}</View>
-      <View>
-        <Text style={styles.tileLabel}>{label}</Text>
-        {soon && <Text style={styles.soon}>Coming soon</Text>}
-      </View>
+      <Text style={styles.tileLabel}>{label}</Text>
     </Pressable>
   );
 }
 
-// The Dashboard: Statistics, Exercises, Measures (not built yet) and Calendar.
+// The Dashboard: Statistics, Exercises, Body weight and Calendar.
 export function DashboardTiles() {
   const router = useRouter();
   return (
@@ -33,10 +30,10 @@ export function DashboardTiles() {
           label="Statistics"
           onPress={() => router.push('/statistics')}
         />
-        <Tile icon={<WorkoutIcon color={COLORS.text} active={false} />} label="Exercises" onPress={() => router.push('/exercises')} />
+        <Tile icon={<WorkoutIcon color={COLORS.text} />} label="Exercises" onPress={() => router.push('/exercises')} />
       </View>
       <View style={[styles.tiles, styles.tilesBelow]}>
-        <Tile icon={<PersonSimple size={ICON_SIZES.xxl} weight="light" color={COLORS.text} />} label="Measures" soon />
+        <Tile icon={<PersonSimple size={ICON_SIZES.xxl} weight="light" color={COLORS.text} />} label="Body weight" onPress={() => router.push('/body-weight')} />
         <Tile
           icon={<CalendarDots size={ICON_SIZES.xxl} weight="light" color={COLORS.text} />}
           label="Calendar"
@@ -76,11 +73,5 @@ const styles = StyleSheet.create({
   tileLabel: {
     marginLeft: SPACE.xs,
     ...TYPE.bodyMedium,
-  },
-  soon: {
-    marginLeft: SPACE.xs,
-    marginTop: -SPACE.xxs,
-    ...TYPE.mini,
-    color: COLORS.textSecondary,
   },
 });

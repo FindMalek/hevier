@@ -173,34 +173,37 @@ describe('activeWorkoutStore', () => {
     expect(db.celebrated).toBe(0);
   });
 
-  it('the ▶ timer completes its set at zero without any screen open', async () => {
+  it('the ▶ stopwatch counts up and ■ writes its time and completes the set', async () => {
     const s = await store();
     await s.getActiveWorkout();
     vi.useFakeTimers();
-    s.updateActiveWorkout((w) => ({ ...w, setTimer: { setKey: 's2', endsAt: Date.now() + 30_000 } }));
-    await vi.advanceTimersByTimeAsync(29_000);
+    s.updateActiveWorkout((w) => ({ ...w, setTimer: { setKey: 's2', startedAt: Date.now() } }));
+    await vi.advanceTimersByTimeAsync(10 * 60_000);
+    // No end: it never completes the set on its own.
     expect(s.peekActiveWorkout()!.exercises[0].sets[1].done).toBe(false);
-    await vi.advanceTimersByTimeAsync(1_100);
+    await s.stopSetTimer();
     const w = s.peekActiveWorkout()!;
     expect(w.setTimer).toBeNull();
+    expect(w.exercises[0].sets[1].time).toBe('10:00');
     expect(w.exercises[0].sets[1].done).toBe(true);
     expect(w.restTotal).toBe(120);
   });
 
-  it('a stopped ▶ timer does nothing', async () => {
+  it('■ at 0s just stops the stopwatch', async () => {
     const s = await store();
     await s.getActiveWorkout();
-    vi.useFakeTimers();
-    s.updateActiveWorkout((w) => ({ ...w, setTimer: { setKey: 's2', endsAt: Date.now() + 1_000 } }));
-    s.updateActiveWorkout((w) => ({ ...w, setTimer: null }));
-    await vi.advanceTimersByTimeAsync(2_000);
-    expect(s.peekActiveWorkout()!.exercises[0].sets[1].done).toBe(false);
+    s.updateActiveWorkout((w) => ({ ...w, setTimer: { setKey: 's2', startedAt: Date.now() } }));
+    await s.stopSetTimer();
+    const w = s.peekActiveWorkout()!;
+    expect(w.setTimer).toBeNull();
+    expect(w.exercises[0].sets[1].done).toBe(false);
   });
 
-  it('a ▶ timer that ran out while the app was closed completes on load', async () => {
-    const s = await store(workout({ setTimer: { setKey: 's2', endsAt: Date.now() - 1_000 } }));
-    await s.getActiveWorkout();
-    await flush();
-    expect(s.peekActiveWorkout()!.exercises[0].sets[1].done).toBe(true);
+  it('a draft from the old ▶ countdown loads without its timer', async () => {
+    const old = { setKey: 's2', endsAt: Date.now() - 1_000 } as unknown as { setKey: string; startedAt: number };
+    const s = await store(workout({ setTimer: old }));
+    const w = await s.getActiveWorkout();
+    expect(w!.setTimer).toBeNull();
+    expect(w!.exercises[0].sets[1].done).toBe(false);
   });
 });

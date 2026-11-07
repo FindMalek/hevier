@@ -14,6 +14,7 @@ export interface StatSet {
   primary: MuscleGroup;
   secondary: MuscleGroup[];
   weightKg: number | null;
+  bodyWeightKg?: number | null; // body weight exercises: the body weight logged at the time
   reps: number | null;
   failure?: boolean; // a failure set (always a hard set)
   warmup?: boolean; // a warm-up set (W), counts 0.3

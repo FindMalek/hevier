@@ -44,6 +44,7 @@ function fakePhone(files: Record<string, string>, deviceId = 'phone-a', workouts
     snapshot: async () => ({
       deviceId,
       workouts,
+      lastWorkout: null,
       files: Object.keys(files).map((p) => ({ path: p, size: fs.statSync(path.join(dir, p)).size })),
     }),
     upload: async (url, p, headers) => {

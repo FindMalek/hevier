@@ -6,11 +6,13 @@ import { LOG_WORKOUT_SIZES } from '@/constants/sizes';
 import { elapsedLabel } from '@/lib/format/duration';
 import { volumeLabel } from '@/lib/format/weight';
 import { elapsedSeconds, workoutStats } from '@/lib/workout/activeWorkout';
+import { useBodyWeight } from '@/hooks/useBodyWeight';
 import type { DurationStatProps, WorkoutStatsRowProps } from './types';
 
 // Duration · Volume · Sets above the exercises.
 export function WorkoutStatsRow({ workout, onDuration }: WorkoutStatsRowProps) {
-  const stats = workoutStats(workout);
+  const { bodyWeight } = useBodyWeight();
+  const stats = workoutStats(workout, bodyWeight);
   return (
     <View style={styles.row}>
       <DurationStat workout={workout} onPress={onDuration} />
@@ -21,7 +23,7 @@ export function WorkoutStatsRow({ workout, onDuration }: WorkoutStatsRowProps) {
 }
 
 // The only part of the page that changes every second (with the rest bar and a
-// ▶ countdown), so it ticks on its own.
+// ▶ stopwatch), so it ticks on its own.
 function DurationStat({ workout, onPress }: DurationStatProps) {
   const now = useNow();
   return <Stat label="Duration" value={elapsedLabel(elapsedSeconds(workout, now))} blue onPress={onPress} style={styles.stat} />;

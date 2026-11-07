@@ -36,6 +36,14 @@ export const SIZES = {
   avatarLarge: 86, // profile photo on Profile and Edit Profile
 };
 
+// app/onboarding.tsx
+export const ONBOARDING_SIZES = {
+  progressHeight: 4, // the step bars at the top
+  inputHeight: 56, // name / body weight box
+  choiceHeight: 120, // a Male / Female card
+  choiceIcon: 40,
+};
+
 // components/ui/ActionBar.tsx
 export const ACTION_BAR_SIZES = {
   barHeight: 48.1,
@@ -419,8 +427,8 @@ export const SYNC_SCAN_SIZES = {
   hintRight: 16,
 };
 
-// components/ui/TabBar.tsx
-export const TAB_BAR_SIZES = {
+// components/ui/WorkoutPill.tsx
+export const WORKOUT_PILL_SIZES = {
   workoutPillLeft: 12.4,
   workoutPillRight: 12.4,
   workoutPillHeight: 70.9,
@@ -428,9 +436,6 @@ export const TAB_BAR_SIZES = {
   pillButtonHeight: 46.6,
   pillDotWidth: 8.3,
   pillDotHeight: 8.3,
-  tabHeight: 51,
-  iconSlotWidth: 55,
-  iconSlotHeight: 29,
 };
 
 // components/ui/TabHeader.tsx

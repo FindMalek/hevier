@@ -13,12 +13,15 @@ export function isValidPath(p: string): boolean {
   return /^(hevier\.db|(media|profile)\/[A-Za-z0-9._-]+)$/.test(p) && !p.includes('..');
 }
 
-// Another phone's copy is never replaced without asking, and neither is a
-// copy with more workouts (a wiped phone mustn't erase the good copy).
+// The PC keeps the newest data. Another phone's copy is never replaced
+// without asking, and neither is a copy with more workouts (a wiped phone
+// mustn't erase the good copy) or with a newer last workout (an old copy of
+// the data, e.g. a database copied onto another device, mustn't replace newer).
 export function checkAccept(current: Manifest | null, incoming: BeginRequest): Refusal['reason'] | null {
   if (!current || incoming.force) return null;
   if (incoming.deviceId !== current.deviceId) return 'otherDevice';
   if (incoming.workouts < current.workouts) return 'fewer';
+  if (incoming.lastWorkout && current.lastWorkout && incoming.lastWorkout < current.lastWorkout) return 'older';
   return null;
 }
 

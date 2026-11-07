@@ -2,7 +2,8 @@ import { Directory, File, Paths } from 'expo-file-system';
 
 import type { FileEntry } from '@/shared/sync-types';
 import { closeDb } from '@/db/client';
-import { countWorkouts, getDeviceId, makeSnapshot } from '@/db/sync/sync';
+import { countWorkouts, lastWorkoutStart, makeSnapshot } from '@/db/sync/sync';
+import { getDeviceId } from './deviceId';
 import { STORAGE_FILES, STORAGE_FOLDERS, SYNC_FOLDERS } from '@/constants/storage';
 import type { SyncIO } from '@/types/sync';
 
@@ -38,7 +39,7 @@ export const expoIO: SyncIO = {
     if (dest.exists) dest.delete();
     await makeSnapshot(decodeURI(dest.uri.replace(/^file:\/\//, '')));
     const files = [{ path: STORAGE_FILES.database, size: snapshotFile().size }, ...SYNC_FOLDERS.flatMap(listFolder)];
-    return { deviceId: await getDeviceId(), workouts: await countWorkouts(), files };
+    return { deviceId: await getDeviceId(), workouts: await countWorkouts(), lastWorkout: await lastWorkoutStart(), files };
   },
 
   async upload(url, path, headers) {

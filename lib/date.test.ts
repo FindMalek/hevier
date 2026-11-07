@@ -2,7 +2,7 @@
 // runs in its own worker, so the zone set here stays here.
 import { describe, expect, it } from 'vitest';
 
-import { dayKey, daysBetween, secondsUntil, startOfDay, startOfMonth, startOfWeek, weeksBetween } from './date';
+import { dayKey, daysBetween, secondsSince, secondsUntil, startOfDay, startOfMonth, startOfWeek, weeksBetween } from './date';
 
 process.env.TZ = 'Europe/Paris';
 
@@ -53,6 +53,18 @@ describe('secondsUntil', () => {
   it('is never negative', () => {
     expect(secondsUntil(now - 5000, now)).toBe(0);
     expect(secondsUntil(now, now)).toBe(0);
+  });
+});
+
+describe('secondsSince', () => {
+  const now = new Date(2026, 9, 15, 12).getTime();
+  it('starts at 0 and rounds down', () => {
+    expect(secondsSince(now, now)).toBe(0);
+    expect(secondsSince(now - 999, now)).toBe(0);
+    expect(secondsSince(now - 61_500, now)).toBe(61);
+  });
+  it('is never negative', () => {
+    expect(secondsSince(now + 5000, now)).toBe(0);
   });
 });
 

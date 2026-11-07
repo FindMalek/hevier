@@ -43,6 +43,15 @@ describe('checkAccept', () => {
     expect(checkAccept(manifest(), manifest({ workouts: 313 }))).toBeNull();
   });
 
+  it('refuses a copy whose last workout is older than the PC copy\'s', () => {
+    const pc = manifest({ lastWorkout: '2026-11-06T15:31:57.722Z' });
+    expect(checkAccept(pc, manifest({ workouts: 313, lastWorkout: '2026-11-03T19:45:42.227Z' }))).toBe('older');
+    expect(checkAccept(pc, manifest({ lastWorkout: '2026-11-06T15:31:57.722Z' }))).toBeNull();
+    expect(checkAccept(pc, manifest({ lastWorkout: '2026-11-07T10:00:00.000Z' }))).toBeNull();
+    // A phone on an older version sends no date: counted as before.
+    expect(checkAccept(pc, manifest())).toBeNull();
+  });
+
   it('force takes anything', () => {
     expect(checkAccept(manifest(), { ...manifest({ deviceId: 'emulator', workouts: 1 }), force: true })).toBeNull();
   });

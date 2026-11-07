@@ -1,8 +1,10 @@
 import * as Crypto from 'expo-crypto';
 import { parseClock, parseNumber, setTextOf } from '@/lib/format/setFormat';
 import { SECONDS_PER_HOUR } from '@/constants/time';
+import { setVolumeKg } from '@/lib/volume';
 import { BACKDATED_DURATION_HOURS, BACKDATED_START_HOUR } from '@/constants/training';
 import { FOOTBALL } from '@/constants/football';
+import type { BodyWeightContext } from '@/types/bodyWeight';
 import type { Bests } from '@/types/records';
 import type { EditorSet } from '@/types/routine';
 import type { ActiveExercise, ActiveSet, ActiveWorkout, WorkoutStats } from '@/types/workout';
@@ -77,18 +79,27 @@ export function startingRest(name: string, restSeconds: number | null): number |
   return restSeconds ?? (name === FOOTBALL ? 0 : null);
 }
 
-// Volume and Sets above the exercises: completed sets only.
-export function workoutStats(workout: ActiveWorkout): WorkoutStats {
+// Volume and Sets above the exercises: completed sets only. Body weight
+// exercises (bodyWeight.exerciseIds) count the last body weight logged.
+export function workoutStats(workout: ActiveWorkout, bodyWeight: BodyWeightContext | null = null): WorkoutStats {
   let volumeKg = 0;
   let sets = 0;
   for (const e of workout.exercises) {
+    const weightOfExercise = bodyWeight?.exerciseIds.has(e.exerciseId) ? bodyWeight.weightKg : null;
     for (const s of e.sets) {
       if (!s.done) continue;
       sets++;
-      volumeKg += (parseNumber(s.weight) ?? 0) * (parseNumber(s.reps) ?? 0);
+      volumeKg += setVolumeKg(parseNumber(s.weight), parseNumber(s.reps), weightOfExercise);
     }
   }
   return { volumeKg, sets };
+}
+
+// A done set of a body weight exercise while no body weight is logged: Save
+// Workout asks for it.
+export function needsBodyWeight(workout: ActiveWorkout, bodyWeight: BodyWeightContext | null): boolean {
+  if (!bodyWeight || bodyWeight.weightKg !== null) return false;
+  return workout.exercises.some((e) => bodyWeight.exerciseIds.has(e.exerciseId) && e.sets.some((s) => s.done));
 }
 
 // The exercise named in the workout pill: the next one with a set to do

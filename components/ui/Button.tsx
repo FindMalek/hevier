@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 import { COLORS, TYPE } from '@/constants/theme';
 import { BORDER_WIDTHS, RADIUS, SPACE } from '@/constants/layout';
 import { SIZES } from '@/constants/sizes';
-import { PRESSED_OPACITY } from '@/constants/ui';
+import { DISABLED_OPACITY, PRESSED_OPACITY } from '@/constants/ui';
 import type { ButtonProps } from './types';
 
 // The app's rounded button: a label, maybe an icon before it, centred.
@@ -20,7 +20,7 @@ export const Button = memo(function Button({
 }: ButtonProps) {
   return (
     <Pressable
-      style={({ pressed }) => [styles.button, styles[size], styles[variant], pressed && styles.pressed, style]}
+      style={({ pressed }) => [styles.button, styles[size], styles[variant], pressed && styles.pressed, disabled && styles.disabled, style]}
       disabled={disabled || busy}
       onPress={onPress}>
       {busy ? (
@@ -65,6 +65,9 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: PRESSED_OPACITY,
+  },
+  disabled: {
+    opacity: DISABLED_OPACITY,
   },
   outlineLabel: {
     color: COLORS.primary,

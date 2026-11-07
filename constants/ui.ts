@@ -6,6 +6,9 @@ export const BUTTON_SIZES = ['normal', 'compact'] as const;
 // How see-through a button is while pressed.
 export const PRESSED_OPACITY = 0.7;
 
+// How see-through a button is while it can't be tapped.
+export const DISABLED_OPACITY = 0.4;
+
 // Text sizes of a Stat (label above a value).
 export const STAT_SIZES = ['small', 'medium', 'large'] as const;
 

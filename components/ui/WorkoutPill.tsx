@@ -1,9 +1,6 @@
-import type { BottomTabBarProps } from 'expo-router/js-tabs';
-import type { ComponentType } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { memo, useCallback, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CaretUp } from 'phosphor-react-native/src/icons/CaretUp';
 import { TrashSimple } from 'phosphor-react-native/src/icons/TrashSimple';
 
@@ -11,68 +8,19 @@ import { discardActiveWorkout, useActiveWorkoutSelect, useNow, useUntil } from '
 import { ConfirmDialog } from './ConfirmDialog';
 import { clock, elapsedLabel } from '@/lib/format/duration';
 import { currentExerciseName, elapsedSeconds } from '@/lib/workout/activeWorkout';
-
-import { HomeIcon, ProfileIcon, WorkoutIcon } from './TabIcons';
-import { COLORS, LINE_HEIGHTS, TYPE } from '@/constants/theme';
-import { TAB_LABELS } from '@/constants/labels';
+import { COLORS, TYPE } from '@/constants/theme';
 import { HIT_SLOPS, RADIUS, SPACE } from '@/constants/layout';
-import { ICON_SIZES, TAB_BAR_SIZES } from '@/constants/sizes';
+import { ICON_SIZES, WORKOUT_PILL_SIZES } from '@/constants/sizes';
 import { secondsUntil } from '@/lib/date';
 import type { ActiveWorkout } from '@/types/workout';
-import type { TabIconProps } from '@/types/ui';
 import type { PillTimeProps } from './types';
 
-const TABS: Record<string, { label: string; Icon: ComponentType<TabIconProps> }> = {
-  index: { label: TAB_LABELS.index, Icon: HomeIcon },
-  workout: { label: TAB_LABELS.workout, Icon: WorkoutIcon },
-  profile: { label: TAB_LABELS.profile, Icon: ProfileIcon },
-};
-
-// 51dp of content above the system gesture area, a
-// 55x29dp pill 7dp from the top, label baseline at 49.5dp.
-export function TabBar({ state, navigation }: BottomTabBarProps) {
-  const insets = useSafeAreaInsets();
-
-  return (
-    <View>
-      <WorkoutPill />
-      <View style={[styles.bar, { paddingBottom: insets.bottom }]}>
-        {state.routes.map((route, index) => {
-          const tab = TABS[route.name];
-          if (!tab) return null;
-          const focused = state.index === index;
-          const color = focused ? COLORS.primary : COLORS.text;
-
-          function onPress() {
-            const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-            if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
-          }
-
-          return (
-            <Pressable
-              key={route.key}
-              style={styles.tab}
-              onPress={onPress}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: focused }}>
-              <View style={styles.iconSlot}>
-                {focused && <View style={styles.pill} />}
-                <tab.Icon color={color} active={focused} />
-              </View>
-              <Text style={[TYPE.miniMedium, styles.label, { color }]}>{tab.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    </View>
-  );
-}
-
-// The floating workout pill: it sits on the tab
-// bar over the page while a workout is running. ^ (or the text) reopens Log
+// The floating workout pill: it sits just above the tab bar, over the tab's
+// page, while a workout is running. Each tab screen draws it at its bottom
+// (Android's native tab bar has no room for it). ^ (or the text) reopens Log
 // Workout; the bin discards it after asking. Shows "Rest 02:45" during a rest.
 // It only follows what it shows (samePill), so typing in a set doesn't redraw it.
-function WorkoutPill() {
+export function WorkoutPill() {
   const router = useRouter();
   const workout = useActiveWorkoutSelect(wholeWorkout, samePill);
   const [discarding, setDiscarding] = useState(false);
@@ -147,14 +95,13 @@ function samePill(a: ActiveWorkout | null, b: ActiveWorkout | null) {
 const DISCARD_RED = COLORS.danger;
 
 const styles = StyleSheet.create({
-  // 12.4 from the screen edges, 71 tall, 8 above the tab bar.
+  // 12.4 from the screen edges, 71 tall, 8 above the tab bar (the bottom of the tab screen).
   workoutPill: {
     position: 'absolute',
-    left: TAB_BAR_SIZES.workoutPillLeft,
-    right: TAB_BAR_SIZES.workoutPillRight,
-    bottom: '100%',
-    marginBottom: SPACE.sm,
-    height: TAB_BAR_SIZES.workoutPillHeight,
+    left: WORKOUT_PILL_SIZES.workoutPillLeft,
+    right: WORKOUT_PILL_SIZES.workoutPillRight,
+    bottom: SPACE.sm,
+    height: WORKOUT_PILL_SIZES.workoutPillHeight,
     borderRadius: RADIUS.pill,
     paddingHorizontal: SPACE.sm,
     flexDirection: 'row',
@@ -163,8 +110,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   pillButton: {
-    width: TAB_BAR_SIZES.pillButtonWidth,
-    height: TAB_BAR_SIZES.pillButtonHeight,
+    width: WORKOUT_PILL_SIZES.pillButtonWidth,
+    height: WORKOUT_PILL_SIZES.pillButtonHeight,
     borderRadius: RADIUS.pill,
     alignItems: 'center',
     justifyContent: 'center',
@@ -180,8 +127,8 @@ const styles = StyleSheet.create({
     marginLeft: SPACE.xs,
   },
   pillDot: {
-    width: TAB_BAR_SIZES.pillDotWidth,
-    height: TAB_BAR_SIZES.pillDotHeight,
+    width: WORKOUT_PILL_SIZES.pillDotWidth,
+    height: WORKOUT_PILL_SIZES.pillDotHeight,
     borderRadius: RADIUS.pill,
     marginRight: SPACE.md,
     backgroundColor: COLORS.done,
@@ -199,32 +146,5 @@ const styles = StyleSheet.create({
     marginTop: SPACE.xxs,
     ...TYPE.callout,
     color: COLORS.textSecondary,
-  },
-  bar: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.surface,
-  },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    height: TAB_BAR_SIZES.tabHeight,
-    paddingTop: SPACE.sm,
-  },
-  iconSlot: {
-    width: TAB_BAR_SIZES.iconSlotWidth,
-    height: TAB_BAR_SIZES.iconSlotHeight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  // Drawn behind the icon rather than around it, so the icon can overflow
-  // the pill without Android clipping or squaring its corners.
-  pill: {
-    ...StyleSheet.absoluteFill,
-    borderRadius: RADIUS.pill,
-    backgroundColor: COLORS.tabIndicator,
-  },
-  label: {
-    marginTop: SPACE.xs,
-    lineHeight: LINE_HEIGHTS.tight,
   },
 });

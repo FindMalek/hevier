@@ -2,13 +2,13 @@ import http from 'node:http';
 import fs from 'node:fs';
 import { pipeline } from 'node:stream/promises';
 import { KEY_HEADER, isValidPath } from '../shared/sync-protocol';
-import type { BeginRequest, Manifest } from '../shared/sync-types';
+import type { BeginRequest, Manifest, Refusal } from '../shared/sync-types';
 import { StoreError, type Store } from './store';
 
 // What the window prints as it happens (main.ts).
 export type SyncEvent =
   | { type: 'received'; manifest: Manifest }
-  | { type: 'refused'; reason: 'fewer' | 'otherDevice'; phoneWorkouts: number; pcWorkouts: number }
+  | { type: 'refused'; reason: Refusal['reason']; phoneWorkouts: number; pcWorkouts: number }
   | { type: 'restore' };
 
 function send(res: http.ServerResponse, status: number, body: unknown) {

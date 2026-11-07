@@ -28,6 +28,8 @@ export function syncMessage(result: SyncResult, usb = false): string {
       return "This PC doesn't know this phone. Scan the QR again.";
     case 'fewer':
       return `Your phone has fewer workouts than the PC copy (${result.phoneWorkouts} vs ${result.pc?.workouts}). Not sent.`;
+    case 'older':
+      return "This phone's last workout is older than the one in the PC copy. Not sent.";
     case 'otherDevice':
       return 'This copy came from another phone. Replace it?';
     case 'error':

@@ -164,8 +164,9 @@ export function useRoutineDrag({
   );
 
   // Every frame while lifted: follow the finger, scroll near the edges,
-  // update the gap.
-  useFrameCallback(() => {
+  // update the gap. Off until a card is lifted: left on, it would wake the
+  // phone on every screen refresh, even with the Workout tab out of sight.
+  const frame = useFrameCallback(() => {
     const s = dragging.get();
     if (s < 0 || dropping.get()) return;
     const fromTop = finger.get() - listTop.get();
@@ -186,7 +187,8 @@ export function useRoutineDrag({
       if (target.get() >= 0) scheduleOnRN(moved);
       target.set(t);
     }
-  });
+  }, false);
+  const follow = useCallback((on: boolean) => frame.setActive(on), [frame]);
 
   const pan = useCallback(
     (index: number) =>
@@ -204,6 +206,7 @@ export function useRoutineDrag({
           target.set(-1);
           lift.set(withSpring(1, ROUTINE_DRAG_MOTION.liftSpring));
           scheduleOnRN(lifted, index);
+          scheduleOnRN(follow, true);
         })
         .onUpdate((e) => {
           finger.set(e.absoluteY);
@@ -228,13 +231,14 @@ export function useRoutineDrag({
           );
         })
         .onFinalize((_, success) => {
+          scheduleOnRN(follow, false);
           if (success || dragging.get() !== index || dropping.get()) return;
           dragging.set(-1);
           target.set(-1);
           lift.set(0);
           scheduleOnRN(cancelled);
         }),
-    [listRef, listTop, dragging, fingerStart, finger, scrollStart, scroll, top, boxes, target, lift, dropping, slotTop, lifted, cancelled, dropped]
+    [listRef, listTop, dragging, fingerStart, finger, scrollStart, scroll, top, boxes, target, lift, dropping, slotTop, lifted, cancelled, dropped, follow]
   );
 
   const ghostStyle = useAnimatedStyle(() => ({
