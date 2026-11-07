@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lastSyncedLabel, restoreMessage, syncMessage } from './format';
+import { lastSyncedLabel, pairMessage, restoreMessage, syncMessage } from './format';
 
 describe('lastSyncedLabel', () => {
   const now = new Date(2026, 9, 24, 20, 0);
@@ -30,5 +30,14 @@ describe('restoreMessage', () => {
     expect(restoreMessage({ deviceId: 'a', date, workouts: 312, files: [] }, new Date(2026, 9, 25, 9, 0))).toBe(
       'Restore from PC?\n\nBackup from 24 Oct 18:42, 312 workouts. This replaces everything on this phone, including a workout in progress.'
     );
+  });
+});
+
+describe('pairMessage', () => {
+  it('names the host, and warns when it is outside the local network', () => {
+    expect(pairMessage({ host: '192.168.1.23', port: 4873, key: '' }, true)).toMatch(/^Pair with 192\.168\.1\.23:4873\?/);
+    const warning = pairMessage({ host: 'evil.example.com', port: 4873, key: '' }, false);
+    expect(warning).toContain('evil.example.com:4873 is outside your local network');
+    expect(warning).toContain('Only continue if you know this address');
   });
 });

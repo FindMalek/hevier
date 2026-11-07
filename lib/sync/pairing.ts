@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ASYNC_STORAGE_KEYS } from '@/constants/storage';
+import { ASYNC_STORAGE_KEYS, LOCAL_HOST_PATTERNS } from '@/constants/storage';
 import type { Pairing } from '@/types/sync';
 
 // Which PC this phone syncs with, read from the QR code in the Hevier Sync
@@ -10,17 +10,28 @@ import type { Pairing } from '@/types/sync';
 export function parsePairLink(text: string): Pairing | null {
   const match = /^hevier:\/\/pair\?(.*)$/.exec(text.trim());
   if (!match) return null;
-  const params = new Map(
-    match[1].split('&').map((part) => {
-      const [k, v = ''] = part.split('=');
-      return [k, decodeURIComponent(v)] as const;
-    })
-  );
+  let params: Map<string, string>;
+  try {
+    params = new Map(
+      match[1].split('&').map((part) => {
+        const [k, v = ''] = part.split('=');
+        return [k, decodeURIComponent(v)] as const;
+      })
+    );
+  } catch {
+    return null;
+  }
   const host = params.get('host') ?? '';
   const port = Number(params.get('port'));
   const key = params.get('key') ?? '';
   if (!/^[A-Za-z0-9.-]+$/.test(host) || !Number.isInteger(port) || port <= 0 || !/^[0-9a-f]{32}$/.test(key)) return null;
   return { host, port, key };
+}
+
+// True for a PC on the same network or cable: a pairing with any other host
+// would send the whole backup out of the house.
+export function isLocalHost(host: string): boolean {
+  return LOCAL_HOST_PATTERNS.some((pattern) => pattern.test(host));
 }
 
 export async function getPairing(): Promise<Pairing | null> {

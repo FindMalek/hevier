@@ -54,6 +54,17 @@ export const SYNC_HOSTS = {
   usb: '127.0.0.1', // over the USB cable (adb reverse maps the phone's port to the PC's)
 };
 
+// Hosts that count as a PC on the same network or cable (lib/sync/pairing.ts).
+export const LOCAL_HOST_PATTERNS: readonly RegExp[] = [
+  /^localhost$/i,
+  /\.local$/i,
+  /^127\.\d+\.\d+\.\d+$/,
+  /^10\.\d+\.\d+\.\d+$/,
+  /^192\.168\.\d+\.\d+$/,
+  /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/,
+  /^169\.254\.\d+\.\d+$/,
+];
+
 // The home-screen widgets' saved data (Android SharedPreferences). Only the
 // Kotlin side reads and writes these (modules/home-widgets/.../HomeWidgets.kt,
 // PREFS and KEY): listed here so no other key clashes; they must match it.
