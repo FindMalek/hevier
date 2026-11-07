@@ -145,10 +145,11 @@ export default function LogWorkout() {
         onFinish={finish}
       />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: resting ? 120 : 48 }} keyboardShouldPersistTaps="handled">
-        <WorkoutStatsRow workout={workout} onDuration={openDuration} />
-        <Divider />
+      {/* Duration · Volume · Sets stay pinned under the header while the exercises scroll. */}
+      <WorkoutStatsRow workout={workout} onDuration={openDuration} />
+      <Divider />
 
+      <ScrollView contentContainerStyle={{ paddingBottom: resting ? 120 : 48 }} keyboardShouldPersistTaps="handled">
         {workout.exercises.map((exercise) => (
           <LogExercise
             key={exercise.key}
