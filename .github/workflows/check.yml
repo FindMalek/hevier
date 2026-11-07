@@ -21,7 +21,7 @@ jobs:
           fetch-depth: 0 # Sonar needs the history to tell new code from old
 
       # The pnpm version comes from "packageManager" in the root package.json.
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
 
       - uses: actions/setup-node@v4
         with:
@@ -37,10 +37,10 @@ jobs:
       - name: Generate Expo types
         working-directory: apps/mobile
         run: |
-          CI=1 ./node_modules/.bin/expo start --port 8099 > expo-start.log 2>&1 &
+          CI=1 ./node_modules/.bin/expo start --port 8099 > "$RUNNER_TEMP/expo-start.log" 2>&1 &
           for i in $(seq 1 90); do [ -f .expo/types/router.d.ts ] && break; sleep 1; done
           kill $! 2>/dev/null || true
-          test -f expo-env.d.ts && test -f .expo/types/router.d.ts || { cat expo-start.log; exit 1; }
+          test -f expo-env.d.ts && test -f .expo/types/router.d.ts || { cat "$RUNNER_TEMP/expo-start.log"; exit 1; }
 
       - name: Cache Turborepo
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
