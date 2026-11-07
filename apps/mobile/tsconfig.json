@@ -1,5 +1,5 @@
 {
-  "extends": ["expo/tsconfig.base", "@hevier/config-typescript/base.json"],
+  "extends": ["@hevier/config-typescript/base.json", "expo/tsconfig.base"],
   "compilerOptions": {
     "paths": {
       "@/*": [

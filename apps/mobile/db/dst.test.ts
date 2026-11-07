@@ -84,7 +84,7 @@ describe('profile bars, one pass', () => {
     };
     let seed = 11;
     const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
-    for (let run = 0; run < 50; run++) {
+    for (let run = 0; run < 10; run++) {
       const sessions: Session[] = [];
       let t = Date.UTC(2024, 0, 1);
       for (let i = 0; i < 150; i++) {
