@@ -70,7 +70,7 @@ test.describe('layout', () => {
   test('download buttons match the release state', async ({ page }) => {
     const hasApk = process.env.NEXT_PUBLIC_HAS_APK_RELEASE === 'true';
     await openPage(page, { hideChrome: false });
-    const label = hasApk ? /Download for Android|Get the APK/ : /Get it on GitHub|^Get Hevier$/;
+    const label = hasApk ? /Download for Android|Get the APK/ : /Build from source|^Get Hevier$/;
     const links = page.getByRole('link', { name: label });
     expect(await links.count()).toBeGreaterThanOrEqual(3);
     for (const href of await links.evaluateAll((nodes) => nodes.map((n) => n.getAttribute('href')))) {

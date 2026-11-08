@@ -9,7 +9,7 @@ export function Get() {
         <div className="section-head center" data-reveal>
           <p className="eyebrow">Get Hevier</p>
           <h2 id="get-title" className="h2">
-            Free to download.
+            {HAS_APK_RELEASE ? 'Free to download.' : 'Free to run.'}
             <br />
             Open to read.
           </h2>
@@ -48,7 +48,7 @@ export function Get() {
             </p>
             <pre className="code" tabIndex={0} aria-label="Commands to run Hevier from source">
               <code>
-                <span>$ </span>git clone {SITE.repo}.git{'\n'}
+                <span>$ </span>git clone {SITE.repo}{'\n'}
                 <span>$ </span>pnpm install{'\n'}
                 <span>$ </span>pnpm android
               </code>
