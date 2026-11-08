@@ -1,5 +1,7 @@
 // Serves the static export in out/ for Playwright and local checks: node scripts/serve-out.mjs
-import { createReadStream, existsSync, statSync } from 'node:fs';
+// Requests are looked up in a map built once from the files in out/, so a request path never
+// reaches the filesystem.
+import { createReadStream, readdirSync } from 'node:fs';
 import { createServer } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,18 +23,36 @@ const TYPES = {
   '.svg': 'image/svg+xml',
 };
 
-function resolveFile(urlPath) {
-  const clean = decodeURIComponent(urlPath.split('?')[0]);
-  const candidate = path.normalize(path.join(root, clean));
-  if (!candidate.startsWith(root)) return null;
-  if (existsSync(candidate) && statSync(candidate).isFile()) return candidate;
-  const index = path.join(candidate, 'index.html');
-  if (existsSync(index)) return index;
-  return null;
+function indexFiles(dir, urlPrefix, files) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const url = `${urlPrefix}/${entry.name}`;
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      indexFiles(file, url, files);
+      continue;
+    }
+    files.set(url, file);
+    if (entry.name === 'index.html') files.set(urlPrefix === '' ? '/' : urlPrefix, file);
+  }
+  return files;
+}
+
+const files = indexFiles(root, '', new Map());
+
+function lookup(requestUrl) {
+  const [pathname] = requestUrl.split('?');
+  let decoded;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    return undefined;
+  }
+  const trimmed = decoded.length > 1 && decoded.endsWith('/') ? decoded.slice(0, -1) : decoded;
+  return files.get(trimmed);
 }
 
 createServer((req, res) => {
-  const file = resolveFile(req.url ?? '/');
+  const file = lookup(req.url ?? '/');
   if (!file) {
     res.writeHead(404, { 'content-type': 'text/plain' });
     res.end('Not found');
