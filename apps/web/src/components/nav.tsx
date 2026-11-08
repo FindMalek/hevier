@@ -1,6 +1,6 @@
 import Image from 'next/image';
-import { CTA, NAV_LINKS } from '@/lib/site';
-import { DownloadIcon } from './icons';
+import { CTA, HAS_APK_RELEASE, NAV_LINKS } from '@/lib/site';
+import { DownloadIcon, TerminalIcon } from './icons';
 
 export function Nav() {
   return (
@@ -18,7 +18,7 @@ export function Nav() {
           ))}
         </nav>
         <a href={CTA.href} className="btn btn-primary btn-sm">
-          <DownloadIcon size={16} />
+          {HAS_APK_RELEASE ? <DownloadIcon size={16} /> : <TerminalIcon size={16} />}
           {CTA.navLabel}
         </a>
       </div>

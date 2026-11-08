@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { CTA, HAS_APK_RELEASE, SITE } from '@/lib/site';
-import { ArrowRightIcon, DownloadIcon, GithubIcon } from './icons';
+import { ArrowRightIcon, DownloadIcon, GithubIcon, TerminalIcon } from './icons';
 
 export function Get() {
   return (
@@ -26,7 +26,7 @@ export function Get() {
             </p>
             <div className="cta-row" style={{ justifyContent: 'flex-start' }}>
               <a href={CTA.href} className="btn btn-primary">
-                <DownloadIcon />
+                {HAS_APK_RELEASE ? <DownloadIcon /> : <TerminalIcon />}
                 {CTA.label}
               </a>
             </div>

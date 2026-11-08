@@ -68,6 +68,16 @@ export function ExternalIcon({ size = 14, className }: IconProps) {
   );
 }
 
+export function TerminalIcon({ size = 20, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <rect x="3" y="4" width="18" height="16" rx="3.5" />
+      <path d="m7.5 10 3 2.5-3 2.5" />
+      <path d="M13 15.5h3.5" />
+    </svg>
+  );
+}
+
 export function MedalIcon({ size = 14, className }: IconProps) {
   return (
     <svg {...base(size)} strokeWidth={2.4} className={className}>

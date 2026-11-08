@@ -1,5 +1,5 @@
 import { CTA, HAS_APK_RELEASE, SITE } from '@/lib/site';
-import { DownloadIcon, GithubIcon } from './icons';
+import { DownloadIcon, GithubIcon, TerminalIcon } from './icons';
 import { Phone } from './phone';
 
 export function Hero() {
@@ -23,7 +23,7 @@ export function Hero() {
           </p>
           <div className="cta-row" data-rise style={{ '--i': 3 } as React.CSSProperties}>
             <a href={CTA.href} className="btn btn-primary">
-              <DownloadIcon />
+              {HAS_APK_RELEASE ? <DownloadIcon /> : <TerminalIcon />}
               {CTA.label}
             </a>
             <a href={SITE.repo} className="btn btn-glass">
