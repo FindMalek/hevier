@@ -198,6 +198,14 @@ describe('transformRows', () => {
   });
 });
 
+describe('transformRows (end time)', () => {
+  it('skips a row whose end time cannot be read, with the reason', () => {
+    const result = transformRows([row({ rowNumber: 4, end_time: 'later' })]);
+    expect(result.workouts).toEqual([]);
+    expect(result.skipped).toEqual([{ row: 4, reason: 'Could not parse date: "later"' }]);
+  });
+});
+
 describe('dates', () => {
   const rows = [row({ start_time: 'Oct 13, 2026, 6:44 PM', end_time: 'Oct 13, 2026, 7:28 PM' })];
 

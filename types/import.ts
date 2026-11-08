@@ -81,6 +81,18 @@ export interface DateParts {
   second: number;
 }
 
+// One CSV row, read in full (scripts/import/parseCsv.ts).
+export interface ParsedRow {
+  rowNumber: number;
+  title: string;
+  description: string | null;
+  startTime: string;
+  endTime: string | null;
+  exerciseName: string;
+  notes: string | null;
+  set: TransformedSet;
+}
+
 export interface ImportResult {
   bytes: Uint8Array;
   skipped: SkippedRow[];

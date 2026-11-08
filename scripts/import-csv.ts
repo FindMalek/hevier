@@ -28,7 +28,7 @@ export async function importCsvToDatabase(
   const parsed = parseCsvText(csvText);
   const transformed = transformRows(parsed.rows, options);
   const { exerciseTypes, workouts } = transformed;
-  const skipped = [...parsed.skipped, ...transformed.skipped].sort((a, b) => a.row - b.row);
+  const skipped = [...parsed.skipped, ...transformed.skipped].sort((earlier, later) => earlier.row - later.row);
   const total = parsed.rows.length + parsed.skipped.length;
   if (workouts.length === 0 || skipped.length > total * MAX_SKIPPED_SHARE) {
     const reading = workouts.length === 0 ? 'No workouts could be read from the CSV' : 'Too many CSV rows could not be read';
