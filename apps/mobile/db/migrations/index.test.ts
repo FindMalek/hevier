@@ -215,4 +215,28 @@ describe('runMigrations', () => {
     expect(rawDb.exec("SELECT exercise_id FROM workout_exercises WHERE id = 'we'")[0].values[0]).toEqual(['lp']);
     expect(rawDb.exec("SELECT id FROM exercises WHERE catalogue_id = '2291'")).toEqual([]); // the female copy left
   });
+
+  it('rolls back a migration that fails halfway so a retry can succeed', async () => {
+    const rawDb = new SQL.Database();
+    for (const m of MIGRATIONS.slice(0, 8)) rawDb.exec(m.sql);
+    rawDb.exec('PRAGMA user_version = 8');
+    rawDb.exec(`
+      INSERT INTO exercises (id, name, type) VALUES ('sq', 'Squat', 'weight_reps');
+      INSERT INTO workouts (id, title, start_time) VALUES ('w', 'LOWER A', '2026-10-06T18:56:00Z');
+      INSERT INTO workout_exercises (id, workout_id, exercise_id, order_index) VALUES ('we', 'w', 'sq', 0);
+      INSERT INTO sets (id, workout_exercise_id, set_index, set_type, weight_kg, reps) VALUES ('s1', 'we', 0, 'normal', 100, 10);
+      CREATE TABLE routine_sets_new (id TEXT);
+    `);
+    const db = wrap(rawDb);
+
+    await expect(runMigrations(db)).rejects.toThrow();
+    expect(rawDb.exec('PRAGMA user_version')[0].values[0][0]).toBe(8);
+    expect(() => rawDb.exec(`INSERT INTO sets (id, workout_exercise_id, set_index, set_type) VALUES ('x', 'we', 1, 'warmup')`)).toThrow();
+
+    rawDb.exec('DROP TABLE routine_sets_new');
+    await runMigrations(db);
+
+    expect(rawDb.exec('PRAGMA user_version')[0].values[0][0]).toBe(MIGRATIONS.length);
+    expect(rawDb.exec('SELECT id FROM sets')[0].values).toEqual([['s1']]);
+  });
 });
