@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ActiveSet } from '@/types/workout';
 import type { Bests } from '@/types/records';
-import { epley1RM, setRecords, workoutRecordCounts, workoutRecords } from './records';
+import { epley1RM, exerciseBests, setRecords, workoutRecordCounts, workoutRecords } from './records';
 
 const set = (weight: string, reps: string, done = true, extra: Partial<ActiveSet> = {}): ActiveSet => ({
   key: `${weight}x${reps}`,
@@ -55,6 +55,17 @@ describe('personal records', () => {
     expect(setRecords('weight_reps', bests, [undone, second], 'second').map((r) => r.kind)).toEqual(['oneRm', 'volume']);
   });
 
+  it('a warm-up set has no records and does not raise the bar for the next set', () => {
+    const warmup = set('120', '3', true, { key: 'warmup', setType: 'warmup' });
+    const working = set('85', '8');
+    expect(setRecords('weight_reps', bests, [warmup], 'warmup')).toEqual([]);
+    expect(setRecords('weight_reps', bests, [warmup, working], working.key).map((r) => r.kind)).toEqual([
+      'weight',
+      'oneRm',
+      'volume',
+    ]);
+  });
+
   it('no history, no records: the first time is not a PR', () => {
     const s = set('80', '10');
     expect(setRecords('weight_reps', null, [s], s.key)).toEqual([]);
@@ -85,6 +96,7 @@ describe('records per saved workout', () => {
     workoutId,
     exerciseId,
     type: 'weight_reps' as const,
+    setType: 'normal' as const,
     weightKg,
     reps,
     durationSeconds: null,
@@ -105,6 +117,25 @@ describe('records per saved workout', () => {
       ['w3', 2],
     ]);
   });
+  it('ignores warm-up sets: no record, and they do not raise the bar', () => {
+    const warmup = { ...s('w2', 120, 3), setType: 'warmup' as const };
+    const { counts, recordSets } = workoutRecords([s('w1', 80, 10), warmup, s('w3', 85, 5)]);
+    expect([...counts]).toEqual([
+      ['w1', 0],
+      ['w2', 0],
+      ['w3', 1],
+    ]);
+    expect(recordSets).toEqual([false, false, true]);
+  });
+
+  it('keeps warm-up sets out of the stored bests', () => {
+    const rows = [s('w1', 80, 10), { ...s('w1', 120, 3), setType: 'warmup' as const }].map(
+      ({ workoutId: _w, type: _t, ...row }) => row
+    );
+    expect(exerciseBests(rows).get('bench')?.weightKg).toBe(80);
+    expect(exerciseBests([rows[1]]).size).toBe(0);
+  });
+
   it('lists what each workout beat, with the new best (the PR cards)', () => {
     const { records } = workoutRecords([s('w1', 80, 10), s('w2', 85, 5), s('w2', 86, 5), s('w3', 80, 12)]);
     expect(records.get('w1')).toBeUndefined();

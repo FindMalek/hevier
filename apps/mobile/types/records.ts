@@ -1,5 +1,6 @@
 import type { RECORD_KINDS } from '@/constants/records';
 import type { ExerciseType } from './exercise';
+import type { SetType } from './workout';
 
 // An exercise's best values (lib/stats/records.ts).
 export interface Bests {
@@ -28,6 +29,7 @@ export interface HistorySet {
   workoutId: string;
   exerciseId: string;
   type: ExerciseType;
+  setType: SetType;
   weightKg: number | null;
   reps: number | null;
   durationSeconds: number | null;
