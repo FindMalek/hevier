@@ -1,5 +1,6 @@
 import { KEY_HEADER } from '@/shared/sync-protocol';
 import type { BeginRequest, BeginResponse, Refusal, StatusResponse } from '@/shared/sync-types';
+import { acquireSyncLock } from './lock';
 import { baseUrl, getPairing, setLastSynced } from './pairing';
 import { SYNC_TIMEOUTS } from '@/constants/motion';
 import { SYNC_HOSTS } from '@/constants/storage';
@@ -58,10 +59,19 @@ export async function fetchStatus(pairing: Pairing, timeoutMs = SYNC_TIMEOUTS.re
   return (await res.json()) as StatusResponse;
 }
 
-export async function syncNow(
-  io: SyncIO,
-  opts: { force?: boolean; timeoutMs?: number; pairing?: Pairing | null } = {}
-): Promise<SyncResult> {
+type SyncOptions = { force?: boolean; timeoutMs?: number; pairing?: Pairing | null };
+
+export async function syncNow(io: SyncIO, opts: SyncOptions = {}): Promise<SyncResult> {
+  const release = acquireSyncLock();
+  if (!release) return { ok: false, reason: 'busy' };
+  try {
+    return await runSync(io, opts);
+  } finally {
+    release();
+  }
+}
+
+async function runSync(io: SyncIO, opts: SyncOptions): Promise<SyncResult> {
   const pairing = opts.pairing !== undefined ? opts.pairing : await getPairing();
   if (!pairing) return { ok: false, reason: 'notPaired' };
   const base = baseUrl(pairing);

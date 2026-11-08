@@ -17,7 +17,7 @@ export interface SyncIO {
 
 export type SyncFailure = {
   ok: false;
-  reason: 'notPaired' | 'pcNotFound' | 'wrongKey' | Refusal['reason'] | 'error';
+  reason: 'notPaired' | 'pcNotFound' | 'wrongKey' | 'busy' | Refusal['reason'] | 'error';
   pc?: Refusal['pc'];
   phoneWorkouts?: number;
 };

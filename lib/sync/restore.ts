@@ -1,5 +1,6 @@
 import { KEY_HEADER } from '@/shared/sync-protocol';
 import { fetchStatus } from './client';
+import { acquireSyncLock } from './lock';
 import { baseUrl } from './pairing';
 import { adoptDeviceId } from './deviceId';
 import type { Pairing, SyncFailure, SyncIO } from '@/types/sync';
@@ -8,6 +9,16 @@ import type { Pairing, SyncFailure, SyncIO } from '@/types/sync';
 // file is downloaded and checked first; any failure leaves the phone as it was.
 // The phone then takes the copy's device id, so its next syncs replace that copy.
 export async function restoreFromPc(io: SyncIO, pairing: Pairing): Promise<{ ok: true } | SyncFailure> {
+  const release = acquireSyncLock();
+  if (!release) return { ok: false, reason: 'busy' };
+  try {
+    return await restore(io, pairing);
+  } finally {
+    release();
+  }
+}
+
+async function restore(io: SyncIO, pairing: Pairing): Promise<{ ok: true } | SyncFailure> {
   const status = await fetchStatus(pairing);
   if ('ok' in status) return status;
   if (!status.backup) return { ok: false, reason: 'error' };
@@ -24,7 +35,9 @@ export async function restoreFromPc(io: SyncIO, pairing: Pairing): Promise<{ ok:
     }
   }
   await io.replaceAll(files.map((f) => f.path));
-  await adoptDeviceId(status.backup.deviceId);
+  // The data is already back: failing to note the copy's id only means the next
+  // sync asks once ("another phone"), so it must not turn the restore into an error.
+  await adoptDeviceId(status.backup.deviceId).catch((e) => console.warn('[sync] could not keep the restored device id', e));
   await io.cleanup();
   return { ok: true };
 }

@@ -32,6 +32,8 @@ export function syncMessage(result: SyncResult, usb = false): string {
       return "This phone's last workout is older than the one in the PC copy. Not sent.";
     case 'otherDevice':
       return 'This copy came from another phone. Replace it?';
+    case 'busy':
+      return 'Another sync or restore is still running. Try again in a moment.';
     case 'error':
       return 'Sync failed. Try again.';
   }
