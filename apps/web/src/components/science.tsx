@@ -102,10 +102,10 @@ export function Science() {
           </div>
           <div>
             <p className="link-stack">
-              <a className="text-link" href={`${SITE.scienceDocs}/recovery.md`}>
+              <a className="text-link" href={SITE.scienceRecovery}>
                 Read the recovery notes
               </a>
-              <a className="text-link" href={`${SITE.scienceDocs}/sets.md`}>
+              <a className="text-link" href={SITE.scienceSets}>
                 Read the set notes
               </a>
             </p>

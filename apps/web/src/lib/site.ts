@@ -24,6 +24,8 @@ export const SITE = {
   contributing: `${REPO}/blob/main/CONTRIBUTING.md`,
   license: `${REPO}/blob/main/LICENSE`,
   scienceDocs: `${REPO}/tree/main/docs/science`,
+  scienceRecovery: `${REPO}/blob/main/docs/science/recovery.md`,
+  scienceSets: `${REPO}/blob/main/docs/science/sets.md`,
   readme: `${REPO}#readme`,
   getStarted: `${REPO}#getting-started`,
 } as const;

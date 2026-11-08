@@ -83,8 +83,8 @@ export const FAQ_ITEMS: Item[] = [
           stopped short.
         </p>
         <p>
-          Read <a href={`${SITE.scienceDocs}/recovery.md`}>the recovery notes</a> and{' '}
-          <a href={`${SITE.scienceDocs}/sets.md`}>the set notes</a>.
+          Read <a href={SITE.scienceRecovery}>the recovery notes</a> and{' '}
+          <a href={SITE.scienceSets}>the set notes</a>.
         </p>
       </>
     ),
