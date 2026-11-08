@@ -8,6 +8,8 @@ permissions:
 
 jobs:
   review:
+    # Needs Settings > Security > Dependency graph; set the DEPENDENCY_REVIEW variable to true once it is on.
+    if: vars.DEPENDENCY_REVIEW == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
