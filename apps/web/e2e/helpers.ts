@@ -1,14 +1,15 @@
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
+import { progressFromHours } from '../src/lib/afterglow';
 
 export const SECTIONS = [
   'hero',
-  'facts',
-  'features',
-  'recovery',
+  'what',
+  'sets',
+  'week',
   'science',
-  'widgets',
+  'moments',
   'privacy',
-  'compare',
+  'free',
   'run-recovery',
   'faq',
   'get',
@@ -17,7 +18,14 @@ export const SECTIONS = [
 
 const STILL = '.nav, .skip-link { visibility: hidden !important; }';
 
-export async function openPage(page: Page, { hideChrome = true }: { hideChrome?: boolean } = {}) {
+interface OpenOptions {
+  hideChrome?: boolean;
+  // The hero only pins and scrubs when the visitor has not asked for reduced motion.
+  motion?: boolean;
+}
+
+export async function openPage(page: Page, { hideChrome = true, motion = false }: OpenOptions = {}) {
+  if (motion) await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.goto('/', { waitUntil: 'load' });
   if (hideChrome) await page.addStyleTag({ content: STILL });
   await loadEverything(page);
@@ -32,4 +40,21 @@ export async function loadEverything(page: Page) {
     await document.fonts.ready;
   });
   await page.waitForTimeout(150);
+}
+
+// The colour the hero writes for muscles with the longest window: red at 0 h, green at 96 h.
+export const longColour = (page: Page) =>
+  page.locator('[data-ag]').evaluate((el) => (el as HTMLElement).style.getPropertyValue('--w3').trim());
+
+// Scrolls the pinned hero to the point where the clock reads `hours` and waits for it to settle.
+export async function scrubTo(page: Page, hours: number) {
+  const p = progressFromHours(hours);
+  await page.evaluate((progress) => {
+    const track = document.querySelector<HTMLElement>('[data-ag-track]');
+    const pin = document.querySelector<HTMLElement>('[data-ag-pin]');
+    if (!track || !pin) throw new Error('hero not found');
+    const top = track.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: top + progress * (track.offsetHeight - pin.offsetHeight), behavior: 'instant' });
+  }, p);
+  await expect.poll(async () => Number(await page.locator('[data-ag-slider]').inputValue()), { timeout: 4000 }).toBeCloseTo(hours, 0);
 }

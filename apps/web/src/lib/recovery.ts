@@ -114,23 +114,7 @@ export const MUSCLE_LABELS: Record<MuscleKey, string> = {
   CALVES: 'Calves',
 };
 
-export const DEFAULT_SESSION: SessionId = 'full';
-export const DEFAULT_HOURS = 20;
-
 export const MUSCLE_KEYS = Object.keys(MUSCLE_LABELS) as MuscleKey[];
-
-export function sessionById(id: SessionId): Session {
-  return SESSIONS.find((s) => s.id === id) ?? SESSIONS[0];
-}
-
-// CSS custom properties the body map reads: --f-CHEST: url(#g-heavy), and so on.
-export function fillVars(session: Session, hours: number): Record<string, string> {
-  const vars: Record<string, string> = {};
-  for (const key of MUSCLE_KEYS) {
-    vars[`--f-${key}`] = `url(#g-${recoveryState(session.sets[key] ?? 0, hours)})`;
-  }
-  return vars;
-}
 
 export function summarize(session: Session, hours: number): Record<RecoveryState, MuscleKey[]> {
   const out: Record<RecoveryState, MuscleKey[]> = { heavy: [], partly: [], ready: [], idle: [] };
@@ -138,4 +122,19 @@ export function summarize(session: Session, hours: number): Record<RecoveryState
     out[recoveryState(sets, hours)].push(key);
   }
   return out;
+}
+
+export const DEFAULT_SESSION: SessionId = 'full';
+export const DEFAULT_HOURS = 20;
+
+export function sessionById(id: SessionId): Session {
+  return SESSIONS.find((s) => s.id === id) ?? SESSIONS[0];
+}
+
+export function fillVars(session: Session, hours: number): Record<string, string> {
+  const vars: Record<string, string> = {};
+  for (const key of MUSCLE_KEYS) {
+    vars[`--f-${key}`] = `url(#g-${recoveryState(session.sets[key] ?? 0, hours)})`;
+  }
+  return vars;
 }

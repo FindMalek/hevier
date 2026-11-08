@@ -11,9 +11,7 @@ export function Footer() {
               <Image src="/screens/app-icon.webp" alt="" width={30} height={30} />
               Hevier
             </a>
-            <p style={{ marginTop: 14, maxWidth: 340, fontSize: 15.5, color: '#4b4b50' }}>
-              A free, open-source workout tracker. Train hard. Recover smart.
-            </p>
+            <p className="footer-tag">A free, open-source workout tracker. Train hard. Recover smart.</p>
           </div>
           <nav aria-label="Footer, site">
             <h2>Site</h2>
@@ -49,17 +47,16 @@ export function Footer() {
             </ul>
           </nav>
         </div>
-
         <p className="disclaimer" id="disclaimer">
           <b>Unofficial.</b> Hevier is a hobby project inspired by the Hevy app. It is not affiliated with, endorsed by or
           connected to Hevy or its makers. “Hevy” is their trademark. Hevier contains no Hevy code or assets.
         </p>
-
         <p className="credits">
           Body map from <a href="https://github.com/Jsplice/MuscleMap">MuscleMap</a> (MIT). Exercise catalogue from{' '}
           <a href="https://github.com/DuarteSantos8/openGym">openGym</a> (AGPL-3.0). Set in Geist, copyright 2023 Vercel,
-          under the SIL Open Font License (<a href={`${SITE.repo}/blob/main/THIRD-PARTY-NOTICES.md`}>full text</a>). Android is a trademark of Google LLC. Hevier is free software under the AGPL-3.0. This site uses no
-          cookies and no analytics. Recovery figures are estimates, not medical advice.
+          under the SIL Open Font License (<a href={`${SITE.repo}/blob/main/THIRD-PARTY-NOTICES.md`}>full text</a>). Android
+          is a trademark of Google LLC. Hevier is free software under the AGPL-3.0. This site uses no cookies and no
+          analytics. Recovery figures are estimates, not medical advice.
         </p>
       </div>
     </footer>

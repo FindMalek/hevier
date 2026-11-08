@@ -35,7 +35,7 @@ test.describe('honesty', () => {
   test('iOS and Run Recovery are labelled as not shipped', async ({ page }) => {
     await openPage(page);
     await expect(page.getByText('Coming soon', { exact: true })).toBeVisible();
-    await expect(page.getByText('Coming to iOS').first()).toBeVisible();
+    await expect(page.getByText('Coming to iOS').filter({ visible: true }).first()).toBeVisible();
     const text = (await page.locator('main').innerText()).toLowerCase();
     expect(text).not.toMatch(/available on (the )?(app store|ios)/);
     expect(text).not.toMatch(/download on the app store/);
@@ -81,47 +81,50 @@ test.describe('layout', () => {
   });
 });
 
-test.describe('recovery demo', () => {
-  test('a leg workout turns quads red then green as time passes', async ({ page }) => {
+test.describe('set counter', () => {
+  test('tapping sets changes what they are worth and the zone', async ({ page }) => {
     await openPage(page);
-    await page.getByRole('button', { name: 'Leg day' }).click();
-    const slider = page.getByLabel('Time since you trained');
-    const quadsFill = () =>
-      page.locator('.bodies').evaluate((el) => getComputedStyle(el).getPropertyValue('--f-QUADS').trim());
+    const total = page.locator('#sets .total');
+    await expect(total).toContainText('3.88');
+    await expect(page.locator('#sets .zone-copy')).toContainText('Maintenance.');
 
-    await slider.fill('6');
-    expect(await quadsFill()).toBe('url(#g-heavy)');
-    await slider.fill('40');
-    expect(await quadsFill()).toBe('url(#g-partly)');
-    await slider.fill('80');
-    expect(await quadsFill()).toBe('url(#g-ready)');
+    await page.getByRole('button', { name: 'Add a set' }).click();
+    await expect(total).toContainText('4.88');
+    await expect(page.locator('#sets .zone-copy')).toContainText('Growth zone.');
+
+    const remove = page.getByRole('button', { name: 'Remove the last set' });
+    await remove.click();
+    await remove.click();
+    await remove.click();
+    await expect(total).toContainText('2.3');
+    await expect(page.locator('#sets .zone-copy')).toContainText('Below maintenance.');
+    await expect(page.locator('#sets .helpers')).toContainText('1.15');
   });
 
-  test('keyboard users can read a muscle window', async ({ page }) => {
+  test('a set cycles from failure to reps left', async ({ page }) => {
     await openPage(page);
-    const chest = page.getByRole('button', { name: /^Chest/ });
-    await chest.focus();
-    await page.keyboard.press('Enter');
-    await expect(chest).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('.detail')).toContainText('Heavy recent load for the first');
+    await page.getByRole('button', { name: /^F failure, set 4, counts 1/ }).click();
+    await expect(page.getByRole('button', { name: /^2 reps left, set 4, counts 1/ })).toBeVisible();
+    await page.getByRole('button', { name: /^2 reps left, set 4/ }).click();
+    await expect(page.getByRole('button', { name: /^4 reps left, set 4, counts 0.86/ })).toBeVisible();
+  });
+});
+
+test.describe('week strip', () => {
+  test('planning a day changes the morning maps and the sentence', async ({ page }) => {
+    await openPage(page);
+    await page.getByRole('button', { name: /^Tuesday workout: Rest/ }).click();
+    await page.getByRole('button', { name: 'Show the recovery map for Wednesday morning' }).click();
+    const caption = page.locator('#week .week-cap');
+    await expect(caption).toContainText('Wednesday morning:');
+    await expect(caption).toContainText('chest');
+    await expect(caption).toContainText('still heavy');
   });
 
-  test('slider announces once after you stop, not on every step', async ({ page }) => {
+  test('a morning before any workout says there is nothing to recover from', async ({ page }) => {
     await openPage(page);
-    const slider = page.getByLabel('Time since you trained');
-    const live = page.locator('#recovery [role="status"]');
-    await slider.focus();
-    for (let i = 0; i < 3; i += 1) await page.keyboard.press('ArrowRight');
-    await expect(page.locator('#recovery .legend')).not.toHaveAttribute('aria-live', /.+/);
-    await expect(live).toContainText('23 hours after full body');
-  });
-
-  test('slider moves with the arrow keys', async ({ page }) => {
-    await openPage(page);
-    const slider = page.getByLabel('Time since you trained');
-    await slider.focus();
-    await page.keyboard.press('ArrowRight');
-    await expect(slider).toHaveValue('21');
+    await page.getByRole('button', { name: 'Show the recovery map for Monday morning' }).click();
+    await expect(page.locator('#week .week-cap')).toContainText('nothing trained yet');
   });
 });
 

@@ -1,17 +1,19 @@
-import { Compare } from '@/components/compare';
+import { Afterglow } from '@/components/afterglow';
+import { AfterglowDriver } from '@/components/afterglow-driver';
 import { Faq } from '@/components/faq';
-import { Features } from '@/components/features';
 import { Footer } from '@/components/footer';
+import { Free } from '@/components/free';
 import { Get } from '@/components/get';
-import { Facts, Hero } from '@/components/hero';
 import { JsonLd } from '@/components/json-ld';
+import { Moments } from '@/components/moments';
 import { Nav } from '@/components/nav';
 import { Privacy } from '@/components/privacy';
-import { RecoverySection } from '@/components/recovery-section';
 import { RevealRoot } from '@/components/reveal-root';
 import { RunRecovery } from '@/components/run-recovery';
 import { Science } from '@/components/science';
-import { Widgets } from '@/components/widgets';
+import { Sets } from '@/components/sets';
+import { Week } from '@/components/week';
+import { What } from '@/components/what';
 
 export default function Home() {
   return (
@@ -21,14 +23,14 @@ export default function Home() {
       </a>
       <Nav />
       <main id="main">
-        <Hero />
-        <Facts />
-        <Features />
-        <RecoverySection />
+        <Afterglow />
+        <What />
+        <Sets />
+        <Week />
         <Science />
-        <Widgets />
+        <Moments />
         <Privacy />
-        <Compare />
+        <Free />
         <RunRecovery />
         <Faq />
         <Get />
@@ -36,6 +38,7 @@ export default function Home() {
       <Footer />
       <JsonLd />
       <RevealRoot />
+      <AfterglowDriver />
     </>
   );
 }

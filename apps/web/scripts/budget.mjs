@@ -12,7 +12,7 @@ const BUDGET_KB = {
   'JavaScript on the home page (gzip)': 150,
   'CSS (gzip)': 20,
   'HTML of the home page (gzip)': 70,
-  'Images above the fold (icon + 3 phones)': 160,
+  'Images on the page (icon)': 20,
 };
 
 const gz = (file) => gzipSync(readFileSync(file)).length / 1024;
@@ -24,7 +24,7 @@ const measured = {
   'JavaScript on the home page (gzip)': tags.reduce((sum, [, src]) => sum + gz(path.join(out, src)), 0),
   'CSS (gzip)': styles.reduce((sum, [, href]) => sum + gz(path.join(out, href)), 0),
   'HTML of the home page (gzip)': gz(path.join(out, 'index.html')),
-  'Images above the fold (icon + 3 phones)': ['app-icon.webp', 'home.webp', 'log-workout.webp', 'recovery.webp'].reduce(
+  'Images on the page (icon)': ['app-icon.webp'].reduce(
     (sum, name) => sum + statSync(path.join(out, 'screens', name)).size / 1024,
     0,
   ),
