@@ -11,6 +11,7 @@ import { fetchStatus, getLastRefusal, onRefusalChange, overUsb, syncNow } from '
 import { expoIO } from '@/lib/sync/expoIO';
 import { lastSyncedLabel, restoreMessage, syncMessage } from '@/lib/sync/format';
 import { getLastSynced, getPairing } from '@/lib/sync/pairing';
+import { isSyncBusy } from '@/lib/sync/lock';
 import { restoreFromPc } from '@/lib/sync/restore';
 import { COLORS, LINE_HEIGHTS, TYPE } from '@/constants/theme';
 import { LAYOUT, RADIUS, SPACE } from '@/constants/layout';
@@ -63,9 +64,13 @@ export default function SyncScreen() {
   // Shows what the PC holds, then asks before replacing anything.
   async function askRestore() {
     if (!pairing || busy) return;
+    setNote(null);
+    if (isSyncBusy()) {
+      setResult({ ok: false, reason: 'busy' });
+      return;
+    }
     setBusy(true);
     setResult(null);
-    setNote(null);
     const status = await fetchStatus(pairing);
     setBusy(false);
     if ('ok' in status) setResult(status);

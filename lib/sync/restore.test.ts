@@ -9,11 +9,20 @@ import { createStore, type Store } from '@/backup-server/store';
 import { KEY_HEADER } from '@/shared/sync-protocol';
 
 const stored = new Map<string, string>();
+const storage = { failDeviceId: false };
 vi.mock('@react-native-async-storage/async-storage', () => ({
-  default: { getItem: async (k: string) => stored.get(k) ?? null, setItem: async (k: string, v: string) => void stored.set(k, v) },
+  default: {
+    getItem: async (k: string) => stored.get(k) ?? null,
+    setItem: async (k: string, v: string) => {
+      if (storage.failDeviceId && k === 'hevier.sync.deviceId') throw new Error('disk full');
+      stored.set(k, v);
+    },
+  },
 }));
 vi.mock('expo-crypto', () => ({ randomUUID: () => 'new-id' }));
-const { fetchStatus } = await import('./client');
+const { fetchStatus, quietSync, syncNow } = await import('./client');
+const { getDeviceId } = await import('./deviceId');
+const { isSyncBusy } = await import('./lock');
 const { restoreFromPc } = await import('./restore');
 type SyncIO = import('@/types/sync').SyncIO;
 type Pairing = import('@/types/sync').Pairing;
@@ -26,18 +35,21 @@ beforeEach(async () => {
   const server = createServer(store);
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   pairing = { host: '127.0.0.1', port: (server.address() as AddressInfo).port, key: store.key() };
+  stored.clear();
+  storage.failDeviceId = false;
+  stored.set('hevier.sync.pairing', JSON.stringify(pairing));
   return () => new Promise<void>((resolve) => server.close(() => resolve()));
 });
 
 // Puts a copy on the PC the way a phone would.
-async function pcHolds(files: Record<string, string>, workouts = 312) {
+async function pcHolds(files: Record<string, string>, workouts = 312, lastWorkout?: string) {
   const headers = { [KEY_HEADER]: store.key(), 'content-type': 'application/json' };
   const base = `http://127.0.0.1:${pairing.port}`;
   const list = Object.entries(files).map(([p, b]) => ({ path: p, size: Buffer.byteLength(b) }));
   await fetch(`${base}/begin`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ deviceId: 'phone-a', date: '2026-10-24T16:42:00.000Z', workouts, files: list }),
+    body: JSON.stringify({ deviceId: 'phone-a', date: '2026-10-24T16:42:00.000Z', workouts, lastWorkout, files: list }),
   });
   for (const [p, b] of Object.entries(files)) {
     await fetch(`${base}/file?path=${encodeURIComponent(p)}`, { method: 'PUT', headers, body: b });
@@ -46,25 +58,39 @@ async function pcHolds(files: Record<string, string>, workouts = 312) {
 }
 
 // The new phone: downloads land in a staging folder; replaceAll records what
-// would replace the phone's data.
-function fakePhone(opts: { truncate?: string } = {}) {
+// would replace the phone's data. `hold` pauses each download once it is on
+// disk (`downloaded` says the first one is); `wipeOnCleanup` makes cleanup
+// delete the staged files like the real one. `stall` writes the first bytes of
+// a download and then never answers, ignoring the abort, like a dropped Wi-Fi.
+function fakePhone(opts: { truncate?: string; hold?: Promise<void>; wipeOnCleanup?: boolean; stall?: boolean; failReplace?: Error } = {}) {
+  let firstDownloaded = () => {};
+  const downloaded = new Promise<void>((resolve) => (firstDownloaded = resolve));
   const staging = fs.mkdtempSync(path.join(os.tmpdir(), 'hevier-staging-'));
   const replaced: string[][] = [];
   const io: SyncIO = {
     snapshot: async () => ({ deviceId: 'x', workouts: 0, lastWorkout: null, files: [] }),
     upload: async () => 200,
-    cleanup: async () => {},
+    cleanup: async () => {
+      if (opts.wipeOnCleanup) fs.rmSync(staging, { recursive: true, force: true });
+    },
     download: async (url, p, headers) => {
       const res = await fetch(url, { headers });
       let body = Buffer.from(await res.arrayBuffer());
       if (p === opts.truncate) body = body.subarray(0, 1);
       fs.mkdirSync(path.dirname(path.join(staging, p)), { recursive: true });
-      fs.writeFileSync(path.join(staging, p), body);
+      fs.writeFileSync(path.join(staging, p), opts.stall ? body.subarray(0, 1) : body);
+      if (opts.stall) return new Promise<never>(() => {});
+      firstDownloaded();
+      await opts.hold;
       return { status: res.status, size: body.length };
     },
-    replaceAll: async (paths) => void replaced.push(paths),
+    replaceAll: async (paths) => {
+      if (opts.failReplace) throw opts.failReplace;
+      if (paths.some((p) => !fs.existsSync(path.join(staging, p)))) throw new Error('staged files are gone');
+      replaced.push(paths);
+    },
   };
-  return { io, replaced, staged: (p: string) => fs.readFileSync(path.join(staging, p), 'utf8') };
+  return { io, replaced, downloaded, staged: (p: string) => fs.readFileSync(path.join(staging, p), 'utf8') };
 }
 
 describe('fetchStatus', () => {
@@ -98,6 +124,67 @@ describe('restoreFromPc', () => {
     await pcHolds({ 'hevier.db': 'db-1', 'media/a.jpg': 'photo-a' });
     const phone = fakePhone({ truncate: 'media/a.jpg' });
     expect(await restoreFromPc(phone.io, pairing)).toMatchObject({ ok: false, reason: 'error' });
+    expect(phone.replaced).toEqual([]);
+  });
+
+  it('a restored phone syncs on as the phone the copy came from, not as older or another phone', async () => {
+    await pcHolds({ 'hevier.db': 'db-1' }, 312, '2026-11-06T15:31:57.722Z');
+    expect(await restoreFromPc(fakePhone().io, pairing)).toEqual({ ok: true });
+    const phone = fakePhone();
+    phone.io.snapshot = async () => ({
+      deviceId: await getDeviceId(),
+      workouts: 312,
+      lastWorkout: '2026-11-06T15:31:57.722Z',
+      files: [{ path: 'hevier.db', size: 4 }],
+    });
+    phone.io.upload = async (url, _p, headers) => (await fetch(url, { method: 'PUT', headers, body: 'db-2' })).status;
+    expect(await syncNow(phone.io, { pairing })).toMatchObject({ ok: true });
+  });
+
+  it('a device id that cannot be kept does not fail a restore that went through', async () => {
+    await pcHolds({ 'hevier.db': 'db-1' });
+    storage.failDeviceId = true;
+    const phone = fakePhone();
+    expect(await restoreFromPc(phone.io, pairing)).toEqual({ ok: true });
+    expect(phone.replaced).toEqual([['hevier.db']]);
+  });
+
+  it('the quiet sync on app open leaves a restore under way alone', async () => {
+    await pcHolds({ 'hevier.db': 'db-1', 'media/a.jpg': 'photo-a' });
+    let release = () => {};
+    const phone = fakePhone({ hold: new Promise<void>((r) => (release = r)), wipeOnCleanup: true });
+    const restoring = restoreFromPc(phone.io, pairing);
+    await phone.downloaded;
+    expect(isSyncBusy()).toBe(true);
+    await quietSync(phone.io);
+    release();
+    expect(await restoring).toEqual({ ok: true });
+    expect(isSyncBusy()).toBe(false);
+    expect(phone.replaced).toEqual([['hevier.db', 'media/a.jpg']]);
+  });
+
+  it('a restore answers busy while a sync runs', async () => {
+    await pcHolds({ 'hevier.db': 'db-1' });
+    const phone = fakePhone();
+    const syncing = syncNow(phone.io, { pairing }); // takes the lock before its first await
+    expect(await restoreFromPc(phone.io, pairing)).toMatchObject({ ok: false, reason: 'busy' });
+    await syncing;
+  });
+
+  it('a swap that throws answers error and frees the lock', async () => {
+    await pcHolds({ 'hevier.db': 'db-1' });
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const phone = fakePhone({ failReplace: new Error('disk full') });
+    expect(await restoreFromPc(phone.io, pairing)).toEqual({ ok: false, reason: 'error' });
+    expect(isSyncBusy()).toBe(false);
+  });
+
+  it('a download that stops moving answers timeout, frees the lock and leaves nothing staged', async () => {
+    await pcHolds({ 'hevier.db': 'db-1', 'media/a.jpg': 'photo-a' });
+    const phone = fakePhone({ stall: true, wipeOnCleanup: true });
+    expect(await restoreFromPc(phone.io, pairing, { stallMs: 50 })).toEqual({ ok: false, reason: 'timeout' });
+    expect(isSyncBusy()).toBe(false);
+    expect(() => phone.staged('hevier.db')).toThrow();
     expect(phone.replaced).toEqual([]);
   });
 

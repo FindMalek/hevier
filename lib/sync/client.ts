@@ -1,6 +1,8 @@
 import { KEY_HEADER } from '@/shared/sync-protocol';
 import type { BeginRequest, BeginResponse, Refusal, StatusResponse } from '@/shared/sync-types';
+import { withSyncLock } from './lock';
 import { baseUrl, getPairing, setLastSynced } from './pairing';
+import { TransferTimeout, withStallTimeout } from './transfer';
 import { SYNC_TIMEOUTS } from '@/constants/motion';
 import { SYNC_HOSTS } from '@/constants/storage';
 import type { Pairing, SyncFailure, SyncIO, SyncResult } from '@/types/sync';
@@ -58,10 +60,13 @@ export async function fetchStatus(pairing: Pairing, timeoutMs = SYNC_TIMEOUTS.re
   return (await res.json()) as StatusResponse;
 }
 
-export async function syncNow(
-  io: SyncIO,
-  opts: { force?: boolean; timeoutMs?: number; pairing?: Pairing | null } = {}
-): Promise<SyncResult> {
+type SyncOptions = { force?: boolean; timeoutMs?: number; stallMs?: number; pairing?: Pairing | null };
+
+export function syncNow(io: SyncIO, opts: SyncOptions = {}): Promise<SyncResult> {
+  return withSyncLock(() => runSync(io, opts));
+}
+
+async function runSync(io: SyncIO, opts: SyncOptions): Promise<SyncResult> {
   const pairing = opts.pairing !== undefined ? opts.pairing : await getPairing();
   if (!pairing) return { ok: false, reason: 'notPaired' };
   const base = baseUrl(pairing);
@@ -93,13 +98,16 @@ export async function syncNow(
     }
     if (begin.status !== 200) return { ok: false, reason: 'error' };
 
-    // Photos and videos can be big: no time limit on the uploads.
+    // Photos and videos can be big, so an upload has no limit on its length,
+    // only on how long it stands still (SYNC_TIMEOUTS.stallMs).
     const { need } = (await begin.json()) as BeginResponse;
+    const stallMs = opts.stallMs ?? SYNC_TIMEOUTS.stallMs;
     for (const p of need) {
-      const code = await io.upload(`${base}/file?path=${encodeURIComponent(p)}`, p, headers);
+      const url = `${base}/file?path=${encodeURIComponent(p)}`;
+      const code = await withStallTimeout(stallMs, (hooks) => io.upload(url, p, headers, hooks));
       if (code !== 200) return { ok: false, reason: 'error' };
     }
-    const commit = await request(`${base}/commit`, { method: 'POST', headers });
+    const commit = await request(`${base}/commit`, { method: 'POST', headers }, SYNC_TIMEOUTS.commitMs);
     if (commit?.status !== 200) return { ok: false, reason: commit ? 'error' : 'pcNotFound' };
 
     await setLastSynced(at);
@@ -107,25 +115,19 @@ export async function syncNow(
     return { ok: true, at };
   } catch (e) {
     console.warn('[sync] failed', e);
-    return { ok: false, reason: 'error' };
+    return { ok: false, reason: e instanceof TransferTimeout ? 'timeout' : 'error' };
   } finally {
     await io.cleanup();
   }
 }
 
 // On app open: send a copy if the PC program is open, otherwise nothing.
-// One at a time: coming back to the app while a copy is still going adds
-// nothing.
-let quietRunning = false;
-
+// Coming back to the app while a copy is still going adds nothing: syncNow
+// answers busy.
 export async function quietSync(io: SyncIO): Promise<void> {
-  if (quietRunning) return;
-  quietRunning = true;
   try {
     await syncNow(io, { timeoutMs: SYNC_TIMEOUTS.quietMs });
   } catch {
     // never bothers the user
-  } finally {
-    quietRunning = false;
   }
 }
