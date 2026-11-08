@@ -7,6 +7,7 @@ import type { SetType } from '@/types/workout';
 import type {
   CsvColumn,
   CsvRow,
+  NoNumbersRow,
   ParsedCsv,
   ParsedRow,
   RawRow,
@@ -142,10 +143,11 @@ function groupBy<Item>(items: Item[], keyOf: (item: Item) => string): Map<string
   return groups;
 }
 
-// Rows with a bad value, or of an exercise with no weight, reps, time or
-// distance at all, are left out and reported in `skipped`.
+// Rows with a bad value are left out and reported in `skipped`; rows of an
+// exercise with no weight, reps, time or distance at all, in `noNumbers`.
 export function transformRows(csvRows: CsvRow[], { timeZone = machineTimeZone() }: TransformOptions = {}): TransformResult {
   const skipped: SkippedRow[] = [];
+  const noNumbers: NoNumbersRow[] = [];
   const parsedRows: ParsedRow[] = [];
   for (const csvRow of csvRows) {
     const parsed = parseRow(csvRow, timeZone);
@@ -160,9 +162,7 @@ export function transformRows(csvRows: CsvRow[], { timeZone = machineTimeZone() 
       exerciseTypes.set(exerciseName, type);
       continue;
     }
-    for (const row of exerciseRows) {
-      skipped.push({ row: row.rowNumber, reason: `No weight, reps, time or distance for "${exerciseName}"` });
-    }
+    for (const row of exerciseRows) noNumbers.push({ row: row.rowNumber, exerciseName });
   }
 
   const typedRows = parsedRows.filter((row) => exerciseTypes.has(row.exerciseName));
@@ -187,5 +187,5 @@ export function transformRows(csvRows: CsvRow[], { timeZone = machineTimeZone() 
     }
   );
 
-  return { exerciseTypes, workouts, skipped: skipped.sort((earlier, later) => earlier.row - later.row) };
+  return { exerciseTypes, workouts, skipped: skipped.sort((earlier, later) => earlier.row - later.row), noNumbers };
 }

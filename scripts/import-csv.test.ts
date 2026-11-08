@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import initSqlJs from 'sql.js';
-import { describeSkipped, importCsvToDatabase } from './import-csv';
+import { describeNoNumbers, describeSkipped, importCsvToDatabase } from './import-csv';
 import type { CatalogueEntry } from '@/types/import';
 import { SELECT_BODY_WEIGHT_EXERCISE_IDS, SET_BODY_WEIGHT } from '@/db/bodyWeight/queries';
 
@@ -125,6 +125,49 @@ describe('importCsvToDatabase (unusable CSV)', () => {
     const rows = (bad: string[]) => [HEADER, ...bad, ...Array.from({ length: 10 - bad.length }, (_, setIndex) => good(setIndex))].join('\n');
     expect((await importCsvToDatabase(rows(['"A","someday"']))).skipped).toHaveLength(1);
     await expect(importCsvToDatabase(rows(['"A","someday"', '"A","someday"']))).rejects.toThrow('Too many CSV rows');
+  });
+});
+
+describe('importCsvToDatabase (exercises without numbers)', () => {
+  const HEADER = fs.readFileSync(SAMPLE, 'utf-8').split('\n')[0];
+  const START = 'Oct 1, 2026, 6:00 PM';
+  const stretch = (setIndex: number) => `"A","${START}","","","Stretching",,"",${setIndex},"normal",,,,,`;
+  const bench = (setIndex: number, start = START) => `"A","${start}","","","Bench",,"",${setIndex},"normal",100,10,,,`;
+  const csv = (...lines: string[]) => [HEADER, ...lines].join('\n');
+  const indexes = (count: number) => Array.from({ length: count }, (_, setIndex) => setIndex);
+
+  it('imports a CSV where most rows are an exercise with no numbers, and says they were left out', async () => {
+    const lines = [...indexes(12).map(stretch), ...indexes(3).map((setIndex) => bench(setIndex))];
+    const { bytes, skipped, noNumbers } = await importCsvToDatabase(csv(...lines));
+    const db = new (await initSqlJs()).Database(bytes);
+    expect(skipped).toEqual([]);
+    expect(noNumbers).toHaveLength(12);
+    expect(new Set(noNumbers.map(({ exerciseName }) => exerciseName))).toEqual(new Set(['Stretching']));
+    expect(db.exec('SELECT COUNT(*) FROM sets')[0].values[0][0]).toBe(3);
+    expect(db.exec("SELECT COUNT(*) FROM exercises WHERE name = 'Stretching'")[0].values[0][0]).toBe(0);
+  });
+
+  it('does not let them hide a CSV where many of the other rows are unreadable', async () => {
+    const bad = bench(99, 'someday');
+    const lines = [...indexes(30).map(stretch), bad, bad, ...indexes(8).map((setIndex) => bench(setIndex))];
+    await expect(importCsvToDatabase(csv(...lines))).rejects.toThrow('Too many CSV rows could not be read (2 of 10 rows skipped)');
+  });
+
+  it('refuses a CSV where no row has numbers', async () => {
+    await expect(importCsvToDatabase(csv(...indexes(3).map(stretch)))).rejects.toThrow(
+      'No workouts could be read from the CSV (no row has weight, reps, time or distance)'
+    );
+  });
+});
+
+describe('describeNoNumbers', () => {
+  it('counts the rows and names each exercise once', () => {
+    const rows = [
+      { row: 1, exerciseName: 'Stretching' },
+      { row: 2, exerciseName: 'Stretching' },
+      { row: 3, exerciseName: 'Foam Rolling' },
+    ];
+    expect(describeNoNumbers(rows)).toBe('3 rows had no numbers and were left out (Stretching, Foam Rolling).');
   });
 });
 

@@ -93,9 +93,17 @@ export interface ParsedRow {
   set: TransformedSet;
 }
 
+// A row of an exercise logged without weight, reps, time or distance
+// (Stretching): nothing to import, and not an error.
+export interface NoNumbersRow {
+  row: number;
+  exerciseName: string;
+}
+
 export interface ImportResult {
   bytes: Uint8Array;
   skipped: SkippedRow[];
+  noNumbers: NoNumbersRow[];
 }
 
 // A Hevy CSV workout, turned into ours (scripts/import/parseCsv.ts).
@@ -128,4 +136,5 @@ export interface TransformResult {
   exerciseTypes: Map<string, ExerciseType>;
   workouts: TransformedWorkout[];
   skipped: SkippedRow[];
+  noNumbers: NoNumbersRow[];
 }

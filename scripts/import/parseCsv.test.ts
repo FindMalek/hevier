@@ -182,7 +182,7 @@ describe('transformRows', () => {
     expect(transformRows(rows).exerciseTypes.get('Walk')).toBe('distance_duration');
   });
 
-  it('skips and reports rows with a bad number, a bad date or no data, and keeps the rest', () => {
+  it('skips and reports rows with a bad number or a bad date, and keeps the rest', () => {
     const rows = [
       row({ rowNumber: 1, set_index: '0' }),
       row({ rowNumber: 2, set_index: '1', weight_kg: 'heavy' }),
@@ -194,7 +194,8 @@ describe('transformRows', () => {
     const result = transformRows(rows);
     expect(result.workouts[0].exercises).toHaveLength(1);
     expect(result.workouts[0].exercises[0].sets).toHaveLength(1);
-    expect(result.skipped.map((s) => s.row)).toEqual([2, 3, 4, 5, 6]);
+    expect(result.skipped.map((skippedRow) => skippedRow.row)).toEqual([2, 3, 4, 5]);
+    expect(result.noNumbers).toEqual([{ row: 6, exerciseName: 'Empty' }]);
   });
 });
 
