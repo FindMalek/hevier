@@ -11,32 +11,32 @@ const ROWS: Row[] = [
   {
     feature: 'Routines',
     hevier: 'Unlimited.',
-    elsewhere: 'Hevy’s free plan caps routines at 4. Strong’s free plan caps them at 3.',
+    elsewhere: 'Hevy’s own site says its free plan caps routines at 4. A third-party review says Strong’s caps them at 3.',
   },
   {
     feature: 'Graph history',
     hevier: 'All of it.',
-    elsewhere: 'Hevy’s free plan shows 3 months. Strong keeps charts in its paid plan.',
+    elsewhere: 'Hevy’s own site says its free plan shows 3 months of graphs. Third-party reviews say Strong keeps charts in its paid plan.',
   },
   {
     feature: 'Sets per muscle per week',
     hevier: 'Free.',
-    elsewhere: 'A paid feature in Hevy and Liftosaur.',
+    elsewhere: 'Third-party reviews list it as a paid feature in Hevy and Liftosaur.',
   },
   {
     feature: 'Per-muscle recovery map',
     hevier: 'Free.',
-    elsewhere: 'We found none in Hevy or Strong.',
+    elsewhere: 'We could not find one in Hevy or Strong.',
   },
   {
     feature: 'Where numbers come from',
     hevier: 'Every rule cites its study.',
-    elsewhere: 'We found no other tracker that publishes sources for how it counts sets.',
+    elsewhere: 'We did not find another tracker that cites sources for how it counts sets.',
   },
   {
     feature: 'Account',
     hevier: 'Not needed.',
-    elsewhere: 'Hevy and Strong ask you to make one.',
+    elsewhere: 'Hevy and Strong are built around an account.',
   },
   {
     feature: 'Price',
@@ -59,8 +59,8 @@ export function Compare() {
             Hevier doesn’t.
           </h2>
           <p className="lead">
-            Compared with the free plans of other trackers as of November 2026, from their public pricing pages and
-            reviews. Plans change, so check the store listing before you decide.
+            Compared with the free plans of other trackers as of November 2026, from each app’s public pricing pages and
+            third-party reviews, not a hands-on test. Plans change, so check the store listing before you decide.
           </p>
         </div>
 

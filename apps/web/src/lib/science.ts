@@ -20,8 +20,8 @@ export const SOURCES: Source[] = [
   },
   {
     id: 'pelland',
-    cite: 'Pelland et al. 2024',
-    journal: 'Sports Med',
+    cite: 'Pelland et al. 2026',
+    journal: 'Sports Med (preprint 2024)',
     pmid: '41343037',
     note: 'Helper muscles count half a set. 4 sets a week is the smallest dose that grew muscle.',
   },
