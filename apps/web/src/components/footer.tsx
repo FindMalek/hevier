@@ -57,8 +57,8 @@ export function Footer() {
 
         <p className="credits">
           Body map from <a href="https://github.com/Jsplice/MuscleMap">MuscleMap</a> (MIT). Exercise catalogue from{' '}
-          <a href="https://github.com/DuarteSantos8/openGym">openGym</a> (AGPL-3.0). Set in Geist (SIL Open Font
-          License). Android is a trademark of Google LLC. Hevier is free software under the AGPL-3.0. This site uses no
+          <a href="https://github.com/DuarteSantos8/openGym">openGym</a> (AGPL-3.0). Set in Geist, copyright 2023 Vercel,
+          under the SIL Open Font License (<a href={`${SITE.repo}/blob/main/THIRD-PARTY-NOTICES.md`}>full text</a>). Android is a trademark of Google LLC. Hevier is free software under the AGPL-3.0. This site uses no
           cookies and no analytics. Recovery figures are estimates, not medical advice.
         </p>
       </div>
