@@ -25,6 +25,12 @@ describe('statistics', () => {
     expect(days.map((d) => d.trained)).toEqual([false, false, false, false, true, false, true]);
   });
 
+  it('ignores sets older than the 7 days', () => {
+    const sets = [set(at(8, 1)), set(at(9, 7), { startMs: Date.UTC(2020, 0, 1) }), set(new Date(2026, 9, 8, 0, 30).toISOString())];
+    const days = lastSevenDays(sets, new Date(2026, 9, 14, 21));
+    expect(days.map((d) => d.trained)).toEqual([true, false, false, false, false, false, false]);
+  });
+
   it('counts sets per primary muscle, without cardio', () => {
     expect(
       setsPerMuscle([set(at(9, 1)), set(at(9, 1)), set(at(9, 2), { primary: 'Lats' }), set(at(9, 3), { primary: 'Cardio' })])

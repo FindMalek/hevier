@@ -23,11 +23,15 @@ export function between(sets: StatSet[], from: Date, to: Date): StatSet[] {
 // The 7 days up to today, oldest first.
 export function lastSevenDays(sets: StatSet[], now = new Date()): StripDay[] {
   const today = startOfDay(now);
-  const trained = new Set(sets.map((s) => startOfDay(new Date(startMsOf(s))).getTime()));
-  return Array.from({ length: 7 }, (_, i) => {
-    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6 + i);
-    return { date, trained: trained.has(date.getTime()) };
-  });
+  const dates = Array.from({ length: 7 }, (_, i) => new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6 + i));
+  // Older sets can't land in the strip: skipped before a Date is built for them.
+  const from = dates[0].getTime();
+  const trained = new Set<number>();
+  for (const s of sets) {
+    const t = startMsOf(s);
+    if (t >= from) trained.add(startOfDay(new Date(t)).getTime());
+  }
+  return dates.map((date) => ({ date, trained: trained.has(date.getTime()) }));
 }
 
 // The hard-set window of the 7 days: from the first day's midnight to the
