@@ -13,11 +13,11 @@ to a commit SHA; Dependabot bumps them weekly.
 | `android.yml` | PR, manual, called by `release.yml` | `apk (debug)` on a PR, `apk (release)` from a release | Prebuild + Gradle. A PR gets a debug APK (arm64 only) as an artifact for 7 days. A release builds the signed APK and AAB. |
 | `web.yml` | PR, push to `main`, manual | `web (build, e2e, axe)` | Builds the landing page and runs Playwright: behaviour and axe tests block; the screenshot tests only warn until linux baselines are committed (see [Landing page](#landing-page)). |
 | `sync-binaries.yml` | PR touching `apps/sync` or `packages/shared`, manual, called by `release.yml` | `build` | `bun build --compile` for linux-x64, windows-x64, darwin-arm64 and darwin-x64 from one linux runner, a smoke test of the linux binary (starts, answers 401 without the key and 200 with it), archives as artifacts. |
-| `release.yml` | push to `main`, manual with a tag | `please`, `android`, `sync`, `publish` | release-please keeps the release PR current. Merging it tags `vX.Y.Z`; the same run builds the Android release and the Sync binaries and publishes the GitHub Release. |
+| `release.yml` | push to `main`, manual (from a tag to rebuild it) | `please`, `android`, `sync`, `publish` | release-please keeps the release PR current. Merging it tags `vX.Y.Z`; the same run builds the Android release and the Sync binaries and publishes the GitHub Release. |
 | `pages.yml` | push to `main` touching `apps/web`, manual | `build`, `deploy` | Static export of the landing page to GitHub Pages. |
 | `vercel-preview.yml` | PR touching `apps/web` | `preview` | A Vercel preview, only when the three Vercel secrets exist. |
 | `codeql.yml` | PR, push to `main`, weekly | `analyze (javascript-typescript)`, `analyze (actions)` | CodeQL for the code and for the workflows. |
-| `dependency-review.yml` | PR | `review` | Fails a PR that adds a dependency with a high severity advisory. |
+| `dependency-review.yml` | PR | `review` | Fails a PR that adds a dependency with a high severity advisory. Skipped until the `DEPENDENCY_REVIEW` variable is `true` (see [Owner todo](#owner-todo)). |
 | `security.yml` | PR, push to `main`, weekly | `audit (informational)`, `gitleaks` | `pnpm audit --prod` in the job summary (never fails), and a gitleaks secret scan (non-blocking on fork PRs). |
 | `.github/dependabot.yml` | weekly | | Grouped PRs for npm (Expo and React Native packages are left alone: move them with `npx expo install --fix`) and for the actions. |
 
@@ -41,6 +41,7 @@ Settings > Secrets and variables > Actions. Nothing is needed for the checks to 
 | `HAS_APK_RELEASE` | variable | Set to `true` once a release has an APK: the landing page then says "Download for Android" (`NEXT_PUBLIC_HAS_APK_RELEASE`) | Optional |
 | `WEB_VISUAL_BLOCKING` | variable | `true` makes the screenshot tests block | Optional, after the linux baselines are committed |
 | `VERCEL_PR_COMMENT` | variable | `true` posts the preview URL on the PR | Optional |
+| `DEPENDENCY_REVIEW` | variable | `true` runs `review` in `dependency-review.yml` | Optional, set it once the Dependency graph is on |
 
 `EXPO_TOKEN` is not used: the app is built with Gradle on the runner, not with EAS.
 If you move to EAS later, create it at expo.dev > Account settings > Access tokens and
@@ -91,8 +92,7 @@ summary.
    release with the changelog section, builds the signed APK + AAB and the Sync binaries,
    uploads them with `SHA256SUMS`, and publishes the release.
 4. If the keystore secrets are missing the release stays a **draft** with a debug-signed
-   APK. Add the secrets, then run Release (Actions > Release > Run workflow) with the tag
-   to build and publish again.
+   APK. Add the secrets, then run Release from that tag (see below) to build and publish again.
 5. Set the `HAS_APK_RELEASE` variable to `true` so the landing page links the APK.
 
 Version handling: release-please writes the version into the files above. The Android
@@ -105,7 +105,12 @@ The first release PR only lists commits after `28face9` (`bootstrap-sha` in
 `release-please-config.json`) and starts from `1.0.0` in `.release-please-manifest.json`.
 Change both before the first release if you want another start.
 
-To release by hand without release-please: push the tag, then run Release with that tag.
+To build an existing tag again (or to release by hand without release-please: push the
+tag first), run Release **from the tag ref**: `gh workflow run release.yml --ref vX.Y.Z`,
+or Actions > Release > Run workflow > "Use workflow from" > Tags > `vX.Y.Z`. There is no
+input: the workflow takes the version from `github.ref_name` (it must look like `vX.Y.Z`,
+`vX.Y.Z-rc.1`) and builds the commit it runs on, so the build can never be pointed at
+another ref. Run from a branch it runs release-please instead.
 
 ### Release PR and checks
 
@@ -158,18 +163,31 @@ Settings > Branches > `main`, require status checks, and add exactly these:
 
 `check`, `mobile (expo-doctor)`, `mobile (android-bundle)`, `mobile (prebuild)`,
 `actionlint`, `title`, `web (build, e2e, axe)`, `apk (debug)`,
-`analyze (javascript-typescript)`, `analyze (actions)`, `review`.
+`analyze (javascript-typescript)`, `analyze (actions)`.
+
+Add `review` once the Dependency graph is on (see [Owner todo](#owner-todo)). While the
+`DEPENDENCY_REVIEW` variable is not `true` the job is skipped and never reports.
 
 Leave `build` (sync binaries), `gitleaks`, `audit (informational)`, `preview`, and the
 Pages jobs out: they are path-filtered, informational, or need secrets. A path-filtered
 workflow that is skipped never reports, and a required check that never reports blocks
 the merge. Squash merges only, so the PR title is the commit.
 
+## Owner todo
+
+- **Dependency review.** The `review` job needs the Dependency graph: Settings > Security
+  (Advanced Security) > Dependency graph > Enable. Then set the repository variable
+  `DEPENDENCY_REVIEW=true` (Settings > Secrets and variables > Actions > Variables, or
+  `gh variable set DEPENDENCY_REVIEW --body true`). Until then the job is skipped.
+- **Code scanning.** CodeQL uploads need code scanning to be available (free on public
+  repositories). On a private repository without GitHub Code Security the two `analyze`
+  jobs fail at the upload step.
+
 ## Forks
 
 A pull request from a fork runs everything that needs no secret: `check` (without
 Sonar), the Expo checks, `actionlint`, the title check, the web job, the debug APK, the
-sync build, CodeQL, dependency review, the audit, and gitleaks (reports, never blocks).
+sync build, CodeQL, dependency review (once enabled), the audit, and gitleaks (reports, never blocks).
 It never sees `SONAR_TOKEN`, the keystore, or the Vercel secrets, and its token is
 read-only. Releases, Pages and the Vercel preview run only in the main repository.
 
@@ -179,9 +197,9 @@ read-only. Releases, Pages and the Vercel preview run only in the main repositor
 pnpm install --frozen-lockfile
 pnpm turbo run check                                     # check
 cd apps/mobile
-npx expo-doctor                                          # mobile (expo-doctor)
-npx expo export --platform android                       # mobile (android-bundle)
-npx expo prebuild --platform android --no-install        # mobile (prebuild), then:
+pnpm dlx expo-doctor@1.21.6                              # mobile (expo-doctor)
+pnpm exec expo export --platform android                 # mobile (android-bundle)
+pnpm exec expo prebuild --platform android --no-install  # mobile (prebuild), then:
 (cd android && ./gradlew assembleDebug)                  # apk (debug), needs JDK 17 + Android SDK
 cd ../..
 pnpm --filter @hevier/web build && pnpm --filter @hevier/web e2e   # web
