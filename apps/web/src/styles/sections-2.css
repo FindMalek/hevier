@@ -158,6 +158,9 @@
   .p-widgets .wgrid {
     grid-template-columns: repeat(4, 1fr);
   }
+  .wgrid .w {
+    min-height: 290px;
+  }
 }
 
 /* the Android notification, drawn the way it looks in the shade */
@@ -233,7 +236,7 @@
   display: grid;
   align-content: start;
   gap: 6px;
-  aspect-ratio: 1 / 1;
+  min-height: 190px;
   min-width: 0;
   padding: 16px 16px 14px;
   border-radius: 26px;
@@ -243,7 +246,7 @@
     inset 0 1px 0 rgb(255 255 255 / 0.14),
     0 0 0 1px rgb(14 16 28 / 0.4),
     0 18px 30px -16px rgb(14 16 28 / 0.55);
-  overflow: hidden;
+  overflow: clip;
 }
 .w p {
   margin: 0;
@@ -276,13 +279,16 @@
 .w-next {
   align-content: center;
 }
+.w-cal {
+  align-content: start;
+}
 .w-vol b {
   margin-bottom: 8px;
 }
 .cal {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
+  gap: 2px;
   align-items: center;
   text-align: center;
   font-size: clamp(9px, 1.3vw, 11.5px);
@@ -302,10 +308,12 @@
   color: #fff;
   font-weight: 600;
 }
+.w-rec {
+  grid-template-rows: auto minmax(0, 1fr);
+}
 .w-rec div {
   display: flex;
   gap: 6px;
-  height: 100%;
   min-height: 0;
   padding: 2px 0 6px;
 }
