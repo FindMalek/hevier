@@ -12,10 +12,9 @@ import type { ActiveWorkout } from '@/types/workout';
 export async function loadActiveWorkout(): Promise<ActiveWorkout | null> {
   const workout = await getJson<ActiveWorkout>(STORAGE_KEYS.activeWorkout);
   if (!workout) return null;
-  const missing = workout.exercises.filter((e) => e.bests === undefined);
-  if (missing.length > 0) {
-    const bests = await getExerciseBestsFor(missing.map((e) => e.exerciseId));
-    for (const e of missing) e.bests = bestsOf(bests, e.exerciseId);
+  if (workout.exercises.length > 0) {
+    const bests = await getExerciseBestsFor(workout.exercises.map((e) => e.exerciseId));
+    for (const e of workout.exercises) e.bests = bestsOf(bests, e.exerciseId);
   }
   return workout;
 }

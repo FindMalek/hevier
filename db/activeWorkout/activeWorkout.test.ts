@@ -85,6 +85,18 @@ describe('active workout', () => {
     expect(w.exercises).toEqual([]);
   });
 
+  it('reads the bests again when the draft is loaded, so an older draft does not keep outdated ones', async () => {
+    raw.exec(`
+      INSERT INTO workouts (id, title, start_time) VALUES ('w1', 'LOWER A', '2026-10-01T18:00:00Z');
+      INSERT INTO workout_exercises (id, workout_id, exercise_id, order_index) VALUES ('we1', 'w1', 'squat', 0);
+      INSERT INTO sets (id, workout_exercise_id, set_index, set_type, weight_kg, reps) VALUES ('s1', 'we1', 0, 'normal', 100, 10);
+    `);
+    const w = await startWorkout('a', new Date('2026-10-14T18:00:00Z'));
+    w.exercises[1].bests = { ...w.exercises[1].bests!, weightKg: 150 };
+    await saveActiveWorkout(w);
+    expect((await loadActiveWorkout())!.exercises[1].bests?.weightKg).toBe(100);
+  });
+
   it('survives leaving the screen: saved and loaded back', async () => {
     const w = await startWorkout('a', new Date('2026-10-14T18:00:00Z'));
     w.exercises[1].sets[0].done = true;

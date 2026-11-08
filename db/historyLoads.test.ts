@@ -184,6 +184,27 @@ describe('Duplicate Routine', () => {
   });
 });
 
+describe('warm-up sets', () => {
+  it('a heavy warm-up is neither a stored best nor a record on the workout card', async () => {
+    raw.exec(`
+      INSERT INTO exercises (id, name, type) VALUES ('squat', 'Squat', 'weight_reps');
+      INSERT INTO workouts (id, title, start_time, end_time) VALUES
+        ('w1', 'LOWER A', '2026-10-01T18:00:00.000Z', '2026-10-01T19:00:00.000Z'),
+        ('w2', 'LOWER A', '2026-10-08T18:00:00.000Z', '2026-10-08T19:00:00.000Z');
+      INSERT INTO workout_exercises (id, workout_id, exercise_id, order_index) VALUES ('we1', 'w1', 'squat', 0), ('we2', 'w2', 'squat', 0);
+      INSERT INTO sets (id, workout_exercise_id, set_index, set_type, weight_kg, reps) VALUES
+        ('s1', 'we1', 0, 'normal', 100, 10),
+        ('s2', 'we2', 0, 'warmup', 140, 3),
+        ('s3', 'we2', 1, 'normal', 105, 10);
+    `);
+
+    expect((await getExerciseBests('squat'))?.weightKg).toBe(105);
+    const w2 = (await getWorkoutCards()).find((c) => c.id === 'w2')!;
+    expect(w2.exercises[0].sets.map((x) => x.record)).toEqual([false, true]);
+    expect(w2.prs?.find((p) => p.kind === 'weight')?.value).toBe(105);
+  });
+});
+
 describe('the shared history', () => {
   beforeEach(() => {
     raw.exec(`
