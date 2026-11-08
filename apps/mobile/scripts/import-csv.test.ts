@@ -28,7 +28,7 @@ describe('importCsvToDatabase (sample CSV)', () => {
     // 8 exercises in the CSV, but "Running" is the built-in Run; every database gets Run and Football (migrations 006, 015).
     expect(one('SELECT COUNT(*) FROM exercises')).toBe(9);
     expect(one('SELECT COUNT(*) FROM sets')).toBe(16);
-    expect(one('PRAGMA user_version')).toBe(15);
+    expect(one('PRAGMA user_version')).toBe(16);
     expect(one('SELECT COUNT(*) FROM routines')).toBe(0);
   });
 
@@ -42,7 +42,7 @@ describe('importCsvToDatabase (sample CSV)', () => {
   });
 
   it('files the Running sets under the built-in Run, with their distance and time', async () => {
-    const { all, one } = await importSample(loadCatalogue());
+    const { all, one } = await importSample();
     expect(one("SELECT COUNT(*) FROM exercises WHERE name IN ('Run', 'Running')")).toBe(1);
     expect(
       all(`SELECT e.name, s.distance_km, s.duration_seconds FROM sets s
