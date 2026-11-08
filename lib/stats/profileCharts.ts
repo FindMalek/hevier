@@ -2,7 +2,6 @@ import { MAX_SCALE_MAGNITUDES, MAX_SCALE_TICKS } from '@/constants/profile';
 import { SECONDS_PER_HOUR } from '@/constants/time';
 import { SHORT_VOLUME_FROM_KG } from '@/constants/weight';
 import { startOfDay, startOfMonth, startOfWeek } from '@/lib/date';
-import { finiteOr } from '@/lib/number';
 import { monthDay, monthName, shortDate, shortMonth } from '@/lib/format/date';
 import { plural } from '@/lib/format/text';
 import { shortVolumeLabel, thousandsLabel, volumeLabel } from '@/lib/format/weight';
@@ -26,7 +25,8 @@ const METRIC_VALUES: Record<ProfileMetric, (s: ProfileSession) => number> = {
 };
 
 export function metricValue(s: ProfileSession, metric: ProfileMetric): number {
-  return finiteOr(METRIC_VALUES[metric](s));
+  const value = METRIC_VALUES[metric](s);
+  return Number.isFinite(value) ? value : 0;
 }
 
 // One bar per day, week or month up to the current one, empty ones included.

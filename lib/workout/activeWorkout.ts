@@ -1,7 +1,6 @@
 import * as Crypto from 'expo-crypto';
 import { parseClock, parseNumber, setTextOf } from '@/lib/format/setFormat';
 import { SECONDS_PER_HOUR } from '@/constants/time';
-import { finiteOr } from '@/lib/number';
 import { setVolumeKg } from '@/lib/volume';
 import { BACKDATED_DURATION_HOURS, BACKDATED_START_HOUR } from '@/constants/training';
 import { FOOTBALL } from '@/constants/football';
@@ -118,7 +117,7 @@ export function hasCompletedSets(workout: ActiveWorkout) {
 export function elapsedSeconds(workout: ActiveWorkout, now: number): number {
   const until = workout.pausedAt ?? now;
   const seconds = Math.floor((until - Date.parse(workout.startTime)) / 1000 - (workout.pausedSeconds ?? 0));
-  return Math.max(0, finiteOr(seconds));
+  return seconds > 0 ? seconds : 0;
 }
 
 export function pauseTimer(workout: ActiveWorkout, now: number): ActiveWorkout {

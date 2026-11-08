@@ -3,7 +3,6 @@ import { SPLIT_OTHER_PART_SHARE, WARM_UP_EXERCISE } from '@/constants/training';
 import { BODY_PARTS, BODY_PART_OF } from '@/constants/muscles';
 import { startMsOf } from '@/lib/training/effort';
 import { startOfDay } from '@/lib/date';
-import { finiteOr } from '@/lib/number';
 import { setVolumeKg } from '@/lib/volume';
 import type { BodyPart, MuscleGroup } from '@/types/muscles';
 import type { MainExercise, MonthReport, MuscleCount, SplitPart, StatSet, StripDay } from '@/types/stats';
@@ -87,7 +86,7 @@ export function muscleSplit(sets: StatSet[]): SplitPart[] {
 // Days from the first set to now (at least a week), for "a week" averages over All time.
 export function daysLogged(sets: StatSet[], now = new Date()): number {
   if (sets.length === 0) return DAYS_PER_WEEK;
-  const days = finiteOr((now.getTime() - startMsOf(sets[0])) / MS_PER_DAY);
+  const days = (now.getTime() - startMsOf(sets[0])) / MS_PER_DAY;
   return days >= DAYS_PER_WEEK ? days : DAYS_PER_WEEK;
 }
 
