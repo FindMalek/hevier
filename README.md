@@ -177,13 +177,15 @@ scripts/load-device.sh path/to/workouts.csv
 This **replaces** the app's data on the device. Hevy's export has workouts
 only, so make your routines in the app.
 
-Pounds and miles are converted to kg and km. Hevy's dates have no time zone,
-so they are read in this computer's zone (printed when the import runs); set
-`HEVIER_TIMEZONE=Europe/Paris` (any IANA name) if you trained elsewhere. A
-time that happened twice when the clocks went back is read as the first one,
-and a time that never happened when they went forward is moved forward by the
-gap. Rows that can't be read are skipped and listed. If nothing can be read, or more
-than 1 row in 10 is skipped, the import stops and your app's data is left alone.
+- **Units:** pounds and miles are converted to kg and km.
+- **Time zone:** Hevy's dates have no time zone, so they're read in this
+  computer's zone (printed when the import runs). If you trained elsewhere:
+  `HEVIER_TIMEZONE=Europe/Paris scripts/load-device.sh path/to/workouts.csv`
+- **No numbers:** an exercise logged without weight, reps, time or distance
+  (like Stretching) is left out, and the import says so.
+- **Bad rows:** skipped and listed.
+- **Safety:** if nothing can be read, or more than 1 row in 10 is skipped,
+  the import stops and your app's data is left alone.
 
 ### Exercise pictures
 
