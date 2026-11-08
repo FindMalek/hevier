@@ -62,9 +62,9 @@ export function checkTimeZone(timeZone: string): string {
 
 // Minutes the zone is ahead of UTC at the instant `ms`.
 function offsetMinutes(ms: number, timeZone: string): number {
-  const p: Record<string, number> = {};
-  for (const part of formatterFor(timeZone).formatToParts(ms)) p[part.type] = Number(part.value);
-  const wall = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+  const fields: Record<string, number> = {};
+  for (const part of formatterFor(timeZone).formatToParts(ms)) fields[part.type] = Number(part.value);
+  const wall = Date.UTC(fields.year, fields.month - 1, fields.day, fields.hour, fields.minute, fields.second);
   return (wall - Math.floor(ms / MS_PER_SECOND) * MS_PER_SECOND) / MS_PER_MINUTE;
 }
 
@@ -77,13 +77,31 @@ function hour24(hour: number, meridiem: string | undefined): number {
   return (hour % HOURS_ON_CLOCK) + (meridiem.toUpperCase() === 'PM' ? HOURS_ON_CLOCK : 0);
 }
 
-function parts(value: string): DateParts | null {
-  let m = MONTH_FIRST_DATE.exec(value);
-  if (m) return { year: Number(m[3]), month: monthIndex(m[1]), day: Number(m[2]), hour: hour24(Number(m[4]), m[7]), minute: Number(m[5]), second: Number(m[6] ?? 0) };
-  m = DAY_FIRST_DATE.exec(value);
-  if (m) return { year: Number(m[3]), month: monthIndex(m[2]), day: Number(m[1]), hour: hour24(Number(m[4]), m[7]), minute: Number(m[5]), second: Number(m[6] ?? 0) };
-  m = NUMERIC_DATE.exec(value);
-  if (m) return { year: Number(m[1]), month: Number(m[2]) - 1, day: Number(m[3]), hour: Number(m[4]), minute: Number(m[5]), second: Number(m[6] ?? 0) };
+function readParts(value: string): DateParts | null {
+  const named = MONTH_FIRST_DATE.exec(value) ?? DAY_FIRST_DATE.exec(value);
+  if (named?.groups) {
+    const { year, month, day, hour, minute, second, meridiem } = named.groups;
+    return {
+      year: Number(year),
+      month: monthIndex(month),
+      day: Number(day),
+      hour: hour24(Number(hour), meridiem),
+      minute: Number(minute),
+      second: Number(second ?? 0),
+    };
+  }
+  const numeric = NUMERIC_DATE.exec(value);
+  if (numeric?.groups) {
+    const { year, month, day, hour, minute, second } = numeric.groups;
+    return {
+      year: Number(year),
+      month: Number(month) - 1,
+      day: Number(day),
+      hour: Number(hour),
+      minute: Number(minute),
+      second: Number(second ?? 0),
+    };
+  }
   return null;
 }
 
@@ -96,11 +114,11 @@ export function parseHevyDate(value: string, timeZone = machineTimeZone()): stri
   const text = value.trim();
   const fail = () => new Error(`Could not parse date: "${value}"`);
   if (DATE_WITH_ZONE.test(text)) {
-    const t = Date.parse(text.replace(' ', 'T'));
-    if (Number.isNaN(t)) throw fail();
-    return new Date(t).toISOString();
+    const instant = Date.parse(text.replace(' ', 'T'));
+    if (Number.isNaN(instant)) throw fail();
+    return new Date(instant).toISOString();
   }
-  const parsed = parts(text);
+  const parsed = readParts(text);
   if (!parsed || parsed.month < 0 || parsed.year < MIN_IMPORT_YEAR) throw fail();
   const { year, month, day, hour, minute, second } = parsed;
   const wall = new Date(Date.UTC(year, month, day, hour, minute, second));
@@ -114,9 +132,10 @@ export function parseHevyDate(value: string, timeZone = machineTimeZone()): stri
   const guess = wall.getTime();
   // The zone's offset a day before and a day after is the one in force on
   // either side of a clock change, whichever way the zone sits from UTC.
-  const before = guess - offsetMinutes(guess - MS_PER_DAY, timeZone) * MS_PER_MINUTE;
-  const after = guess - offsetMinutes(guess + MS_PER_DAY, timeZone) * MS_PER_MINUTE;
-  const fits = (t: number) => guess - offsetMinutes(t, timeZone) * MS_PER_MINUTE === t;
+  const utcIf = (offsetAt: number): number => guess - offsetMinutes(offsetAt, timeZone) * MS_PER_MINUTE;
+  const before = utcIf(guess - MS_PER_DAY);
+  const after = utcIf(guess + MS_PER_DAY);
+  const fits = (instant: number): boolean => utcIf(instant) === instant;
   const candidates = [before, after].filter(fits);
   return new Date(candidates.length > 0 ? Math.min(...candidates) : Math.max(before, after)).toISOString();
 }

@@ -28,12 +28,12 @@ function metricColumn(row: RawRow, metric: string, imperial: string, perUnit: nu
   if (metric in row) return row[metric] ?? '';
   const raw = (row[imperial] ?? '').trim();
   if (raw === '') return '';
-  const n = Number(raw);
-  return Number.isNaN(n) ? raw : String(Number((n * perUnit).toFixed(CONVERTED_DECIMALS)));
+  const value = Number(raw);
+  return Number.isNaN(value) ? raw : String(Number((value * perUnit).toFixed(CONVERTED_DECIMALS)));
 }
 
 function missingColumns(header: string[]): string[] {
-  const missing: string[] = CSV_COLUMNS.filter((c) => !header.includes(c));
+  const missing: string[] = CSV_COLUMNS.filter((column) => !header.includes(column));
   if (!header.includes(WEIGHT_COLUMNS.kg) && !header.includes(WEIGHT_COLUMNS.lbs)) missing.push(WEIGHT_COLUMNS.kg);
   if (!header.includes(DISTANCE_COLUMNS.km) && !header.includes(DISTANCE_COLUMNS.miles)) missing.push(DISTANCE_COLUMNS.km);
   return missing;
@@ -48,22 +48,22 @@ export function parseCsvText(text: string): ParsedCsv {
   if (header.length === 1 && header[0].includes(';')) {
     throw new Error('This looks like a semicolon-separated file: export a comma-separated CSV');
   }
-  const repeated = header.filter((name, i) => header.indexOf(name) !== i);
+  const repeated = header.filter((name, index) => header.indexOf(name) !== index);
   if (repeated.length > 0) throw new Error(`CSV repeats the columns: ${[...new Set(repeated)].join(', ')}`);
   const missing = missingColumns(header);
   if (missing.length > 0) throw new Error(`CSV is missing columns: ${missing.join(', ')}`);
   const rows: CsvRow[] = [];
   const skipped: SkippedRow[] = [];
-  records.forEach((record, i) => {
-    const rowNumber = i + 1;
+  records.forEach((record, index) => {
+    const rowNumber = index + 1;
     if (record.every((field) => field.trim() === '')) return;
     if (record.length !== header.length) {
       skipped.push({ row: rowNumber, reason: `Expected ${header.length} fields, got ${record.length}` });
       return;
     }
-    const raw: RawRow = Object.fromEntries(header.map((name, k) => [name, record[k]]));
+    const raw: RawRow = Object.fromEntries(header.map((name, column) => [name, record[column]]));
     rows.push({
-      ...(Object.fromEntries(CSV_COLUMNS.map((c) => [c, raw[c] ?? ''])) as Record<CsvColumn, string>),
+      ...(Object.fromEntries(CSV_COLUMNS.map((column) => [column, raw[column] ?? ''])) as Record<CsvColumn, string>),
       weight_kg: metricColumn(raw, WEIGHT_COLUMNS.kg, WEIGHT_COLUMNS.lbs, KG_PER_LB),
       distance_km: metricColumn(raw, DISTANCE_COLUMNS.km, DISTANCE_COLUMNS.miles, KM_PER_MILE),
       rowNumber,
@@ -75,17 +75,18 @@ export function parseCsvText(text: string): ParsedCsv {
 function toNullableNumber(value: string): number | null {
   const trimmed = value.trim();
   if (trimmed === '') return null;
-  const n = Number(trimmed);
-  if (!Number.isFinite(n)) throw new Error(`Expected a number, got: "${value}"`);
-  return n;
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed)) throw new Error(`Expected a number, got: "${value}"`);
+  return parsed;
 }
 
 function inferExerciseType(rowsForExercise: CsvRow[]): ExerciseType | null {
-  const hasDistance = rowsForExercise.some((r) => r.distance_km.trim() !== '');
-  const hasDuration = rowsForExercise.some((r) => r.duration_seconds.trim() !== '');
-  const hasWeight = rowsForExercise.some((r) => r.weight_kg.trim() !== '');
-  const hasReps = rowsForExercise.some((r) => r.reps.trim() !== '');
-  if (hasDistance && (hasDuration || !(hasWeight || hasReps))) return 'distance_duration';
+  const hasDistance = rowsForExercise.some((row) => row.distance_km.trim() !== '');
+  const hasDuration = rowsForExercise.some((row) => row.duration_seconds.trim() !== '');
+  const hasWeight = rowsForExercise.some((row) => row.weight_kg.trim() !== '');
+  const hasReps = rowsForExercise.some((row) => row.reps.trim() !== '');
+  const distanceOnly = hasDistance && !hasWeight && !hasReps;
+  if (hasDistance && (hasDuration || distanceOnly)) return 'distance_duration';
   if (hasDuration) return 'duration';
   if (hasWeight) return 'weight_reps';
   if (hasReps) return 'reps_only';

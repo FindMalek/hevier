@@ -99,8 +99,8 @@ describe('importCsvToDatabase (sample CSV)', () => {
 // that yields (almost) nothing must stop the import instead.
 describe('importCsvToDatabase (unusable CSV)', () => {
   const HEADER = fs.readFileSync(SAMPLE, 'utf-8').split('\n')[0];
-  const line = (n: number, start: string) =>
-    `"A","${start}","","","Bench",,"",${n},"normal",100,10,,,`;
+  const line = (setIndex: number, start: string) =>
+    `"A","${start}","","","Bench",,"",${setIndex},"normal",100,10,,,`;
 
   it.each([['an empty file', ''], ['a header and no rows', `${HEADER}\n`]])('refuses %s', async (_name, text) => {
     await expect(importCsvToDatabase(text)).rejects.toThrow('No workouts could be read from the CSV (the CSV has no rows)');
@@ -112,17 +112,17 @@ describe('importCsvToDatabase (unusable CSV)', () => {
   });
 
   it('refuses a file where too many rows are unreadable, and keeps one with a stray bad row', async () => {
-    const good = (n: number) => line(n, 'Oct 1, 2026, 6:00 PM');
+    const good = (setIndex: number) => line(setIndex, 'Oct 1, 2026, 6:00 PM');
     const bad = line(99, 'someday');
-    const many = [HEADER, bad, bad, ...Array.from({ length: 8 }, (_, n) => good(n))].join('\n');
+    const many = [HEADER, bad, bad, ...Array.from({ length: 8 }, (_, setIndex) => good(setIndex))].join('\n');
     await expect(importCsvToDatabase(many)).rejects.toThrow('Too many CSV rows could not be read');
-    const few = [HEADER, bad, ...Array.from({ length: 19 }, (_, n) => good(n))].join('\n');
-    expect((await importCsvToDatabase(few)).skipped.map((r) => r.row)).toEqual([1]);
+    const few = [HEADER, bad, ...Array.from({ length: 19 }, (_, setIndex) => good(setIndex))].join('\n');
+    expect((await importCsvToDatabase(few)).skipped.map((skippedRow) => skippedRow.row)).toEqual([1]);
   });
 
   it('allows exactly 1 unreadable row in 10 and counts lines with the wrong number of fields', async () => {
-    const good = (n: number) => line(n, 'Oct 1, 2026, 6:00 PM');
-    const rows = (bad: string[]) => [HEADER, ...bad, ...Array.from({ length: 10 - bad.length }, (_, n) => good(n))].join('\n');
+    const good = (setIndex: number) => line(setIndex, 'Oct 1, 2026, 6:00 PM');
+    const rows = (bad: string[]) => [HEADER, ...bad, ...Array.from({ length: 10 - bad.length }, (_, setIndex) => good(setIndex))].join('\n');
     expect((await importCsvToDatabase(rows(['"A","someday"']))).skipped).toHaveLength(1);
     await expect(importCsvToDatabase(rows(['"A","someday"', '"A","someday"']))).rejects.toThrow('Too many CSV rows');
   });

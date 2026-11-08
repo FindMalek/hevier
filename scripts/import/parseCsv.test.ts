@@ -23,7 +23,7 @@ describe('parseCsvText', () => {
 
   it('reads a file that starts with a byte order mark', () => {
     const text = `\uFEFF${HEADER}\n"LOWER B","Oct 13, 2026, 6:44 PM","","","Squat (Machine)",,"",0,"normal",120,10,,,`;
-    expect(parseCsvText(text).rows.map((r) => r.title)).toEqual(['LOWER B']);
+    expect(parseCsvText(text).rows.map((row) => row.title)).toEqual(['LOWER B']);
   });
 
   it('skips a line with too many or too few fields instead of shifting its values', () => {
@@ -32,7 +32,7 @@ describe('parseCsvText', () => {
 "B","Oct 13, 2026, 6:44 PM","","","Bench",,"",0,"normal",100,10,,,
 "C","Oct 13, 2026, 6:44 PM","","","Bench",,"",0`;
     const { rows, skipped } = parseCsvText(text);
-    expect(rows.map((r) => [r.title, r.rowNumber])).toEqual([['B', 2]]);
+    expect(rows.map((row) => [row.title, row.rowNumber])).toEqual([['B', 2]]);
     expect(skipped).toEqual([
       { row: 1, reason: 'Expected 14 fields, got 15' },
       { row: 3, reason: 'Expected 14 fields, got 8' },

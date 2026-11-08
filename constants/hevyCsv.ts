@@ -25,9 +25,9 @@ export const CSV_COLUMNS = [
 export const MONTH_KEYS = MONTH_NAMES.map((name) => name.toLowerCase());
 
 // Hevy's dates: "Oct 1, 2026, 6:00 PM", "1 Oct 2026, 18:00", "2026-10-01 18:00:00".
-export const MONTH_FIRST_DATE = /^([A-Za-z]{3,9})\.? (\d{1,2}),? (\d{4}),? (\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?$/i;
-export const DAY_FIRST_DATE = /^(\d{1,2}) ([A-Za-z]{3,9})\.? (\d{4}),? (\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?$/i;
-export const NUMERIC_DATE = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{1,2}):(\d{2})(?::(\d{2}))?$/;
+export const MONTH_FIRST_DATE = /^(?<month>[A-Za-z]{3,9})\.? (?<day>\d{1,2}),? (?<year>\d{4}),? (?<hour>\d{1,2}):(?<minute>\d{2})(?::(?<second>\d{2}))?\s*(?<meridiem>[AP]M)?$/i;
+export const DAY_FIRST_DATE = /^(?<day>\d{1,2}) (?<month>[A-Za-z]{3,9})\.? (?<year>\d{4}),? (?<hour>\d{1,2}):(?<minute>\d{2})(?::(?<second>\d{2}))?\s*(?<meridiem>[AP]M)?$/i;
+export const NUMERIC_DATE = /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})[T ](?<hour>\d{1,2}):(?<minute>\d{2})(?::(?<second>\d{2}))?$/;
 export const DATE_WITH_ZONE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})$/i;
 
 // Dates before this are read as a typo, not as history.
