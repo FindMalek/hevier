@@ -112,7 +112,7 @@ describe('transformRows', () => {
     ];
     const result = transformRows(rows);
     const exercises = result.workouts[0].exercises;
-    expect(exercises.map((e) => e.exerciseName)).toEqual(['Squat (Machine)', 'Leg Extension (Machine)']);
+    expect(exercises.map((exercise) => exercise.exerciseName)).toEqual(['Squat (Machine)', 'Leg Extension (Machine)']);
     expect(exercises[0].orderIndex).toBe(0);
     expect(exercises[1].orderIndex).toBe(1);
     expect(exercises[0].sets).toHaveLength(2);
@@ -174,7 +174,7 @@ describe('transformRows', () => {
   it('keeps warm-up sets, and reads set types Hevier lacks (drop sets) as normal', () => {
     const rows = [row({ set_type: 'warmup', set_index: '0' }), row({ set_type: 'dropset', set_index: '1' })];
     const sets = transformRows(rows).workouts[0].exercises[0].sets;
-    expect(sets.map((s) => s.setType)).toEqual(['warmup', 'normal']);
+    expect(sets.map((set) => set.setType)).toEqual(['warmup', 'normal']);
   });
 
   it('infers distance_duration for an exercise logged with distance only', () => {
