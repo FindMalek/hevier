@@ -9,6 +9,7 @@ import { RESTORE_MARKERS, SQLITE_HEADER, STORAGE_FILES, STORAGE_FOLDERS, SYNC_FO
 import type { RestoreItem, SyncIO } from '@/types/sync';
 import { isRestorableDatabase } from './dbHeader';
 import { KeptBackupError } from './keptBackup';
+import { noteUnfinishedRestore } from './restoreNotice';
 
 // The phone's side of SyncIO: the database copy is made in the cache, the
 // photos are sent straight from documents/media and documents/profile.
@@ -172,17 +173,34 @@ function recoverBackup(): boolean {
 
 // A restore the app was killed in the middle of is put right before the
 // database is opened; false means the old data is still waiting in restore-backup.
+// One that was not committed is undone even when all its data had moved in, and
+// the user is told once (see `undoneRestore`).
 export function recoverInterruptedRestore(): boolean {
   try {
     dropTrash(); // already judged: only its delete was left
-    return recoverBackup();
+    const backup = backupDir();
+    const unfinished = backup.exists && !new File(backup, RESTORE_MARKERS.committed).exists;
+    const ok = recoverBackup();
+    if (unfinished && ok) undoneRestore = true;
+    return ok;
   } catch (e) {
     console.warn('[sync] restore recovery failed', e);
     return false;
   }
 }
 
-addBeforeOpen(async () => recoverInterruptedRestore());
+// Set when a start-up recovery undid a restore that never reached COMMITTED:
+// the user would otherwise see their old data with no word why.
+let undoneRestore = false;
+
+addBeforeOpen(async () => {
+  const ok = recoverInterruptedRestore();
+  if (undoneRestore) {
+    undoneRestore = false;
+    await noteUnfinishedRestore().catch((e) => console.warn('[sync] could not note the undone restore', e));
+  }
+  return ok;
+});
 
 export const expoIO: SyncIO = {
   async snapshot() {

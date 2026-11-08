@@ -24,6 +24,7 @@ export const ASYNC_STORAGE_KEYS = {
   syncPairing: 'hevier.sync.pairing', // the PC paired with (lib/sync/pairing.ts)
   syncLast: 'hevier.sync.last', // time of the last good sync
   syncDeviceId: 'hevier.sync.deviceId', // this phone's id for the PC copy (lib/sync/deviceId.ts)
+  restoreUndone: 'hevier.sync.restoreUndone', // a restore the app was closed in was undone at start, not yet told (lib/sync/restoreNotice.ts)
 };
 
 // File names.

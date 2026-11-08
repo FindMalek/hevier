@@ -86,11 +86,20 @@ vi.mock('expo-sqlite', () => ({
     closeAsync: async () => void sqlite.closes++,
   }),
 }));
+const asyncStorage = new Map<string, string>();
+vi.mock('@react-native-async-storage/async-storage', () => ({
+  default: {
+    getItem: async (k: string) => asyncStorage.get(k) ?? null,
+    setItem: async (k: string, v: string) => void asyncStorage.set(k, v),
+    removeItem: async (k: string) => void asyncStorage.delete(k),
+  },
+}));
 vi.mock('expo-crypto', () => ({}));
 
 const { expoIO, recoverInterruptedRestore } = await import('./expoIO');
 const { closeDbAndHold, getDb } = await import('@/db/client');
 const { KeptBackupError } = await import('./keptBackup');
+const { takeUnfinishedRestoreNotice } = await import('./restoreNotice');
 const { MIGRATIONS } = await import('@/db/migrations');
 
 const DOC = path.join(root, 'doc');
@@ -128,6 +137,7 @@ function expectOldDataIntact() {
 
 beforeEach(() => {
   fs.rmSync(root, { recursive: true, force: true });
+  asyncStorage.clear();
   Object.assign(failing, { copy: '', moveAside: '', moveBack: '', deleteBackup: '', stuck: '' });
   put(DOC, 'SQLite/hevier.db', databaseBytes(LATEST, 'old'));
   put(DOC, 'SQLite/hevier.db-wal', 'old-wal');
@@ -311,6 +321,44 @@ describe('the database around a restore', () => {
     put(BACKUP, 'hevier.db', databaseBytes(LATEST, 'old-user-data'));
     await getDb();
     expect(read('SQLite/hevier.db')).toContain('old-user-data');
+  });
+
+  it('a restore killed after all the new data moved in, before COMMITTED, is undone and the user is told once', async () => {
+    await closedDb();
+    put(BACKUP, 'hevier.db', databaseBytes(LATEST, 'old-user-data'));
+    put(BACKUP, 'SET-ASIDE', '');
+    put(DOC, 'SQLite/hevier.db', databaseBytes(LATEST, 'complete-new'));
+    put(DOC, 'media/a.jpg', 'photo-a');
+    await getDb();
+    expect(read('SQLite/hevier.db')).toContain('old-user-data');
+    expect(has('media/a.jpg')).toBe(false);
+    expect(await takeUnfinishedRestoreNotice()).toBe(true);
+    expect(await takeUnfinishedRestoreNotice()).toBe(false);
+  });
+
+  it('a finished restore, or a start with nothing to undo, leaves no notice', async () => {
+    await closedDb();
+    put(BACKUP, 'hevier.db', databaseBytes(LATEST, 'old-user-data'));
+    put(BACKUP, 'SET-ASIDE', '');
+    put(BACKUP, 'COMMITTED', '');
+    put(DOC, 'SQLite/hevier.db', databaseBytes(LATEST, 'complete-new'));
+    await getDb();
+    expect(read('SQLite/hevier.db')).toContain('complete-new');
+    expect(await takeUnfinishedRestoreNotice()).toBe(false);
+    await closedDb();
+    await getDb();
+    expect(await takeUnfinishedRestoreNotice()).toBe(false);
+  });
+
+  it('a recovery that cannot put everything back tells nothing yet, the note comes with the start that does', async () => {
+    await closedDb();
+    fs.rmSync(path.join(DOC, 'SQLite'), { recursive: true });
+    put(BACKUP, 'hevier.db', databaseBytes(LATEST, 'old-user-data'));
+    failing.moveBack = 'hevier.db';
+    expect(await answers(getDb())).toBe('rejected');
+    expect(await takeUnfinishedRestoreNotice()).toBe(false);
+    expect(await answers(getDb())).toBe('answered');
+    expect(await takeUnfinishedRestoreNotice()).toBe(true);
   });
 
   it('stays shut while the old data cannot be put back, so nothing new lands on top of it', async () => {

@@ -1,6 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 
 import { DataWaitingError, getDb } from '@/db/client';
+import { UNFINISHED_RESTORE_NOTICE, takeUnfinishedRestoreNotice } from '@/lib/sync/restoreNotice';
+
+// A restore undone by this start (lib/sync/expoIO.ts) is told once.
+async function tellUnfinishedRestore(): Promise<void> {
+  try {
+    if (await takeUnfinishedRestoreNotice()) Alert.alert(UNFINISHED_RESTORE_NOTICE.title, UNFINISHED_RESTORE_NOTICE.message);
+  } catch (e) {
+    console.warn('[sync] could not read the restore notice', e);
+  }
+}
 
 const STILL_CLOSED = 'Your data could not be opened yet. Try again in a moment.';
 
@@ -18,7 +29,10 @@ export function useDataWaiting(): { message: string | null; trying: boolean; ret
   // always did. A retry is the user asking, so it answers either way.
   const tryOpen = useCallback((byUser: boolean) => {
     return getDb().then(
-      () => setMessage(null),
+      () => {
+        setMessage(null);
+        void tellUnfinishedRestore();
+      },
       (e) => {
         if (e instanceof DataWaitingError) setMessage(e.message);
         else if (byUser) setMessage(STILL_CLOSED);
