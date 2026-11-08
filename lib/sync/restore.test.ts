@@ -63,8 +63,9 @@ async function pcHolds(files: Record<string, string>, workouts = 312, lastWorkou
 // would replace the phone's data. `hold` pauses each download once it is on
 // disk (`downloaded` says the first one is); `wipeOnCleanup` makes cleanup
 // delete the staged files like the real one; `failReplace` is what the swap
-// throws.
-function fakePhone(opts: { truncate?: string; hold?: Promise<void>; wipeOnCleanup?: boolean; failReplace?: Error } = {}) {
+// throws. `stall` writes the first bytes of a download and then never answers,
+// ignoring the abort, like a dropped Wi-Fi.
+function fakePhone(opts: { truncate?: string; hold?: Promise<void>; wipeOnCleanup?: boolean; stall?: boolean; failReplace?: Error } = {}) {
   let firstDownloaded = () => {};
   const downloaded = new Promise<void>((resolve) => (firstDownloaded = resolve));
   const staging = fs.mkdtempSync(path.join(os.tmpdir(), 'hevier-staging-'));
@@ -80,7 +81,8 @@ function fakePhone(opts: { truncate?: string; hold?: Promise<void>; wipeOnCleanu
       let body = Buffer.from(await res.arrayBuffer());
       if (p === opts.truncate) body = body.subarray(0, 1);
       fs.mkdirSync(path.dirname(path.join(staging, p)), { recursive: true });
-      fs.writeFileSync(path.join(staging, p), body);
+      fs.writeFileSync(path.join(staging, p), opts.stall ? body.subarray(0, 1) : body);
+      if (opts.stall) return new Promise<never>(() => {});
       firstDownloaded();
       await opts.hold;
       return { status: res.status, size: body.length };
@@ -199,12 +201,32 @@ describe('restoreFromPc', () => {
     expect(phone.replaced).toEqual([['hevier.db', 'media/a.jpg']]);
   });
 
-  it('a restore waits for a sync under way', async () => {
+  it('a restore answers busy while a sync runs', async () => {
     await pcHolds({ 'hevier.db': 'db-1' });
     const phone = fakePhone();
     const syncing = syncNow(phone.io, { pairing }); // takes the lock before its first await
     expect(await restoreFromPc(phone.io, pairing)).toMatchObject({ ok: false, reason: 'busy' });
     await syncing;
+  });
+
+  it('a restore that throws anywhere answers error and frees the lock', async () => {
+    await pcHolds({ 'hevier.db': 'db-1' });
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const phone = fakePhone();
+    phone.io.cleanup = async () => {
+      throw new Error('cannot clean');
+    };
+    expect(await restoreFromPc(phone.io, pairing)).toEqual({ ok: false, reason: 'error' });
+    expect(isSyncBusy()).toBe(false);
+  });
+
+  it('a download that stops moving answers timeout, frees the lock and leaves nothing staged', async () => {
+    await pcHolds({ 'hevier.db': 'db-1', 'media/a.jpg': 'photo-a' });
+    const phone = fakePhone({ stall: true, wipeOnCleanup: true });
+    expect(await restoreFromPc(phone.io, pairing, { stallMs: 50 })).toEqual({ ok: false, reason: 'timeout' });
+    expect(isSyncBusy()).toBe(false);
+    expect(() => phone.staged('hevier.db')).toThrow();
+    expect(phone.replaced).toEqual([]);
   });
 
   it('no copy on the PC', async () => {

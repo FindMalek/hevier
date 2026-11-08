@@ -34,6 +34,8 @@ export function syncMessage(result: SyncResult, usb = false): string {
       return 'This copy came from another phone. Replace it?';
     case 'restoreKept':
       return 'Restore failed, and some of your data is in a safe copy on this phone. Close Hevier and open it again to put it back.';
+    case 'timeout':
+      return 'The PC stopped answering during the transfer. Check the Wi-Fi and try again.';
     case 'busy':
       return 'Another sync or restore is still running. Try again in a moment.';
     case 'error':

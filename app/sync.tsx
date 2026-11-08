@@ -81,15 +81,7 @@ export default function SyncScreen() {
   async function restore() {
     setBackup(null);
     setBusy(true);
-    let r: Awaited<ReturnType<typeof restoreFromPc>>;
-    try {
-      r = await restoreFromPc(expoIO, pairing!);
-    } catch (e) {
-      console.warn('[sync] restore threw', e);
-      setBusy(false);
-      setNote('Restore failed. Try again.');
-      return;
-    }
+    const r = await restoreFromPc(expoIO, pairing!);
     if (r.ok) {
       await reloadAppAsync();
       return;
