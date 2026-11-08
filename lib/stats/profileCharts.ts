@@ -2,6 +2,7 @@ import { MAX_SCALE_MAGNITUDES, MAX_SCALE_TICKS } from '@/constants/profile';
 import { SECONDS_PER_HOUR } from '@/constants/time';
 import { SHORT_VOLUME_FROM_KG } from '@/constants/weight';
 import { startOfDay, startOfMonth, startOfWeek } from '@/lib/date';
+import { finiteOr } from '@/lib/number';
 import { monthDay, monthName, shortDate, shortMonth } from '@/lib/format/date';
 import { plural } from '@/lib/format/text';
 import { shortVolumeLabel, thousandsLabel, volumeLabel } from '@/lib/format/weight';
@@ -18,14 +19,14 @@ function step(d: Date, unit: BarUnit, steps = 1): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + steps * (unit === 'week' ? 7 : 1));
 }
 
+const METRIC_VALUES: Record<ProfileMetric, (s: ProfileSession) => number> = {
+  duration: (s) => s.durationSeconds / SECONDS_PER_HOUR, // hours, so the grid lands on whole hours
+  volume: (s) => s.volumeKg,
+  reps: (s) => s.reps,
+};
+
 export function metricValue(s: ProfileSession, metric: ProfileMetric): number {
-  const value =
-    metric === 'duration'
-      ? s.durationSeconds / SECONDS_PER_HOUR // hours, so the grid lands on whole hours
-      : metric === 'volume'
-        ? s.volumeKg
-        : s.reps;
-  return Number.isFinite(value) ? value : 0;
+  return finiteOr(METRIC_VALUES[metric](s));
 }
 
 // One bar per day, week or month up to the current one, empty ones included.
