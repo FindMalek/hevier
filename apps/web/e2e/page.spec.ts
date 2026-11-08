@@ -6,7 +6,7 @@ test.describe('seo', () => {
     await page.goto('/');
     await expect(page).toHaveTitle(/Hevier/);
     await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /no account/i);
-    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /opengraph-image/);
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /\/og\.png$/);
     await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
     const raw = await page.locator('script[type="application/ld+json"]').textContent();
     const data = JSON.parse(raw ?? '{}');
@@ -18,7 +18,7 @@ test.describe('seo', () => {
   test('robots, sitemap and share image are served', async ({ request }) => {
     expect((await request.get('/robots.txt')).ok()).toBe(true);
     expect((await request.get('/sitemap.xml')).ok()).toBe(true);
-    const og = await request.get('/opengraph-image');
+    const og = await request.get('/og.png');
     expect(og.ok()).toBe(true);
   });
 });

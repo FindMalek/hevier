@@ -26,11 +26,13 @@ export const metadata: Metadata = {
     description: SITE.description,
     url: '/',
     locale: 'en_US',
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'Hevier: train hard, recover smart' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Hevier: train hard, recover smart',
     description: SITE.description,
+    images: ['/og.png'],
   },
   robots: { index: true, follow: true },
   formatDetection: { telephone: false },
