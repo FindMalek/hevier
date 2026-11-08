@@ -2,6 +2,7 @@ import { KEY_HEADER } from '@/shared/sync-protocol';
 import type { BeginRequest, BeginResponse, Refusal, StatusResponse } from '@/shared/sync-types';
 import { withSyncLock } from './lock';
 import { baseUrl, getPairing, setLastSynced } from './pairing';
+import { TransferTimeout, withStallTimeout } from './transfer';
 import { SYNC_TIMEOUTS } from '@/constants/motion';
 import { SYNC_HOSTS } from '@/constants/storage';
 import type { Pairing, SyncFailure, SyncIO, SyncResult } from '@/types/sync';
@@ -59,7 +60,7 @@ export async function fetchStatus(pairing: Pairing, timeoutMs = SYNC_TIMEOUTS.re
   return (await res.json()) as StatusResponse;
 }
 
-type SyncOptions = { force?: boolean; timeoutMs?: number; pairing?: Pairing | null };
+type SyncOptions = { force?: boolean; timeoutMs?: number; stallMs?: number; pairing?: Pairing | null };
 
 export function syncNow(io: SyncIO, opts: SyncOptions = {}): Promise<SyncResult> {
   return withSyncLock(() => runSync(io, opts));
@@ -97,13 +98,16 @@ async function runSync(io: SyncIO, opts: SyncOptions): Promise<SyncResult> {
     }
     if (begin.status !== 200) return { ok: false, reason: 'error' };
 
-    // Photos and videos can be big: no time limit on the uploads.
+    // Photos and videos can be big, so an upload has no limit on its length,
+    // only on how long it stands still (SYNC_TIMEOUTS.stallMs).
     const { need } = (await begin.json()) as BeginResponse;
+    const stallMs = opts.stallMs ?? SYNC_TIMEOUTS.stallMs;
     for (const p of need) {
-      const code = await io.upload(`${base}/file?path=${encodeURIComponent(p)}`, p, headers);
+      const url = `${base}/file?path=${encodeURIComponent(p)}`;
+      const code = await withStallTimeout(stallMs, (hooks) => io.upload(url, p, headers, hooks));
       if (code !== 200) return { ok: false, reason: 'error' };
     }
-    const commit = await request(`${base}/commit`, { method: 'POST', headers });
+    const commit = await request(`${base}/commit`, { method: 'POST', headers }, SYNC_TIMEOUTS.commitMs);
     if (commit?.status !== 200) return { ok: false, reason: commit ? 'error' : 'pcNotFound' };
 
     await setLastSynced(at);
@@ -111,7 +115,7 @@ async function runSync(io: SyncIO, opts: SyncOptions): Promise<SyncResult> {
     return { ok: true, at };
   } catch (e) {
     console.warn('[sync] failed', e);
-    return { ok: false, reason: 'error' };
+    return { ok: false, reason: e instanceof TransferTimeout ? 'timeout' : 'error' };
   } finally {
     await io.cleanup();
   }

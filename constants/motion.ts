@@ -77,6 +77,11 @@ export const SWIPE_TO_DELETE_MOTION = {
 export const SYNC_TIMEOUTS = {
   requestMs: 10_000, // a sync or status the user asked for
   quietMs: 2000, // the quiet copy on app open: gives up fast
+  commitMs: 60_000, // the PC checks and files the copy it received
+  // A photo, video or database transfer is given up when no bytes moved for
+  // this long. There is no limit on the whole transfer: a big file over slow
+  // Wi-Fi may take minutes, but it keeps moving.
+  stallMs: 30_000,
 };
 
 // How often a scrolling list reports its position: about once a frame.

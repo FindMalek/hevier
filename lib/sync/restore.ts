@@ -2,16 +2,18 @@ import { KEY_HEADER } from '@/shared/sync-protocol';
 import { fetchStatus } from './client';
 import { withSyncLock } from './lock';
 import { baseUrl } from './pairing';
+import { TransferTimeout, withStallTimeout } from './transfer';
 import { adoptDeviceId } from './deviceId';
+import { SYNC_TIMEOUTS } from '@/constants/motion';
 import type { Pairing, SyncFailure, SyncIO } from '@/types/sync';
 
 // Restore from PC: the PC's copy replaces everything on this phone. Every
 // file is downloaded and checked first; any failure leaves the phone as it was.
 // The phone then takes the copy's device id, so its next syncs replace that copy.
-export function restoreFromPc(io: SyncIO, pairing: Pairing): Promise<{ ok: true } | SyncFailure> {
+export function restoreFromPc(io: SyncIO, pairing: Pairing, opts: { stallMs?: number } = {}): Promise<{ ok: true } | SyncFailure> {
   return withSyncLock(async () => {
     try {
-      return await restore(io, pairing);
+      return await restore(io, pairing, opts.stallMs ?? SYNC_TIMEOUTS.stallMs);
     } catch (e) {
       console.warn('[sync] restore failed', e);
       return { ok: false, reason: 'error' };
@@ -19,7 +21,7 @@ export function restoreFromPc(io: SyncIO, pairing: Pairing): Promise<{ ok: true 
   });
 }
 
-async function restore(io: SyncIO, pairing: Pairing): Promise<{ ok: true } | SyncFailure> {
+async function restore(io: SyncIO, pairing: Pairing, stallMs: number): Promise<{ ok: true } | SyncFailure> {
   const status = await fetchStatus(pairing);
   if ('ok' in status) return status;
   if (!status.backup) return { ok: false, reason: 'error' };
@@ -29,10 +31,14 @@ async function restore(io: SyncIO, pairing: Pairing): Promise<{ ok: true } | Syn
   await io.cleanup(); // an old half-done restore
   for (const f of files) {
     const url = `${baseUrl(pairing)}/file?path=${encodeURIComponent(f.path)}`;
-    const got = await io.download(url, f.path, headers).catch(() => null);
+    let timedOut = false;
+    const got = await withStallTimeout(stallMs, (hooks) => io.download(url, f.path, headers, hooks)).catch((e) => {
+      timedOut = e instanceof TransferTimeout;
+      return null;
+    });
     if (!got || got.status !== 200 || got.size !== f.size) {
-      await io.cleanup();
-      return { ok: false, reason: 'error' };
+      await io.cleanup(); // nothing half downloaded stays in staging
+      return { ok: false, reason: timedOut ? 'timeout' : 'error' };
     }
   }
   await io.replaceAll(files.map((f) => f.path));
