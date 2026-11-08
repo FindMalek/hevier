@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { SITE } from '@/lib/site';
+import { HAS_APK_RELEASE, SITE } from '@/lib/site';
 import { PlusIcon } from './icons';
 
 interface Item {
@@ -39,9 +39,18 @@ export const FAQ_ITEMS: Item[] = [
     q: 'How do I install it?',
     a: (
       <p>
-        Download the APK from the{' '}
-        <a href={SITE.releases}>GitHub releases page</a>, open it, and allow installs from your browser or file manager
-        when Android asks. You can also build it yourself from the source.
+        {HAS_APK_RELEASE ? (
+          <>
+            Download the APK from the <a href={SITE.releases}>GitHub releases page</a>, open it, and allow installs from
+            your browser or file manager when Android asks. You can also build it yourself from the source.
+          </>
+        ) : (
+          <>
+            There is no APK release yet. Build it from source with the steps in the{' '}
+            <a href={SITE.getStarted}>README</a>, then install it on your phone. Releases will show up on{' '}
+            <a href={SITE.releases}>GitHub</a>.
+          </>
+        )}
       </p>
     ),
   },

@@ -1,4 +1,4 @@
-import { SITE } from '@/lib/site';
+import { HAS_APK_RELEASE, SITE } from '@/lib/site';
 
 export function JsonLd() {
   const data = {
@@ -10,7 +10,7 @@ export function JsonLd() {
     operatingSystem: 'Android',
     isAccessibleForFree: true,
     license: 'https://www.gnu.org/licenses/agpl-3.0.html',
-    downloadUrl: SITE.releases,
+    ...(HAS_APK_RELEASE ? { downloadUrl: SITE.releases } : {}),
     url: SITE.url,
     sameAs: [SITE.repo],
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },

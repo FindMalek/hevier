@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { SITE } from '@/lib/site';
+import { CTA, HAS_APK_RELEASE, SITE } from '@/lib/site';
 import { ArrowRightIcon, DownloadIcon, GithubIcon } from './icons';
 
 export function Get() {
@@ -18,14 +18,16 @@ export function Get() {
         <div className="get">
           <div className="card get-main" data-reveal>
             <p className="card-kicker">Android</p>
-            <h3 className="h3">Download the APK.</h3>
+            <h3 className="h3">{HAS_APK_RELEASE ? 'Download the APK.' : 'Build it from source.'}</h3>
             <p className="lead" style={{ marginTop: 12, maxWidth: 460 }}>
-              Grab the latest build from the GitHub releases page. No account, no store sign-in.
+              {HAS_APK_RELEASE
+                ? 'Grab the latest build from the GitHub releases page. No account, no store sign-in.'
+                : 'There is no APK release yet. The README shows how to build and install it on your phone. Releases will appear on GitHub.'}
             </p>
             <div className="cta-row" style={{ justifyContent: 'flex-start' }}>
-              <a href={SITE.releases} className="btn btn-primary">
+              <a href={CTA.href} className="btn btn-primary">
                 <DownloadIcon />
-                Download for Android
+                {CTA.label}
               </a>
             </div>
             <div style={{ marginTop: 30, paddingTop: 22, borderTop: '1px solid var(--line)' }}>

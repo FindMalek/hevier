@@ -1,4 +1,4 @@
-import { SITE } from '@/lib/site';
+import { CTA, HAS_APK_RELEASE, SITE } from '@/lib/site';
 import { DownloadIcon, GithubIcon } from './icons';
 import { Phone } from './phone';
 
@@ -22,9 +22,9 @@ export function Hero() {
             account. No ads. No subscription.
           </p>
           <div className="cta-row" data-rise style={{ '--i': 3 } as React.CSSProperties}>
-            <a href={SITE.releases} className="btn btn-primary">
+            <a href={CTA.href} className="btn btn-primary">
               <DownloadIcon />
-              Download for Android
+              {CTA.label}
             </a>
             <a href={SITE.repo} className="btn btn-glass">
               <GithubIcon />
@@ -32,7 +32,9 @@ export function Hero() {
             </a>
           </div>
           <p className="fine" data-rise style={{ '--i': 4 } as React.CSSProperties}>
-            APK from the GitHub releases page. Coming to iOS. AGPL-3.0.
+            {HAS_APK_RELEASE
+              ? 'APK from the GitHub releases page. Coming to iOS. AGPL-3.0.'
+              : 'No APK release yet: build it from source today. Coming to iOS. AGPL-3.0.'}
           </p>
         </div>
 

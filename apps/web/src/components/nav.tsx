@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { NAV_LINKS, SITE } from '@/lib/site';
+import { CTA, NAV_LINKS } from '@/lib/site';
 import { DownloadIcon } from './icons';
 
 export function Nav() {
@@ -17,9 +17,9 @@ export function Nav() {
             </a>
           ))}
         </nav>
-        <a href={SITE.releases} className="btn btn-primary btn-sm">
+        <a href={CTA.href} className="btn btn-primary btn-sm">
           <DownloadIcon size={16} />
-          Get the APK
+          {CTA.navLabel}
         </a>
       </div>
     </header>

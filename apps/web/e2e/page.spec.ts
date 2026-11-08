@@ -67,13 +67,17 @@ test.describe('layout', () => {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 
-  test('download buttons point to the releases page', async ({ page }) => {
+  test('download buttons match the release state', async ({ page }) => {
+    const hasApk = process.env.NEXT_PUBLIC_HAS_APK_RELEASE === 'true';
     await openPage(page, { hideChrome: false });
-    const links = page.getByRole('link', { name: /Download for Android|Get the APK/ });
-    expect(await links.count()).toBeGreaterThanOrEqual(2);
+    const label = hasApk ? /Download for Android|Get the APK/ : /Get it on GitHub|^Get it$/;
+    const links = page.getByRole('link', { name: label });
+    expect(await links.count()).toBeGreaterThanOrEqual(3);
     for (const href of await links.evaluateAll((nodes) => nodes.map((n) => n.getAttribute('href')))) {
-      expect(href).toMatch(/github\.com\/.+\/releases$/);
+      expect(href).toMatch(hasApk ? /github\.com\/.+\/releases$/ : /github\.com\/.+#getting-started$/);
     }
+    const text = (await page.locator('main').innerText()).toLowerCase();
+    if (!hasApk) expect(text).not.toContain('download the apk');
   });
 });
 

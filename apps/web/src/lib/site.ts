@@ -3,8 +3,14 @@ const REPO = 'https://github.com/hamzaamry/hevier';
 function siteUrl(): string {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  if (process.env.VERCEL) {
+    throw new Error('Set NEXT_PUBLIC_SITE_URL: a Vercel build needs the real site URL for canonical links and the share image.');
+  }
   return 'http://localhost:4310';
 }
+
+// Flip with NEXT_PUBLIC_HAS_APK_RELEASE=true once the releases page has an APK to download.
+export const HAS_APK_RELEASE = process.env.NEXT_PUBLIC_HAS_APK_RELEASE === 'true';
 
 export const SITE = {
   name: 'Hevier',
@@ -19,7 +25,12 @@ export const SITE = {
   license: `${REPO}/blob/main/LICENSE`,
   scienceDocs: `${REPO}/tree/main/docs/science`,
   readme: `${REPO}#readme`,
+  getStarted: `${REPO}#getting-started`,
 } as const;
+
+export const CTA = HAS_APK_RELEASE
+  ? { label: 'Download for Android', navLabel: 'Get the APK', href: SITE.releases }
+  : { label: 'Get it on GitHub', navLabel: 'Get it', href: SITE.getStarted };
 
 export const NAV_LINKS = [
   { href: '#features', label: 'Features' },
