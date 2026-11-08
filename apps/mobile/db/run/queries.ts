@@ -19,4 +19,16 @@ export const UPSERT_RUN_FEEDBACK = `
   VALUES (?, ?, ?)
   ON CONFLICT(workout_id) DO UPDATE SET verdict_shown = excluded.verdict_shown, legs_felt = excluded.legs_felt`;
 
+// The built-in Run exercise (migration 015), or the user's own of that name.
+export const SELECT_RUN_EXERCISE_ID = 'SELECT id FROM exercises WHERE name = ?';
+
+// Any saved run at all: one row if there is one.
+export const SELECT_ANY_RUN = `
+  SELECT 1 AS found
+  FROM sets s
+  JOIN workout_exercises we ON we.id = s.workout_exercise_id
+  JOIN exercises e ON e.id = we.exercise_id
+  WHERE e.name = ?
+  LIMIT 1`;
+
 export const DELETE_RUN_FEEDBACK = 'DELETE FROM run_feedback WHERE workout_id = ?';

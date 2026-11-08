@@ -4,6 +4,7 @@ import type {
   RUN_KINDS,
   RUN_LEG_DAY_PRESETS,
   RUN_LEGS_FELT,
+  RUN_LOG_WHEN,
   RUN_VERDICTS,
   RUN_WEARABLE_SOURCES,
 } from '@/constants/run';
@@ -80,11 +81,62 @@ export interface Readiness {
   gates: Gate[]; // most restrictive first
   provisional: boolean; // no check-in for this slot's day yet
   confidence: 'low' | 'medium'; // never high: the app can't see most of what matters
+  recentLifting: boolean; // any lifting in the week before the slot
   legScore: number;
   load: LoadState;
   runs28: number;
   hardShare28: number;
   guidance: RunGuidance | null; // null when the verdict is no run
+}
+
+// Run settings, saved as one JSON value in app_state (db/run/settings.ts).
+export interface RunSettings {
+  // null until the user chooses: then it is on only for someone who has logged a run.
+  enabled: boolean | null;
+  slotMinutes: number; // minutes after midnight the run usually happens
+  disclaimerSeen: boolean;
+}
+
+export type RunLogWhen = (typeof RUN_LOG_WHEN)[number];
+
+// A change to the check-in: the fields to set, or a function of the check-in as it is now (a toggle).
+export type CheckInChange = Partial<CheckIn> | ((current: CheckIn) => Partial<CheckIn>);
+
+// What the run screens load (hooks/useRunReadiness.ts), before the check-in is applied.
+export interface RunLoaded {
+  settings: RunSettings;
+  sets: StatSet[];
+  now: Date;
+  slotMs: number; // the next run slot
+}
+
+// Everything the run screens show, loaded together (hooks/useRunReadiness.ts).
+export interface RunScreenData {
+  settings: RunSettings;
+  on: boolean; // the feature shows (lib/training/run.ts runIsOn)
+  sets: StatSet[];
+  checkIn: CheckIn | null;
+  now: Date;
+  slotMs: number; // the next run slot
+  readiness: Readiness; // for that slot
+  days: Readiness[]; // the next mornings from that slot, the first being `readiness`
+}
+
+// What Log Run shows after saving a run.
+export interface SavedRun {
+  workoutId: string;
+  verdictShown: RunVerdict;
+  pace: string | null;
+  easy: string | null;
+}
+
+// What Log Run saves (db/run/logRun.ts).
+export interface LogRunInput {
+  startMs: number;
+  seconds: number;
+  km: number | null;
+  rpe: number | null;
+  verdictShown: RunVerdict; // what the readiness said for that morning
 }
 
 export interface ReadinessInput {

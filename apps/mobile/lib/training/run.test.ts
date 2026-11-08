@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/db/client', () => ({ getDb: async () => null }));
 const { recovery, setEfforts } = await import('./effort');
-const { easyPace, intensityMinutes, legScore, loadState, runKind, runLoad, runsOf, suggestMinutes } = await import('./run');
+const { easyPace, intensityMinutes, legScore, loadState, runIsOn, runKind, runLoad, runsOf, suggestMinutes } = await import('./run');
 type StatSet = import('@/types/stats').StatSet;
 type RunLog = import('@/types/run').RunLog;
 
@@ -70,6 +70,13 @@ describe('run load', () => {
   });
 });
 
+describe('runIsOn', () => {
+  it('follows the setting once chosen; before that, only a runner sees it', () => {
+    expect([runIsOn(true, false), runIsOn(false, true)]).toEqual([true, false]);
+    expect([runIsOn(null, true), runIsOn(null, false)]).toEqual([true, false]);
+  });
+});
+
 describe('loadState', () => {
   it('one 120 AU run yesterday: the short average jumps, the floor keeps the ratio sane', () => {
     const s = loadState(logs([runSet(1, 30, 4)]), SLOT);
@@ -119,7 +126,8 @@ describe('loadState', () => {
       expect(new Date(y, m, d - 4).getTimezoneOffset()).not.toBe(slot.getTimezoneOffset()); // a change in between
       expect(before(slot)).toBeCloseTo(before(new Date(2026, 6, 15, 6, 30)), 6);
     } finally {
-      process.env.TZ = previous;
+      if (previous === undefined) delete process.env.TZ;
+      else process.env.TZ = previous;
     }
   });
 });

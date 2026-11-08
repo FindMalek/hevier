@@ -136,3 +136,28 @@ export const RUN_HRV_MIN_BASELINE = 14;
 export const RUN_HRV_SWC_SD = 0.5; // recent week this many baseline SDs below the baseline mean
 export const RUN_RHR_RECENT_DAYS = 3;
 export const RUN_RHR_RISE_BPM = 3; // a guess
+
+// --- Screens ---------------------------------------------------------------------
+
+export const RUN_FORECAST_DAYS = 5;
+export const RUN_WHY_PREVIEW = 3; // reasons shown before "More"
+export const RUN_SLOT_STEP_MINUTES = 15;
+export const MINUTES_PER_DAY = 24 * 60;
+export const RUN_WORKOUT_TITLE = 'Run';
+// What a quality run is built from, around its hard minutes.
+export const RUN_WARMUP_MINUTES = 10;
+export const RUN_HARD_BLOCK_MINUTES = 3;
+export const RUN_BLOCK_RECOVERY_MINUTES = 2;
+// "If you run anyway" after a strength-only call.
+export const RUN_ANYWAY_RPE_MAX = 3;
+// The check-in's sleep stepper.
+export const RUN_SLEEP_START_H = 7;
+export const RUN_SLEEP_STEP_H = 0.5;
+export const RUN_SLEEP_MIN_H = 3;
+export const RUN_SLEEP_MAX_H = 12;
+// Log Run: the whole effort scale, and when the run was (just now, or yesterday at the run slot).
+export const RUN_EFFORT_SCALE_ROWS = [
+  [1, 2, 3, 4, 5],
+  [6, 7, 8, 9, 10],
+] as const;
+export const RUN_LOG_WHEN = ['now', 'yesterday'] as const;

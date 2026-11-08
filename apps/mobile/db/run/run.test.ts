@@ -27,12 +27,18 @@ const fakeDb = {
   async getFirstAsync<T>(sqlText: string, params: unknown[] = []) {
     return rows<T>(sqlText, params)[0] ?? null;
   },
+  async withTransactionAsync(fn: () => Promise<void>) {
+    await fn();
+  },
 };
 
 vi.mock('@/db/client', () => ({ getDb: async () => fakeDb }));
+vi.mock('expo-crypto', () => ({ randomUUID: () => 'new-id' }));
 
 const { getCheckIn, saveCheckIn } = await import('./checkIns');
 const { saveRunFeedback } = await import('./feedback');
+const { logRun } = await import('./logRun');
+const { getRunSettings, isRunOn, saveRunSettings } = await import('./settings');
 
 beforeEach(async () => {
   const SQL = await initSqlJs();
@@ -53,6 +59,49 @@ describe('check-ins', () => {
     expect(await getCheckIn('2026-11-10')).toEqual({ ...first, feel: 'drained', sleepHours: null, legsSore: true });
     expect(rows('SELECT date FROM run_checkins')).toHaveLength(1);
     expect(await getCheckIn('2026-11-11')).toBeNull();
+  });
+});
+
+describe('run settings', () => {
+  it('start unchosen, at 06:30, and keep what was changed', async () => {
+    expect(await getRunSettings()).toEqual({ enabled: null, slotMinutes: 390, disclaimerSeen: false });
+    await saveRunSettings({ enabled: false, slotMinutes: 420, disclaimerSeen: true });
+    expect(await getRunSettings()).toEqual({ enabled: false, slotMinutes: 420, disclaimerSeen: true });
+  });
+
+  it('are off for someone who never ran, on once a run is logged, and the choice wins', async () => {
+    expect(await isRunOn()).toBe(false);
+    await logRun({ startMs: Date.now(), seconds: 1800, km: null, rpe: null, verdictShown: 'easy' });
+    expect(await isRunOn()).toBe(true);
+    await saveRunSettings({ enabled: false, slotMinutes: 390, disclaimerSeen: false });
+    expect(await isRunOn()).toBe(false);
+    await saveRunSettings({ enabled: true, slotMinutes: 390, disclaimerSeen: false });
+    expect(await isRunOn()).toBe(true);
+  });
+
+  it('a lifter’s sets do not turn it on', async () => {
+    raw.exec(`
+      INSERT INTO exercises (id, name, type) VALUES ('sq', 'Squat', 'weight_reps');
+      INSERT INTO workouts (id, title, start_time) VALUES ('w', 'Legs', '2026-11-09T20:00:00Z');
+      INSERT INTO workout_exercises (id, workout_id, exercise_id, order_index) VALUES ('we', 'w', 'sq', 0);
+      INSERT INTO sets (id, workout_exercise_id, set_index, set_type, weight_kg, reps) VALUES ('s', 'we', 0, 'normal', 100, 5);
+    `);
+    expect(await isRunOn()).toBe(false);
+  });
+});
+
+describe('logRun', () => {
+  it('saves a finished workout with one Run set and the verdict shown', async () => {
+    const start = new Date(2026, 10, 10, 6, 2).getTime();
+    await logRun({ startMs: start, seconds: 1920, km: 5.2, rpe: 3, verdictShown: 'easy' });
+    expect(rows('SELECT title, start_time, end_time FROM workouts')).toEqual([
+      { title: 'Run', start_time: new Date(start).toISOString(), end_time: new Date(start + 1920_000).toISOString() },
+    ]);
+    expect(
+      rows(`SELECT e.name, s.distance_km, s.duration_seconds, s.rpe FROM sets s
+            JOIN workout_exercises we ON we.id = s.workout_exercise_id JOIN exercises e ON e.id = we.exercise_id`)
+    ).toEqual([{ name: 'Run', distance_km: 5.2, duration_seconds: 1920, rpe: 3 }]);
+    expect(rows('SELECT verdict_shown, legs_felt FROM run_feedback')).toEqual([{ verdict_shown: 'easy', legs_felt: null }]);
   });
 });
 

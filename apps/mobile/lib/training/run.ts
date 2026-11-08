@@ -31,6 +31,12 @@ import type { RecoveryState, StatSet } from '@/types/stats';
 // The numbers are in constants/run.ts; lib/training/runReadiness.ts puts them
 // together into a verdict.
 
+// Whether the run screens show: for whoever turned them on or off in Settings; until they
+// choose, only for someone who has logged a run (a lifter who never runs sees nothing).
+export function runIsOn(enabled: boolean | null, hasRun: boolean): boolean {
+  return enabled ?? hasRun;
+}
+
 // Session load in arbitrary units: minutes × how hard it felt (1–10).
 export function runLoad(minutes: number, rpe: number): number {
   return minutes * rpe;

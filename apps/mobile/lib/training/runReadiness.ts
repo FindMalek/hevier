@@ -2,7 +2,7 @@ import { recovery, setEfforts, startMsOf } from './effort';
 import { easyPace, hoursBefore, intensityMinutes, legScore, loadState, runLoad, runsOf, suggestMinutes } from './run';
 import { dayKey, shiftDays } from '@/lib/date';
 import { clamp } from '@/lib/math';
-import { MS_PER_DAY } from '@/constants/time';
+import { MS_PER_DAY, MS_PER_SECOND } from '@/constants/time';
 import { FOOTBALL } from '@/constants/football';
 import { RECENTLY_TRAINED_DAYS } from '@/constants/training';
 import {
@@ -37,6 +37,7 @@ import type {
   ReadinessInput,
   RunGuidance,
   RunLog,
+  RunLogWhen,
   RunVerdict,
 } from '@/types/run';
 import type { StatSet } from '@/types/stats';
@@ -173,12 +174,14 @@ export function readinessAt(input: ReadinessInput, slotMs: number): Readiness {
     lastHard: lastHardRun(runs, slotMs),
   });
   const verdict = verdictOf(gates);
+  const recentLifting = hasRecentLifting(input.sets, slotMs);
   return {
     slotMs,
     verdict,
     gates,
     provisional: checkIn === null,
-    confidence: intensity.runs >= RUN_MIN_RUNS && hasRecentLifting(input.sets, slotMs) ? 'medium' : 'low',
+    confidence: intensity.runs >= RUN_MIN_RUNS && recentLifting ? 'medium' : 'low',
+    recentLifting,
     legScore: legs,
     load,
     runs28: intensity.runs,
@@ -196,6 +199,21 @@ export function forecast(input: ReadinessInput, fromSlotMs: number, days: number
   return Array.from({ length: days }, (_, i) =>
     readinessAt(i === 0 ? input : { ...input, checkIn: null }, slotAt(shiftDays(from, i), slotMinutes))
   );
+}
+
+// When a run being logged started: it ended just now, or it was yesterday at the run slot.
+export function loggedRunStartMs(when: RunLogWhen, now: Date, seconds: number, slotMinutes: number): number {
+  return when === 'yesterday' ? slotAt(shiftDays(now, -1), slotMinutes) : now.getTime() - seconds * MS_PER_SECOND;
+}
+
+// What the readiness said for the morning of the day of `startMs`, before any check-in.
+export function verdictShownAt(sets: StatSet[], startMs: number, slotMinutes: number): RunVerdict {
+  return readinessAt({ sets, checkIn: null }, slotAt(new Date(startMs), slotMinutes)).verdict;
+}
+
+// The first of `days` with a verdict at least `verdict`; null when none.
+export function firstAtLeast(days: Readiness[], verdict: RunVerdict): Readiness | null {
+  return days.find((d) => rank(d.verdict) >= rank(verdict)) ?? null;
 }
 
 // `sets` plus a leg session at `atMs` that isn't saved anywhere: sets to failure

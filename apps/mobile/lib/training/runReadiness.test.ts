@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { RUN_GATE_IDS, RUN_SLOT_DEFAULT_MINUTES, RUN_VERDICTS } from '@/constants/run';
 
 vi.mock('@/db/client', () => ({ getDb: async () => null }));
-const { forecast, nextRunSlotMs, nextSlotMs, readinessAt, verdictOf, withLegDay } = await import('./runReadiness');
+const { firstAtLeast, forecast, loggedRunStartMs, nextRunSlotMs, nextSlotMs, readinessAt, verdictOf, verdictShownAt, withLegDay } =
+  await import('./runReadiness');
 const { runsOf: runsOfSets } = await import('./run');
 type StatSet = import('@/types/stats').StatSet;
 type CheckIn = import('@/types/run').CheckIn;
@@ -273,6 +274,24 @@ describe('slots and the forecast', () => {
     const days = forecast(input([...h1(), ...squats(4)]), SLOT, 5, SLOT_MINUTES);
     expect(days.map((d) => d.verdict)).toEqual(['strength_only', 'easy', 'easy', 'quality', 'quality']);
     expect(days.every((d) => d.provisional)).toBe(true);
+  });
+
+  it('finds the next easy run and the next quality run in the forecast', () => {
+    const days = forecast(input([...h1(), ...squats(4)]), SLOT, 5, SLOT_MINUTES);
+    expect(firstAtLeast(days, 'easy')?.slotMs).toBe(slotOn(11));
+    expect(firstAtLeast(days, 'quality')?.slotMs).toBe(slotOn(13));
+    expect(firstAtLeast(days.slice(0, 1), 'easy')).toBeNull();
+  });
+
+  it('a logged run started when it ended minus its length, or yesterday at the slot', () => {
+    const now = new Date(2026, 10, 10, 7, 5);
+    expect(loggedRunStartMs('now', now, 1920, 390)).toBe(new Date(2026, 10, 10, 6, 33).getTime());
+    expect(loggedRunStartMs('yesterday', now, 1920, 390)).toBe(new Date(2026, 10, 9, 6, 30).getTime());
+  });
+
+  it('the verdict shown for a run is that morning’s call', () => {
+    expect(verdictShownAt([...h1(), ...squats(4)], new Date(2026, 10, 10, 6, 40).getTime(), 390)).toBe('strength_only');
+    expect(verdictShownAt(h1(), new Date(2026, 10, 10, 6, 40).getTime(), 390)).toBe('quality');
   });
 
   it('only the first morning uses the check-in', () => {
