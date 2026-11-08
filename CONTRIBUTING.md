@@ -30,6 +30,13 @@ Coverage counts the logic (`apps/mobile/lib/`, `db/`, `stores/`,
 hooks have no unit tests and don't count (see `sonar-project.properties`). New
 logic needs tests: `pnpm test:coverage` shows what they cover.
 
+The same run also checks `expo-doctor`, the Android bundle and `expo prebuild`,
+builds a debug APK you can download from the run, builds the landing page and
+runs its Playwright tests, and lints the workflows. Give the pull request a
+title like a commit: `type(scope): subject`, subject up to 5 words, lowercase
+(`fix(sync): keep key on restore`). Releases, secrets and branch protection are
+in [docs/ci.md](docs/ci.md).
+
 If you changed a screen, try it on an emulator or phone, and add a screenshot
 to the pull request.
 
