@@ -21,7 +21,7 @@ export const RUN_VERDICT_LINES: Record<RunVerdict, string> = {
 
 // Rest because of pain or illness: no "a walk is fine".
 export const RUN_REST_PAIN_LINE =
-  'Skip it today. If the pain or illness does not settle, or you get chest pain or dizziness, see a doctor.';
+  'Skip the run. If the pain or illness does not settle, or you get chest pain or dizziness, see a doctor.';
 
 // Under a dot in the 5-day strip.
 export const RUN_VERDICT_SHORT: Record<RunVerdict, string> = {
