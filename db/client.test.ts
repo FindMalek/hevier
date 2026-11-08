@@ -23,7 +23,7 @@ vi.mock('expo-sqlite', () => ({
   }),
 }));
 
-const { DataWaitingError, closeDbAndHold, getDb, runBeforeOpen } = await import('./client');
+const { DataWaitingError, addBeforeOpen, closeDbAndHold, getDb } = await import('./client');
 const { runInTransaction } = await import('./transaction');
 
 const pause = (ms = 20) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -82,13 +82,13 @@ describe('closeDbAndHold', () => {
   });
 });
 
-describe('runBeforeOpen', () => {
+describe('addBeforeOpen', () => {
   it('runs before every open, and a false answer keeps the file closed until it says true', async () => {
     const release = await closeDbAndHold();
     release();
     let ready = false;
     const seen: number[] = [];
-    runBeforeOpen(async () => {
+    const remove = addBeforeOpen(async () => {
       seen.push(opened.length);
       return ready;
     });
@@ -99,6 +99,24 @@ describe('runBeforeOpen', () => {
     await getDb();
     expect(opened).toHaveLength(before + 1);
     expect(seen).toEqual([before, before]);
-    runBeforeOpen(async () => true);
+    remove();
+  });
+
+  it('a second task does not replace the first: either one saying false keeps the file closed', async () => {
+    const release = await closeDbAndHold();
+    release();
+    const removeFirst = addBeforeOpen(async () => false);
+    const removeSecond = addBeforeOpen(async () => true);
+    const before = opened.length;
+    await expect(getDb()).rejects.toThrow(DataWaitingError);
+    expect(opened).toHaveLength(before);
+    removeFirst();
+    await getDb();
+    expect(opened).toHaveLength(before + 1);
+    removeSecond();
+  });
+
+  it('says what to do: Try again first, then closing the app', () => {
+    expect(new DataWaitingError().message).toContain('Tap Try again');
   });
 });

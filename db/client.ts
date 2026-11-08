@@ -13,19 +13,32 @@ let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 // opened on files being moved would write to the old ones or open half a copy.
 let swapGate: Promise<void> | null = null;
 
-// Runs before every open of the database file (lib/sync/expoIO.ts puts an
-// interrupted restore back there). While it says false the old data is still
-// waiting, and opening would create an empty database on top of it.
-let beforeOpen: (() => Promise<boolean>) | null = null;
+// Run before every open of the database file (lib/sync/expoIO.ts puts an
+// interrupted restore back there). While one says false the old data is still
+// waiting, and opening would create an empty database on top of it. A list,
+// so a second task can never replace the restore's; the function returned
+// takes the task out again.
+const beforeOpenTasks: (() => Promise<boolean>)[] = [];
 
-export function runBeforeOpen(task: () => Promise<boolean>): void {
-  beforeOpen = task;
+export function addBeforeOpen(task: () => Promise<boolean>): () => void {
+  beforeOpenTasks.push(task);
+  return () => {
+    const at = beforeOpenTasks.indexOf(task);
+    if (at >= 0) beforeOpenTasks.splice(at, 1);
+  };
+}
+
+async function beforeOpenAllowed(): Promise<boolean> {
+  for (const task of beforeOpenTasks) {
+    if (!(await task())) return false;
+  }
+  return true;
 }
 
 // What getDb() rejects with while an interrupted restore's data is still waiting.
 export class DataWaitingError extends Error {
   constructor() {
-    super('Your data is waiting to be put back from an interrupted restore. Close Hevier and open it again.');
+    super('Your data is waiting to be put back from an interrupted restore. Tap Try again. If it still does not open, close Hevier and open it again.');
     this.name = 'DataWaitingError';
   }
 }
@@ -34,9 +47,7 @@ export function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (swapGate) return swapGate.then(getDb);
   if (!dbPromise) {
     dbPromise = (async () => {
-      if (beforeOpen && !(await beforeOpen())) {
-        throw new DataWaitingError();
-      }
+      if (!(await beforeOpenAllowed())) throw new DataWaitingError();
       const db = await SQLite.openDatabaseAsync(STORAGE_FILES.database);
       await runMigrations(db);
       return db;

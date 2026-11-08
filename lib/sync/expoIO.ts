@@ -1,7 +1,7 @@
 import { Directory, File, Paths } from 'expo-file-system';
 
 import type { FileEntry } from '@/shared/sync-types';
-import { closeDbAndHold, runBeforeOpen } from '@/db/client';
+import { addBeforeOpen, closeDbAndHold } from '@/db/client';
 import { MIGRATIONS } from '@/db/migrations';
 import { countWorkouts, lastWorkoutStart, makeSnapshot } from '@/db/sync/sync';
 import { getDeviceId } from './deviceId';
@@ -173,7 +173,7 @@ export function recoverInterruptedRestore(): boolean {
   }
 }
 
-runBeforeOpen(async () => recoverInterruptedRestore());
+addBeforeOpen(async () => recoverInterruptedRestore());
 
 export const expoIO: SyncIO = {
   async snapshot() {
