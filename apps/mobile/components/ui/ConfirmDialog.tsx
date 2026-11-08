@@ -45,6 +45,7 @@ export function DialogButton({
         pressed && !disabled && styles.pressed,
       ]}
       disabled={disabled}
+      accessibilityRole="button"
       onPress={onPress}>
       <Text style={[styles.buttonLabel, destructive && styles.destructive]}>{label}</Text>
     </Pressable>

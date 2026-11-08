@@ -86,7 +86,8 @@ export function muscleSplit(sets: StatSet[]): SplitPart[] {
 // Days from the first set to now (at least a week), for "a week" averages over All time.
 export function daysLogged(sets: StatSet[], now = new Date()): number {
   if (sets.length === 0) return DAYS_PER_WEEK;
-  return Math.max(DAYS_PER_WEEK, (now.getTime() - startMsOf(sets[0])) / MS_PER_DAY);
+  const days = (now.getTime() - startMsOf(sets[0])) / MS_PER_DAY;
+  return days >= DAYS_PER_WEEK ? days : DAYS_PER_WEEK;
 }
 
 // The period ending now and the one before it, `days` long each. Days by the

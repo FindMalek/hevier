@@ -1,6 +1,6 @@
 import type { Manifest } from '@hevier/shared/sync-types';
 import { clock24, compactDateTime } from '@/lib/format/date';
-import type { SyncResult } from '@/types/sync';
+import type { Pairing, SyncResult } from '@/types/sync';
 
 // Words for the Sync with PC screen (app/sync.tsx).
 
@@ -13,6 +13,15 @@ export function lastSyncedLabel(iso: string | null, now = new Date()): string {
 // The Restore from PC confirmation.
 export function restoreMessage(backup: Manifest, now = new Date()): string {
   return `Restore from PC?\n\nBackup from ${lastSyncedLabel(backup.date, now)}, ${backup.workouts} workouts. This replaces everything on this phone, including a workout in progress.`;
+}
+
+// The Pair with PC confirmation, shown before a scanned or opened link is
+// saved. `current` is the PC this phone is already paired with, if any.
+export function pairMessage({ host, port }: Pairing, local: boolean, current: Pairing | null): string {
+  const question = local
+    ? `Pair with ${host}:${port}?\n\nThis phone will send a copy of your workouts and photos there. Only continue if that is your PC.`
+    : `${host}:${port} is outside your local network.\n\nPairing sends a copy of all your workouts and photos to it. Only continue if you know this address.`;
+  return current ? `${question}\n\nThis replaces your current PC (${current.host}).` : question;
 }
 
 export function syncMessage(result: SyncResult, usb = false): string {
