@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { MUSCLE_KEYS, MUSCLE_LABELS, type MuscleKey, type RecoveryState } from '@/lib/recovery';
 import { DAYS, DAYS_LONG, DEFAULT_PLAN, PLAN_CYCLE, PLAN_LABEL, morningStates, type DayPlan } from '@/lib/week';
 import { Body } from './body-figure';
@@ -36,6 +36,14 @@ const TODAY = 3;
 export function WeekStrip() {
   const [plan, setPlan] = useState<DayPlan[]>(DEFAULT_PLAN);
   const [selected, setSelected] = useState(TODAY);
+  const scroller = useRef<HTMLDivElement>(null);
+
+  // On a phone the strip scrolls sideways: start with today in view.
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el || el.scrollWidth <= el.clientWidth) return;
+    el.scrollLeft = (el.scrollWidth / DAYS.length) * (TODAY + 0.5) - el.clientWidth / 2;
+  }, []);
 
   const cycle = (day: number) => {
     setPlan((list) => list.map((kind, i) => (i === day ? PLAN_CYCLE[(PLAN_CYCLE.indexOf(kind) + 1) % PLAN_CYCLE.length] : kind)));
@@ -44,7 +52,7 @@ export function WeekStrip() {
 
   return (
     <div className="week" data-reveal>
-      <div className="week-scroll glass">
+      <div className="week-scroll glass" ref={scroller}>
         <ul className="week-grid">
           {DAYS.map((name, day) => {
             const states = morningStates(plan, day);

@@ -344,9 +344,6 @@
   background: none;
   cursor: pointer;
 }
-.dayfig .m {
-  stroke-width: 3;
-}
 .week-cap {
   margin: 28px 0 0;
   max-width: 62ch;

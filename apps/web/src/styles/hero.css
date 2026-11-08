@@ -424,6 +424,12 @@ html:not(.js) .ag-hint {
   gap: 28px;
   padding: 36px 0 24px;
 }
+.ag-after .cta-row {
+  width: 100%;
+}
+.ag-after .cta-row .btn {
+  flex: 1 1 200px;
+}
 .ag-after .phone {
   width: min(78vw, 300px);
 }
@@ -670,12 +676,17 @@ html:not(.js) .ag-still {
     align-items: stretch;
     gap: clamp(20px, 3vw, 48px);
   }
+  .ag-bodies,
+  .ag-intro,
+  .ag-stage {
+    order: 0;
+  }
   .ag-copy {
     container-type: inline-size;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 20px;
+    justify-content: center;
+    gap: clamp(28px, 6vh, 64px);
     min-height: 0;
     padding: clamp(4px, 2vh, 28px) 0;
   }
