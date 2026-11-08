@@ -20,9 +20,8 @@ An item from the roadmap becomes one or more issues. All of them carry the same
 Labels come from [`.github/labels.json`](../.github/labels.json).
 
 ```bash
-node scripts/apply-labels.mjs                       # dry run: prints the gh commands
-node scripts/apply-labels.mjs --apply               # creates or updates them
-node scripts/apply-labels.mjs --apply --repo hamzaamry/hevier
+node scripts/apply-labels.mjs --repo hamzaamry/hevier           # prints the gh commands, changes nothing
+node scripts/apply-labels.mjs --repo hamzaamry/hevier | sh      # creates or updates the labels
 ```
 
 `gh label create --force` updates the colour and description of a label that

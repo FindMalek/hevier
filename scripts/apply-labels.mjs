@@ -1,18 +1,16 @@
 #!/usr/bin/env node
 // Creates or updates the repo's labels from .github/labels.json.
 //
-//   node scripts/apply-labels.mjs            print the gh commands, change nothing
-//   node scripts/apply-labels.mjs --apply    run them (needs `gh auth login` and write access)
-//   node scripts/apply-labels.mjs --apply --repo owner/name
+//   node scripts/apply-labels.mjs --repo owner/name          print the gh commands, change nothing
+//   node scripts/apply-labels.mjs --repo owner/name | sh     run them (needs `gh auth login` and write access)
 //
-// `gh label create --force` updates the colour and description of a label that
-// already exists, so running it twice is safe. It never deletes a label.
-import { execFileSync } from 'node:child_process';
+// It only prints. `gh label create --force` updates the colour and description
+// of a label that already exists, so running the output twice is safe. It never
+// deletes a label.
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const args = process.argv.slice(2);
-const apply = args.includes('--apply');
 const repoIndex = args.indexOf('--repo');
 const repo = repoIndex === -1 ? null : args[repoIndex + 1];
 if (repoIndex !== -1 && !repo) {
@@ -39,12 +37,8 @@ for (const { name, color, description } of labels) {
 for (const { name, color, description } of labels) {
   const ghArgs = ['label', 'create', name, '--color', color, '--description', description, '--force'];
   if (repo) ghArgs.push('--repo', repo);
-  if (!apply) {
-    const quoted = ghArgs.map((a) => (/^[\w:./-]+$/.test(a) ? a : JSON.stringify(a)));
-    console.log(['gh', ...quoted].join(' '));
-    continue;
-  }
-  execFileSync('gh', ghArgs, { stdio: 'inherit' });
+  const quoted = ghArgs.map((a) => (/^[\w:./-]+$/.test(a) ? a : JSON.stringify(a)));
+  console.log(['gh', ...quoted].join(' '));
 }
 
-if (!apply) console.error(`\n${labels.length} labels. Dry run: add --apply to create them.`);
+console.error(`\n${labels.length} labels. Nothing was changed, pipe the output to sh to create them.`);
