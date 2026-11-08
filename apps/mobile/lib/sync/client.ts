@@ -28,7 +28,7 @@ export function onRefusalChange(listener: (r: SyncFailure | null) => void): () =
 }
 
 // Sync over the USB cable: the Hevier Sync window maps this phone's port 4873
-// to the PC's through the cable (adb reverse, backup-server/usb.ts), so the
+// to the PC's through the cable (adb reverse, apps/sync/usb.ts), so the
 // PC answers at the phone's own address. Same key and port as the pairing.
 
 export function overUsb(pairing: Pairing): Pairing {
