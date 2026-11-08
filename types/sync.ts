@@ -7,10 +7,13 @@ export type Pairing = { host: string; port: number; key: string };
 export type FoundPairing = { pairing: Pairing; code: string };
 
 // hooks/useSavePairing.ts: `confirm` saves the pairing; `saving` is true from
-// the tap until a failed save lets the user try again.
+// the tap until a failed save lets the user try again, and `error` is that
+// failure in words for the user.
 export interface SavePairingState {
   confirm: (pairing: Pairing | null) => Promise<void>;
   saving: boolean;
+  error: string | null;
+  clearError: () => void;
 }
 
 // How lib/sync/client.ts reaches the files, so it runs in tests.

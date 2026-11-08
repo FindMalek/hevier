@@ -2,6 +2,7 @@ import type { Pairing } from '@/types/sync';
 
 export interface PairDialogProps {
   pairing: Pairing | null;
+  error: string | null;
   onConfirm: () => void;
   onCancel: () => void;
 }

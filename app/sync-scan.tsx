@@ -22,7 +22,7 @@ export default function SyncScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [wrongCode, setWrongCode] = useState(false);
   const [found, setFound] = useState<FoundPairing | null>(null);
-  const { confirm, saving } = useSavePairing(() => router.back());
+  const { confirm, saving, error, clearError } = useSavePairing(() => router.back());
   // Camera frames keep reporting the code the user just refused. A ref, not
   // state: the next frame must see it at once, without waiting for a render.
   const refused = useRef({ code: '', until: 0 });
@@ -42,6 +42,7 @@ export default function SyncScanScreen() {
   function cancel() {
     if (saving || !found) return;
     refused.current = { code: found.code, until: Date.now() + SYNC_SCAN_RETRY_MS };
+    clearError();
     setFound(null);
   }
 
@@ -67,7 +68,7 @@ export default function SyncScanScreen() {
           </View>
         )
       )}
-      <PairDialog pairing={found?.pairing ?? null} onConfirm={() => confirm(found?.pairing ?? null)} onCancel={cancel} />
+      <PairDialog pairing={found?.pairing ?? null} error={error} onConfirm={() => confirm(found?.pairing ?? null)} onCancel={cancel} />
     </Screen>
   );
 }

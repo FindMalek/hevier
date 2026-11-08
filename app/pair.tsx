@@ -12,7 +12,7 @@ export default function Pair() {
   const router = useRouter();
   const { host, port, key } = useLocalSearchParams<{ host?: string; port?: string; key?: string }>();
   const pairing = useMemo(() => parsePairLink(`hevier://pair?host=${host ?? ''}&port=${port ?? ''}&key=${key ?? ''}`), [host, port, key]);
-  const { confirm, saving } = useSavePairing(() => router.replace('/sync'));
+  const { confirm, saving, error } = useSavePairing(() => router.replace('/sync'));
 
   useEffect(() => {
     if (!pairing) router.replace('/sync');
@@ -26,7 +26,7 @@ export default function Pair() {
   return (
     <Screen>
       <Stack.Screen options={{ headerShown: false }} />
-      <PairDialog pairing={pairing} onConfirm={() => confirm(pairing)} onCancel={cancel} />
+      <PairDialog pairing={pairing} error={error} onConfirm={() => confirm(pairing)} onCancel={cancel} />
     </Screen>
   );
 }
