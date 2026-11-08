@@ -30,6 +30,7 @@ export function RecoveryDemo() {
   const [sessionId, setSessionId] = useState<SessionId>(DEFAULT_SESSION);
   const [hours, setHours] = useState(DEFAULT_HOURS);
   const [selected, setSelected] = useState<MuscleKey | null>(null);
+  const [announce, setAnnounce] = useState('');
 
   const session = sessionById(sessionId);
 
@@ -40,6 +41,15 @@ export function RecoveryDemo() {
     if (!bodies) return;
     for (const [name, value] of Object.entries(fillVars(session, hours))) bodies.style.setProperty(name, value);
   }, [session, hours]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setAnnounce(
+        `${hours} hours after ${session.label.toLowerCase()}: ${summary.heavy.length} heavy, ${summary.partly.length} partly recovered, ${summary.ready.length} likely ready.`,
+      );
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [hours, session, summary]);
 
   useEffect(() => {
     const bodies = document.querySelector<HTMLElement>('#recovery-map .bodies');
@@ -112,7 +122,7 @@ export function RecoveryDemo() {
         <span>96 h</span>
       </div>
 
-      <div className="legend" role="status" aria-live="polite">
+      <div className="legend">
         <span className="legend-item">
           <span className="swatch-dot sw-heavy" aria-hidden />
           {summary.heavy.length} heavy
@@ -127,6 +137,10 @@ export function RecoveryDemo() {
         </span>
       </div>
 
+      <p className="sr-only" role="status" aria-live="polite">
+        {announce}
+      </p>
+
       <div className="muscle-chips" role="group" aria-label="Muscles in this workout">
         {trained.map((key) => {
           const state = recoveryState(session.sets[key] ?? 0, hours);
@@ -140,7 +154,7 @@ export function RecoveryDemo() {
         })}
       </div>
 
-      <p className="detail" aria-live="polite">
+      <p className="detail">
         {selected && selectedWindow ? (
           <>
             <b>{MUSCLE_LABELS[selected]}</b> got {selectedSets} effective {selectedSets === 1 ? 'set' : 'sets'}. Heavy

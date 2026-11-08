@@ -106,6 +106,16 @@ test.describe('recovery demo', () => {
     await expect(page.locator('.detail')).toContainText('Heavy recent load for the first');
   });
 
+  test('slider announces once after you stop, not on every step', async ({ page }) => {
+    await openPage(page);
+    const slider = page.getByLabel('Time since you trained');
+    const live = page.locator('#recovery [role="status"]');
+    await slider.focus();
+    for (let i = 0; i < 3; i += 1) await page.keyboard.press('ArrowRight');
+    await expect(page.locator('#recovery .legend')).not.toHaveAttribute('aria-live', /.+/);
+    await expect(live).toContainText('23 hours after full body');
+  });
+
   test('slider moves with the arrow keys', async ({ page }) => {
     await openPage(page);
     const slider = page.getByLabel('Time since you trained');
