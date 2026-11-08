@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { GeistMono } from 'geist/font/mono';
 import { GeistSans } from 'geist/font/sans';
+import { BodyDefs } from '@/components/body';
+import { figureCss } from '@/lib/afterglow';
 import { SITE } from '@/lib/site';
 import './globals.css';
 
@@ -47,8 +49,15 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
-      <body>{children}</body>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+        <style dangerouslySetInnerHTML={{ __html: figureCss() }} />
+      </head>
+      <body>
+        <BodyDefs />
+        {children}
+      </body>
     </html>
   );
 }

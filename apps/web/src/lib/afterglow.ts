@@ -48,11 +48,6 @@ type Rgb = readonly [number, number, number];
 const RED: Rgb = [255, 69, 58];
 const ORANGE: Rgb = [255, 159, 10];
 const GREEN: Rgb = [52, 199, 89];
-// Deeper versions for text, so the headline stays readable on a near-white page.
-const RED_INK: Rgb = [196, 40, 32];
-const ORANGE_INK: Rgb = [176, 92, 0];
-const GREEN_INK: Rgb = [24, 128, 56];
-
 const smooth = (a: number, b: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
@@ -62,12 +57,12 @@ const mix = (a: Rgb, b: Rgb, t: number): Rgb => [a[0] + (b[0] - a[0]) * t, a[1] 
 const triplet = (c: Rgb): string => `${Math.round(c[0])} ${Math.round(c[1])} ${Math.round(c[2])}`;
 
 // Smooth colour for the time-lapse. The label shown next to it always comes from recoveryState.
-function blend(cls: 1 | 2 | 3, hours: number, palette: readonly [Rgb, Rgb, Rgb]) {
+function blend(cls: 1 | 2 | 3, hours: number) {
   const w = recoveryWindow(cls === 1 ? 1 : cls === 2 ? 2 : 4);
   if (!w) throw new Error('window');
   const toOrange = smooth(w.heavyUntil - 3, w.heavyUntil + 3, hours);
   const toGreen = smooth(w.partlyUntil - 4, w.partlyUntil + 4, hours);
-  return { color: mix(mix(palette[0], palette[1], toOrange), palette[2], toGreen), toOrange, toGreen };
+  return { color: mix(mix(RED, ORANGE, toOrange), GREEN, toGreen), toOrange, toGreen };
 }
 
 const TRAINED_BY_CLASS = (() => {
@@ -76,6 +71,15 @@ const TRAINED_BY_CLASS = (() => {
   return counts;
 })();
 const TRAINED = TRAINED_BY_CLASS[1] + TRAINED_BY_CLASS[2] + TRAINED_BY_CLASS[3];
+
+// Text colour for the headline and dots: walks the hue from red through amber to green, so the
+// middle of the clock is a clear yellow-green and never a muddy brown.
+function tone(progress: number): string {
+  const t = Math.min(1, Math.max(0, progress));
+  const hue = t < 0.5 ? 27 + (62 - 27) * (t / 0.5) : 62 + (148 - 62) * ((t - 0.5) / 0.5);
+  const light = 0.52 + 0.1 * Math.sin(Math.PI * Math.min(1, t * 1.15));
+  return `oklch(${light.toFixed(3)} 0.19 ${hue.toFixed(1)})`;
+}
 
 export interface Frame {
   vars: Record<string, string>;
@@ -88,22 +92,19 @@ export function frame(hours: number): Frame {
   let red = 0;
   let orange = 0;
   let green = 0;
-  let ink: Rgb = [0, 0, 0];
   const vars: Record<string, string> = {};
   for (const cls of [1, 2, 3] as const) {
-    const fill = blend(cls, h, [RED, ORANGE, GREEN]);
-    const text = blend(cls, h, [RED_INK, ORANGE_INK, GREEN_INK]);
+    const fill = blend(cls, h);
     const n = TRAINED_BY_CLASS[cls] / TRAINED;
     vars[`--w${cls}`] = triplet(fill.color);
     red += n * (1 - fill.toOrange);
     orange += n * fill.toOrange * (1 - fill.toGreen);
     green += n * fill.toOrange * fill.toGreen;
-    ink = [ink[0] + text.color[0] * n, ink[1] + text.color[1] * n, ink[2] + text.color[2] * n];
   }
   vars['--halo-r'] = red.toFixed(3);
   vars['--halo-o'] = orange.toFixed(3);
   vars['--halo-g'] = green.toFixed(3);
-  vars['--tone'] = triplet(ink);
+  vars['--tone'] = tone(orange * 0.5 + green);
   return { vars, hours: h };
 }
 
