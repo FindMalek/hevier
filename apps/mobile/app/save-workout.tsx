@@ -7,13 +7,17 @@ import { X } from 'phosphor-react-native/src/icons/X';
 
 import { updateActiveWorkout, useActiveWorkout, useNow } from '@/stores/activeWorkoutStore';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { NameDialog } from '@/components/ui/NameDialog';
 import { DurationSheet } from '@/components/workout/DurationSheet';
 import { HeaderPillButton, InnerHeader } from '@/components/ui/InnerHeader';
 import { MediaStrip } from '@/components/workout/MediaStrip';
 import { elapsedLabel } from '@/lib/format/duration';
 import { deleteMediaFiles, pickMedia } from '@/lib/workoutMedia';
 import { COLORS, TYPE } from '@/constants/theme';
-import { elapsedSeconds, workoutStats } from '@/lib/workout/activeWorkout';
+import { elapsedSeconds, needsBodyWeight, workoutStats } from '@/lib/workout/activeWorkout';
+import { parseBodyWeight } from '@/lib/domain/bodyWeight';
+import { addBodyWeight } from '@/db/bodyWeight/bodyWeight';
+import { useBodyWeight } from '@/hooks/useBodyWeight';
 import { HIT_SLOPS, RADIUS, SPACE } from '@/constants/layout';
 import { ICON_SIZES, SAVE_WORKOUT_SIZES, SIZES } from '@/constants/sizes';
 import { dateTimeLabel } from '@/lib/format/date';
@@ -28,22 +32,30 @@ import { useSaveGuard } from '@/hooks/useSaveGuard';
 // Save Workout after Finish: title, Duration / Volume / Sets, photos /
 // videos, description, date, Discard. The clock stands still while here and runs on
 // again if the user goes back to Log Workout (hooks/useSaveGuard.ts). Nothing
-// is saved before Save.
+// is saved before Save. With a body weight exercise done and no body weight
+// logged yet, Save asks for it first (Skip saves without).
 export default function SaveWorkout() {
   const workout = useActiveWorkout();
   const now = useNow(false);
   const [timeOpen, setTimeOpen] = useState(false);
   const [discarding, setDiscarding] = useState(false);
   const { update, closeUpdate, save, finish, discard } = useSaveGuard(workout);
+  const { bodyWeight, reload: reloadBodyWeight } = useBodyWeight();
+  const [askingBodyWeight, setAskingBodyWeight] = useState(false);
 
   if (!workout) return <Screen />;
-  const stats = workoutStats(workout);
+  const stats = workoutStats(workout, bodyWeight);
+
+  function onSave() {
+    if (workout && needsBodyWeight(workout, bodyWeight)) setAskingBodyWeight(true);
+    else void save(); // never rejects: useSaveGuard logs a failed save
+  }
   const start = new Date(workout.startTime);
 
   return (
     <Screen>
       <Stack.Screen options={{ headerShown: false }} />
-      <InnerHeader title="Save Workout" right={<HeaderPillButton label="Save" onPress={save} />} />
+      <InnerHeader title="Save Workout" right={<HeaderPillButton label="Save" onPress={onSave} />} />
       <ScrollView contentContainerStyle={SCREEN_STYLES.content} keyboardShouldPersistTaps="handled">
         <View style={styles.titleRow}>
           <TextInput
@@ -118,6 +130,31 @@ export default function SaveWorkout() {
 
       <DurationSheet workout={workout} visible={timeOpen} onDismiss={() => setTimeOpen(false)} noPause />
       <UpdateRoutineSheet update={update} onUpdate={(routine) => finish(routine)} onKeep={() => finish()} onDismiss={closeUpdate} />
+      <NameDialog
+        visible={askingBodyWeight}
+        title="Your body weight (kg)"
+        message="Pull-ups, dips and other body weight exercises count it as weight lifted."
+        placeholder="e.g. 80"
+        keyboardType="decimal-pad"
+        isValid={(text) => parseBodyWeight(text) !== null}
+        cancelLabel="Skip"
+        onSave={async (text) => {
+          const kg = parseBodyWeight(text);
+          setAskingBodyWeight(false);
+          try {
+            if (kg !== null) await addBodyWeight(kg);
+            await reloadBodyWeight();
+          } catch (e) {
+            console.warn('[body weight] save failed', e);
+          }
+          void save();
+        }}
+        onCancel={() => {
+          setAskingBodyWeight(false);
+          void save();
+        }}
+        onDismiss={() => setAskingBodyWeight(false)}
+      />
       <ConfirmDialog
         visible={discarding}
         message="Are you sure you want to discard the workout in progress?"

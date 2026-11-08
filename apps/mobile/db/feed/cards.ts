@@ -6,6 +6,7 @@ import type { HistorySet } from '@/types/records';
 import type { CardSet, WorkoutCardData } from '@/types/feed';
 import { SELECT_WORKOUT_DESCRIPTION, SELECT_WORKOUT_MEDIA, SELECT_WORKOUT_SETS, SELECT_WORKOUTS } from './queries';
 import type { WorkoutDescriptionRow, WorkoutMediaRow, WorkoutRow, WorkoutSetRow } from './rows';
+import { setVolumeKg } from '@/lib/volume';
 
 // Saved workouts as the workout cards show them (Profile "Workouts", the
 // Home feed) and the workout page.
@@ -75,7 +76,7 @@ export function buildCards(workouts: WorkoutRow[], rows: WorkoutSetRow[]): Worko
     };
     card.exercises[card.exercises.length - 1].sets.push(set);
     historySets.push(set);
-    card.volumeKg += (r.weight_kg ?? 0) * (r.reps ?? 0);
+    card.volumeKg += setVolumeKg(r.weight_kg, r.reps, r.body_weight_kg);
     history.push({
       workoutId: r.workout_id,
       exerciseId: r.exercise_id,

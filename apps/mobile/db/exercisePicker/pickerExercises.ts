@@ -1,5 +1,5 @@
 import { getDb } from '@/db/client';
-import { equipmentGroup, muscleGroup } from '@/lib/domain/muscles';
+import { equipmentGroup, pickerMuscleGroup } from '@/lib/domain/muscles';
 import type { PickerExercise } from '@/types/exercise';
 import { SELECT_PICKER_EXERCISES } from './queries';
 import type { PickerExerciseRow } from './rows';
@@ -17,7 +17,7 @@ export async function getPickerExercises(): Promise<PickerExercise[]> {
     name: r.name,
     type: r.type,
     catalogueId: r.catalogue_id,
-    muscle: muscleGroup(r.target_muscle, r.body_part),
+    muscle: pickerMuscleGroup(r.target_muscle, r.body_part),
     equipment: equipmentGroup(r.equipment),
     timesDone: r.times_done,
     lastDone: r.last_done,

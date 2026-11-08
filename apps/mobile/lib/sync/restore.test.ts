@@ -8,9 +8,11 @@ import { createServer } from '@hevier/sync/server';
 import { createStore, type Store } from '@hevier/sync/store';
 import { KEY_HEADER } from '@hevier/shared/sync-protocol';
 
+const stored = new Map<string, string>();
 vi.mock('@react-native-async-storage/async-storage', () => ({
-  default: { getItem: async () => null, setItem: async () => {} },
+  default: { getItem: async (k: string) => stored.get(k) ?? null, setItem: async (k: string, v: string) => void stored.set(k, v) },
 }));
+vi.mock('expo-crypto', () => ({ randomUUID: () => 'new-id' }));
 const { fetchStatus } = await import('./client');
 const { restoreFromPc } = await import('./restore');
 type SyncIO = import('@/types/sync').SyncIO;
@@ -49,7 +51,7 @@ function fakePhone(opts: { truncate?: string } = {}) {
   const staging = fs.mkdtempSync(path.join(os.tmpdir(), 'hevier-staging-'));
   const replaced: string[][] = [];
   const io: SyncIO = {
-    snapshot: async () => ({ deviceId: 'x', workouts: 0, files: [] }),
+    snapshot: async () => ({ deviceId: 'x', workouts: 0, lastWorkout: null, files: [] }),
     upload: async () => 200,
     cleanup: async () => {},
     download: async (url, p, headers) => {
@@ -88,6 +90,8 @@ describe('restoreFromPc', () => {
     expect(phone.staged('hevier.db')).toBe('db-1');
     expect(phone.staged('media/a.jpg')).toBe('photo-a');
     expect(phone.replaced).toEqual([['hevier.db', 'media/a.jpg', 'profile/me.jpg']]);
+    // The restored phone carries on as the phone the copy came from.
+    expect(stored.get('hevier.sync.deviceId')).toBe('phone-a');
   });
 
   it('a broken download leaves the phone untouched', async () => {

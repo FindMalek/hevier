@@ -8,7 +8,7 @@ import { ZONES } from '@/constants/training';
 import { RECOVERY_LABELS } from '@/constants/labels';
 import { RADIUS, SPACE } from '@/constants/layout';
 import { BODY_FIGURE_SIZES } from '@/constants/sizes';
-import { MUSCLE_MAP_GROUPS } from '@/constants/muscles';
+import { MUSCLE_MAP_FALLBACK, MUSCLE_MAP_GROUPS } from '@/constants/muscles';
 import type { MuscleGroup } from '@/types/muscles';
 import type { RecoveryState } from '@/types/stats';
 import type { BodyFigureProps, LegendItem, LegendProps } from './types';
@@ -24,6 +24,10 @@ const BASE = BODY_MAP_COLORS.base; // nothing to show
 export function groupColors(shades: Map<MuscleGroup, string>): Map<string, string> {
   const colorOf = new Map<string, string>();
   for (const [muscle, color] of shades) for (const g of MUSCLE_MAP_GROUPS[muscle] ?? []) colorOf.set(g, color);
+  for (const [g, muscle] of Object.entries(MUSCLE_MAP_FALLBACK)) {
+    const color = shades.get(muscle);
+    if (color && !colorOf.has(g)) colorOf.set(g, color);
+  }
   return colorOf;
 }
 

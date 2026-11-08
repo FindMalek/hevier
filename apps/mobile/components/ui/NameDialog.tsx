@@ -13,12 +13,19 @@ import type { NameDialogProps } from './types';
 // above the keyboard.
 //
 // The field starts empty; `placeholder` shows the current name when renaming.
+// Also asks for the body weight on Save Workout (`message`, a number keyboard
+// and `isValid`).
 export function NameDialog({
   visible,
   title,
   placeholder,
   onSave,
   onCancel,
+  message,
+  keyboardType,
+  isValid,
+  cancelLabel = 'Cancel',
+  onDismiss = onCancel,
 }: NameDialogProps) {
   const [text, setText] = useState('');
   const keyboard = useKeyboardHeight();
@@ -30,12 +37,14 @@ export function NameDialog({
   }
 
   const name = text.trim();
+  const valid = isValid ? isValid(name) : !!name;
 
   return (
-    <Modal transparent visible={visible} animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onCancel}>
-      <Pressable style={[styles.overlay, { paddingBottom: keyboard }]} onPress={onCancel}>
+    <Modal transparent visible={visible} animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onDismiss}>
+      <Pressable style={[styles.overlay, { paddingBottom: keyboard }]} onPress={onDismiss}>
         <Pressable style={styles.box}>
           <Text style={styles.title}>{title}</Text>
+          {message && <Text style={styles.message}>{message}</Text>}
           <TextInput
             style={styles.input}
             value={text}
@@ -46,11 +55,12 @@ export function NameDialog({
             cursorColor={COLORS.primary}
             autoFocus
             autoCapitalize="sentences"
+            keyboardType={keyboardType}
             returnKeyType="done"
-            onSubmitEditing={() => name && onSave(name)}
+            onSubmitEditing={() => valid && onSave(name)}
           />
-          <DialogButton label="Save" primary disabled={!name} onPress={() => onSave(name)} />
-          <DialogButton label="Cancel" onPress={onCancel} />
+          <DialogButton label="Save" primary disabled={!valid} onPress={() => onSave(name)} />
+          <DialogButton label={cancelLabel} onPress={onCancel} />
         </Pressable>
       </Pressable>
     </Modal>
@@ -74,6 +84,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     ...TYPE.titleSemibold,
     lineHeight: LINE_HEIGHTS.relaxed,
+  },
+  message: {
+    marginTop: SPACE.sm,
+    textAlign: 'center',
+    ...TYPE.body,
+    color: COLORS.textSecondary,
   },
   input: {
     height: NAME_DIALOG_SIZES.inputHeight,

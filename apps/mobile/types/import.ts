@@ -1,3 +1,4 @@
+import type { MuscleGroup } from './muscles';
 import type { SetType } from './workout';
 
 // One entry of packages/catalogue/exercises.json (copied from openGym's catalogue).
@@ -11,6 +12,31 @@ export interface CatalogueEntry {
   category: string | null;
   description: string | null;
   instructions: string[] | null;
+}
+
+// One file of openGym's catalogue/exercises/. A female drawing is either a
+// bare { id, variantOf } or, for a few, a full entry with maleVariant.
+export type OpenGymEntry = Partial<CatalogueEntry> & {
+  id: string;
+  variantOf?: string;
+  maleVariant?: string;
+  femaleVariant?: string;
+};
+
+// A muscle fix for one movement (constants/muscleRules.ts).
+export interface MuscleRule {
+  name: string;
+  match: RegExp;
+  exclude?: RegExp;
+  targets: string[];
+  need: Partial<Record<MuscleGroup, string>>;
+  drop: MuscleGroup[];
+}
+
+// What scripts/update-catalogue.ts makes of an openGym update.
+export interface CatalogueUpdate {
+  removedIds: string[];
+  sql: string[];
 }
 
 // A Hevy CSV workout, turned into ours (scripts/import/parseCsv.ts).

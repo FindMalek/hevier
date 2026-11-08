@@ -1,3 +1,5 @@
+import { SET_BODY_WEIGHT } from '@/db/bodyWeight/queries';
+
 // SQL for the workout cards (Home feed, Profile "Workouts", the workout page).
 
 // Every workout, oldest first: the cards' title, date and duration.
@@ -9,7 +11,8 @@ export const SELECT_WORKOUTS = `
 // Every exercise of every workout with its sets (no set = one row with null set columns), in order.
 export const SELECT_WORKOUT_SETS = `
   SELECT w.id AS workout_id, we.id AS workout_exercise_id, we.exercise_id, e.name, e.type, e.catalogue_id, we.notes,
-         s.id AS set_id, s.set_type, s.weight_kg, s.reps, s.duration_seconds, s.distance_km
+         s.id AS set_id, s.set_type, s.weight_kg, s.reps, s.duration_seconds, s.distance_km,
+         ${SET_BODY_WEIGHT} AS body_weight_kg
   FROM workouts w
   JOIN workout_exercises we ON we.workout_id = w.id
   JOIN exercises e ON e.id = we.exercise_id

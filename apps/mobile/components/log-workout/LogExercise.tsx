@@ -73,7 +73,7 @@ export const LogExercise = memo(function LogExercise({ exercise, settings, timer
           perHand={!!perHand}
           medal={set.done && setRecords(exercise.type, exercise.bests ?? null, exercise.sets, set.key).length > 0}
           showPlay={exercise.type === 'duration' && settings.inlineTimer}
-          timerEndsAt={timer?.setKey === set.key ? timer.endsAt : null}
+          timerStartedAt={timer?.setKey === set.key ? timer.startedAt : null}
           actions={actions}
         />
       ))}

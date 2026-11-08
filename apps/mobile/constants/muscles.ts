@@ -25,6 +25,7 @@ export const MUSCLE_GROUPS = [...UPPER_BODY_MUSCLES, ...LOWER_BODY_MUSCLES, ...O
 // The catalogue's target muscles in the app's groups.
 export const MUSCLE_OF_TARGET: Record<string, MuscleGroup> = {
   abs: 'Abdominals',
+  obliques: 'Abdominals',
   biceps: 'Biceps',
   pectorals: 'Chest',
   'serratus anterior': 'Chest',
@@ -39,15 +40,19 @@ export const MUSCLE_OF_TARGET: Record<string, MuscleGroup> = {
   abductors: 'Abductors',
   adductors: 'Adductors',
   calves: 'Calves',
+  // Tibialis raises: the body map has no shins, the lower leg is the nearest.
+  shins: 'Calves',
   glutes: 'Glutes',
   hamstrings: 'Hamstrings',
   quads: 'Quadriceps',
+  // Knee raises, hip flexion: the front of the thigh (rectus femoris).
+  'hip flexors': 'Quadriceps',
   'cardiovascular system': 'Cardio',
   'full body': 'Full Body',
 };
 
 // The catalogue's secondary muscles in the app's groups; parts with no group
-// (ankles, feet, hip flexors…) are left out. (ankles, feet, hip flexors…) are left out.
+// (ankles, feet, hip flexors…) are left out.
 export const MUSCLE_OF_SECONDARY: Record<string, MuscleGroup> = {
   core: 'Abdominals',
   abdominals: 'Abdominals',
@@ -145,4 +150,11 @@ export const MUSCLE_MAP_GROUPS: Partial<Record<MuscleGroup, string[]>> = {
   Glutes: ['GLUTES'],
   Hamstrings: ['HAMSTRINGS'],
   Quadriceps: ['QUADS'],
+};
+
+// MuscleMap draws its "abductors" down the outside of the thigh, where the
+// outer quad (vastus lateralis) is: when no abductor work was done that strip
+// shows the quads' colour instead of staying grey.
+export const MUSCLE_MAP_FALLBACK: Record<string, MuscleGroup> = {
+  ABDUCTORS: 'Quadriceps',
 };

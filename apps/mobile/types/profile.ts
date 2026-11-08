@@ -1,12 +1,9 @@
 import type { PROFILE_METRICS, PROFILE_RANGES } from '@/constants/profile';
+import type { WorkoutSession } from './workout';
 
-// The Profile tab (db/profile/profile.ts): one past workout, for the chart.
-export interface ProfileSession {
-  startTime: string;
-  durationSeconds: number;
-  volumeKg: number; // Σ weight × reps
-  reps: number;
-}
+// The Profile tab (db/profile/profile.ts): one past workout with its totals
+// (db/sessions/sessions.ts), for the chart.
+export type ProfileSession = WorkoutSession;
 
 export interface Profile {
   name: string;
@@ -36,4 +33,14 @@ export interface ProfileFieldProps {
   onChange: (value: string) => void;
   placeholder: string;
   autoCapitalize?: 'none';
+}
+
+// Which figure the exercise pictures show (Settings, onboarding).
+export type Drawings = 'male' | 'female';
+
+// What the first-launch questions collected; null = skipped.
+export interface OnboardingAnswers {
+  name: string | null;
+  drawings: Drawings | null;
+  bodyWeightKg: number | null;
 }

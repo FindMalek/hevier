@@ -5,9 +5,12 @@ import { Barbell } from 'phosphor-react-native/src/icons/Barbell';
 
 import { COLORS } from '@/constants/theme';
 import { STORAGE_FOLDERS } from '@/constants/storage';
+import { mediaIdFor } from '@/lib/domain/drawings';
+import { useDrawings } from '@/stores/drawings';
 import type { ExerciseThumbProps } from './types';
 
-// Round exercise picture: a white circle with the still.
+// Round exercise picture: a white circle with the still (on the figure chosen
+// in Settings, stores/drawings.ts).
 // Stills are copied to the device by scripts/load-device.sh
 // (files/catalogue/still/<catalogue id>.webp); custom exercises without one
 // get a plain circle with a barbell.
@@ -15,7 +18,8 @@ export const ExerciseThumb = memo(function ExerciseThumb({
   catalogueId,
   size = 40,
 }: ExerciseThumbProps) {
-  const uri = catalogueId ? stillUri(catalogueId) : null;
+  const drawings = useDrawings();
+  const uri = catalogueId ? stillUri(mediaIdFor(catalogueId, drawings)) : null;
   const circle = { width: size, height: size, borderRadius: size / 2 };
   if (!uri) {
     return (
@@ -36,12 +40,12 @@ export const ExerciseThumb = memo(function ExerciseThumb({
 // scripts/load-device.sh copies them, which restarts the app.
 const stills = new Map<string, string | null>();
 
-export function stillUri(catalogueId: string): string | null {
-  let uri = stills.get(catalogueId);
+export function stillUri(mediaId: string): string | null {
+  let uri = stills.get(mediaId);
   if (uri === undefined) {
-    const file = new File(Paths.document, STORAGE_FOLDERS.catalogue, 'still', `${catalogueId}.webp`);
+    const file = new File(Paths.document, STORAGE_FOLDERS.catalogue, 'still', `${mediaId}.webp`);
     uri = file.exists ? file.uri : null;
-    stills.set(catalogueId, uri);
+    stills.set(mediaId, uri);
   }
   return uri;
 }

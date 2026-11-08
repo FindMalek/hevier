@@ -1,6 +1,6 @@
 import type { DRAG_ITEM_KINDS, ROUTINE_METRICS } from '@/constants/routine';
 import type { ExerciseType } from './exercise';
-import type { SetType } from './workout';
+import type { SetType, WorkoutSession } from './workout';
 
 export interface Routine {
   id: string;
@@ -57,12 +57,8 @@ export interface RoutinePageExercise {
 // What the routine page's chart shows: one of ROUTINE_METRICS.
 export type RoutineMetric = (typeof ROUTINE_METRICS)[number];
 
-export interface RoutineSession {
-  startTime: string;
-  volumeKg: number; // Σ weight × reps
-  reps: number;
-  durationSeconds: number;
-}
+// A past workout of the routine with its totals (db/sessions/sessions.ts).
+export type RoutineSession = WorkoutSession;
 
 export interface RoutinePage {
   id: string;

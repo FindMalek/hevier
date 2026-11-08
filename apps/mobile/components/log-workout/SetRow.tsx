@@ -13,7 +13,7 @@ import { COLORS, TYPE } from '@/constants/theme';
 import { BORDER_WIDTHS, HIT_SLOPS, RADIUS, SPACE } from '@/constants/layout';
 import { ICON_SIZES, LOG_WORKOUT_SIZES, SIZES } from '@/constants/sizes';
 import { clock } from '@/lib/format/duration';
-import { secondsUntil } from '@/lib/date';
+import { secondsSince } from '@/lib/date';
 import type { SetRowProps, SetTimerTextProps } from './types';
 
 // One set: memo, so typing in it doesn't redraw the exercise's other sets.
@@ -27,10 +27,10 @@ export const SetRow = memo(function SetRow({
   perHand,
   medal,
   showPlay,
-  timerEndsAt,
+  timerStartedAt,
   actions,
 }: SetRowProps) {
-  const timing = timerEndsAt !== null;
+  const timing = timerStartedAt !== null;
   return (
     <SwipeToDelete rowStyle={[styles.row, set.done && styles.rowDone]} onDelete={() => actions.deleteSet(exerciseKey, set.key)}>
       <View style={styles.inner}>
@@ -43,13 +43,12 @@ export const SetRow = memo(function SetRow({
         {showPlay && (
           <Pressable
             style={styles.play}
-            // Empty box: last session's time.
-            onPress={() => (timing ? actions.stop() : actions.play(set.key, set.time || clock(previous?.durationSeconds ?? null)))}
+            onPress={() => (timing ? actions.stop() : actions.play(set.key, set.time))}
             hitSlop={HIT_SLOPS.md}>
             {timing ? (
               <Stop size={ICON_SIZES.xxs} weight="fill" color={COLORS.primary} />
             ) : (
-              <Play size={ICON_SIZES.xxs} weight="fill" color={COLORS.primary} style={styles.playIcon} />
+              <Play size={ICON_SIZES.xxs} weight="fill" color={COLORS.primary} />
             )}
           </Pressable>
         )}
@@ -59,7 +58,7 @@ export const SetRow = memo(function SetRow({
           perHand={perHand}
           layout="log"
           done={set.done}
-          timer={timing ? <SetTimerText endsAt={timerEndsAt} /> : undefined}
+          timer={timing ? <SetTimerText startedAt={timerStartedAt} /> : undefined}
           onChange={(change) => actions.setChange(exerciseKey, set.key, change)}
         />
         <Pressable
@@ -73,10 +72,10 @@ export const SetRow = memo(function SetRow({
   );
 });
 
-// A ▶ countdown in place of the TIME box.
-function SetTimerText({ endsAt }: SetTimerTextProps) {
+// A ▶ stopwatch in place of the TIME box, counting up from 00:00.
+function SetTimerText({ startedAt }: SetTimerTextProps) {
   const now = useNow();
-  return <Text style={styles.timerText}>{clock(secondsUntil(endsAt, now))}</Text>;
+  return <Text style={styles.timerText}>{clock(secondsSince(startedAt, now))}</Text>;
 }
 
 const styles = StyleSheet.create({
@@ -113,9 +112,6 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  playIcon: {
-    marginLeft: SPACE.xxs,
   },
   timerText: {
     ...TYPE.bodySemibold,

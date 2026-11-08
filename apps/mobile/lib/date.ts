@@ -40,3 +40,8 @@ export function weeksBetween(from: Date, to: Date): number {
 export function secondsUntil(endsAt: number, now: number): number {
   return Math.max(0, Math.ceil((endsAt - now) / MS_PER_SECOND));
 }
+
+// Whole seconds since startedAt (rounded down, so a stopwatch starts at 0), never negative.
+export function secondsSince(startedAt: number, now: number): number {
+  return Math.max(0, Math.floor((now - startedAt) / MS_PER_SECOND));
+}

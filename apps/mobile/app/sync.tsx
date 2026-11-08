@@ -115,7 +115,7 @@ export default function SyncScreen() {
           {result && (
             <View style={styles.result}>
               <Text style={[styles.message, result.ok && styles.messageOk]}>{syncMessage(result, usb)}</Text>
-              {!result.ok && result.reason === 'fewer' && <Button label="Send anyway" variant="outline" size="compact" onPress={() => sync(true)} />}
+              {!result.ok && (result.reason === 'fewer' || result.reason === 'older') && <Button label="Send anyway" variant="outline" size="compact" onPress={() => sync(true)} />}
               {!result.ok && result.reason === 'otherDevice' && <Button label="Replace" variant="outline" size="compact" onPress={() => sync(true)} />}
             </View>
           )}

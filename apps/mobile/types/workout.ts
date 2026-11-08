@@ -73,8 +73,8 @@ export interface ActiveWorkout {
   restEndsAt: number | null;
   restTotal: number | null;
   restExercise?: string | null; // name shown in the pill while resting
-  // ▶ on a timed set: counts down its TIME; at zero the set is completed.
-  setTimer?: { setKey: string; endsAt: number } | null;
+  // ▶ on a timed set: a stopwatch from 0; ■ writes its time into TIME and completes the set.
+  setTimer?: { setKey: string; startedAt: number } | null;
   // Pause Workout Timer: when the current pause began, and earlier pauses in total.
   pausedAt?: number | null;
   pausedSeconds?: number;
@@ -122,4 +122,13 @@ export interface PrEvent {
   name: string;
   catalogueId: string | null;
   records: SetRecord[];
+}
+
+// A past workout with its totals (db/sessions/sessions.ts): the Profile tab and
+// the routine page. Volume as lib/volume.ts counts it.
+export interface WorkoutSession {
+  startTime: string;
+  durationSeconds: number;
+  volumeKg: number;
+  reps: number;
 }

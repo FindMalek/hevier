@@ -3,6 +3,7 @@ import { SPLIT_OTHER_PART_SHARE, WARM_UP_EXERCISE } from '@/constants/training';
 import { BODY_PARTS, BODY_PART_OF } from '@/constants/muscles';
 import { startMsOf } from '@/lib/training/effort';
 import { startOfDay } from '@/lib/date';
+import { setVolumeKg } from '@/lib/volume';
 import type { BodyPart, MuscleGroup } from '@/types/muscles';
 import type { MainExercise, MonthReport, MuscleCount, SplitPart, StatSet, StripDay } from '@/types/stats';
 
@@ -134,7 +135,7 @@ export function monthReport(sets: StatSet[], year: number, month: number, throug
   const days = new Set<number>();
   for (const s of inMonth) {
     workouts.set(s.workoutId, s.durationSeconds);
-    volumeKg += (s.weightKg ?? 0) * (s.reps ?? 0);
+    volumeKg += setVolumeKg(s.weightKg, s.reps, s.bodyWeightKg);
     reps += s.reps ?? 0;
     days.add(new Date(startMsOf(s)).getDate());
   }

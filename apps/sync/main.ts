@@ -29,9 +29,9 @@ function line(e: SyncEvent): string {
     case 'received':
       return `Backup received: ${describe(e.manifest)}`;
     case 'refused':
-      return e.reason === 'fewer'
-        ? `Refused: fewer workouts (${e.phoneWorkouts} vs ${e.pcWorkouts})`
-        : 'Refused: another phone';
+      if (e.reason === 'fewer') return `Refused: fewer workouts (${e.phoneWorkouts} vs ${e.pcWorkouts})`;
+      if (e.reason === 'older') return 'Refused: older data than the copy here';
+      return 'Refused: another phone';
     case 'restore':
       return 'Restore sent to phone';
   }

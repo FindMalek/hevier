@@ -1,5 +1,6 @@
 import { hardSets } from './effort';
 import { between } from '@/lib/stats/stats';
+import { setVolumeKg } from '@/lib/volume';
 import { RADAR_EDGE_SETS, RADAR_RING_STEP, ZONES } from '@/constants/training';
 import { weeksBetween } from '@/lib/date';
 import { RADAR_MUSCLES } from '@/constants/muscles';
@@ -40,7 +41,7 @@ export function periodSummary(sets: StatSet[], from: Date, to: Date): PeriodSumm
   let volumeKg = 0;
   for (const s of inPeriod) {
     durations.set(s.workoutId, s.durationSeconds);
-    if (s.weightKg && s.reps) volumeKg += s.weightKg * s.reps;
+    volumeKg += setVolumeKg(s.weightKg, s.reps, s.bodyWeightKg);
   }
   let durationSeconds = 0;
   for (const d of durations.values()) durationSeconds += d;

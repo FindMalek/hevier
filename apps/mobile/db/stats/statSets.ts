@@ -41,6 +41,7 @@ async function loadStatSets(): Promise<StatSet[]> {
       primary: m.primary,
       secondary: m.secondary,
       weightKg: r.weight_kg,
+      bodyWeightKg: r.body_weight_kg,
       reps: r.reps,
       failure: r.set_type === 'failure',
       warmup: r.set_type === 'warmup',

@@ -66,14 +66,6 @@ export interface RoutineExerciseSetRow {
   duration_seconds: number | null;
 }
 
-// SELECT_ROUTINE_SESSIONS
-export interface RoutineSessionRow {
-  start_time: string;
-  end_time: string | null;
-  volume: number;
-  reps: number;
-}
-
 // SELECT_ROUTINE_EXERCISE_NOTES
 export interface RoutineExerciseNotesRow {
   id: string;

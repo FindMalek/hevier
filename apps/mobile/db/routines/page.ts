@@ -1,8 +1,8 @@
 import { getDb } from '@/db/client';
-import { durationSecondsOf } from '@/lib/workout/duration';
+import { getWorkoutSessions } from '@/db/sessions/sessions';
 import type { RoutinePage, RoutinePageExercise } from '@/types/routine';
-import { SELECT_ROUTINE, SELECT_ROUTINE_EXERCISES_WITH_SETS, SELECT_ROUTINE_SESSIONS } from './queries';
-import type { RoutineExerciseSetRow, RoutineRow, RoutineSessionRow } from './rows';
+import { SELECT_ROUTINE, SELECT_ROUTINE_EXERCISES_WITH_SETS } from './queries';
+import type { RoutineExerciseSetRow, RoutineRow } from './rows';
 
 // Everything the routine page shows.
 export async function getRoutinePage(id: string): Promise<RoutinePage | null> {
@@ -38,13 +38,7 @@ export async function getRoutinePage(id: string): Promise<RoutinePage | null> {
     }
   }
 
-  const sessionRows = await db.getAllAsync<RoutineSessionRow>(SELECT_ROUTINE_SESSIONS, [routine.name]);
-  const sessions = sessionRows.map((s) => ({
-    startTime: s.start_time,
-    volumeKg: s.volume,
-    reps: s.reps,
-    durationSeconds: durationSecondsOf(s.start_time, s.end_time),
-  }));
+  const sessions = await getWorkoutSessions(routine.name);
 
   return { id: routine.id, name: routine.name, exercises, sessions };
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { setBadges, parseClock, typeClock, parseNumber, previousLabel, perHandText, totalText, setValue } from './setFormat';
+import { setBadges, parseClock, typeClock, parseNumber, previousLabel, perHandText, totalText, setValue, weightBoxText } from './setFormat';
 
 describe('set text', () => {
   it('shows and reads times', () => {
@@ -74,5 +74,19 @@ describe('workout page set values', () => {
     expect(setValue('duration', set({ durationSeconds: 383 }))).toBe('06:23');
     expect(setValue('duration', set({}))).toBe('-');
     expect(setValue('distance_duration', set({ distanceKm: 2.5, durationSeconds: 720 }))).toBe('2.5km - 12:00');
+  });
+
+  it('per hand: the KG box keeps what is typed while it matches the total, decimals too', () => {
+    // Typing 7.5 one key at a time, the total saved after each key.
+    let typed = '';
+    for (const key of '7.5') {
+      typed = weightBoxText(totalText(typed + key), typed + key, true);
+    }
+    expect(typed).toBe('7.5');
+    expect(totalText(typed)).toBe('15');
+    expect(weightBoxText('24', '12.', true)).toBe('12.');
+    expect(weightBoxText('24', '05', true)).toBe('12'); // another total came in: shown from it
+    expect(weightBoxText('30', null, true)).toBe('15');
+    expect(weightBoxText('7.', '3', false)).toBe('7.'); // not per hand: the box is the total
   });
 });

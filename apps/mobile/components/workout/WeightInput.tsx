@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { TextInput, type TextInputProps } from 'react-native';
 
-import { perHandText, totalText } from '@/lib/format/setFormat';
+import { totalText, weightBoxText } from '@/lib/format/setFormat';
+import { useSelectAllOnFocus } from '@/hooks/useSelectAllOnFocus';
 
 // The KG box. Per hand it shows and takes one dumbbell and hands back the
 // total; what was typed is kept while it still matches, so "12." or "12,"
@@ -17,10 +18,13 @@ export function WeightInput({
   onChangeText: (total: string) => void;
 }) {
   const [typed, setTyped] = useState<string | null>(null);
-  const shown = !perHand ? value : typed !== null && totalText(typed) === totalText(value) ? typed : perHandText(value);
+  const shown = weightBoxText(value, typed, perHand);
+  const { ref, onFocus } = useSelectAllOnFocus(shown);
   return (
     <TextInput
       {...props}
+      ref={ref}
+      onFocus={onFocus}
       value={shown}
       onChangeText={(text) => {
         if (!perHand) return onChangeText(text);

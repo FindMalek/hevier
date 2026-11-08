@@ -2,7 +2,7 @@ import type { ReorderItem } from '@/types/ui';
 import type { ActiveWorkout } from '@/types/workout';
 import type { SharedValue } from 'react-native-reanimated';
 import type { ReactNode } from 'react';
-import type { StyleProp, ViewProps, ViewStyle } from 'react-native';
+import type { KeyboardTypeOptions, StyleProp, ViewProps, ViewStyle } from 'react-native';
 import type { BUTTON_SIZES, BUTTON_VARIANTS, STAT_SIZES } from '@/constants/ui';
 
 // Props of the shared screen pieces in components/ui/.
@@ -178,6 +178,11 @@ export interface NameDialogProps {
   placeholder: string;
   onSave: (name: string) => void;
   onCancel: () => void;
+  message?: string; // a line under the title
+  keyboardType?: KeyboardTypeOptions; // e.g. decimal-pad for the body weight
+  isValid?: (text: string) => boolean; // Save stays grey until true (default: something typed)
+  cancelLabel?: string;
+  onDismiss?: () => void; // a tap outside or Back, when it isn't the same as Cancel (default onCancel)
 }
 
 export interface ReorderListProps {

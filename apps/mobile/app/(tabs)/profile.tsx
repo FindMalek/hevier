@@ -9,6 +9,7 @@ import { HeaderIconButton, TabHeader } from '@/components/ui/TabHeader';
 import { WorkoutCard } from '@/components/workout/WorkoutCard';
 import { useWorkoutMenu } from '@/components/workout/WorkoutMenu';
 import { Screen } from '@/components/ui/Screen';
+import { WorkoutPill } from '@/components/ui/WorkoutPill';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { COLORS } from '@/constants/theme';
@@ -99,6 +100,7 @@ export default function ProfileTab() {
         />
       )}
 
+      <WorkoutPill />
       {photoSheet}
       {menu}
     </Screen>

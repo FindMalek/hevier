@@ -19,5 +19,4 @@ export interface TileProps {
   icon: ReactNode;
   label: string;
   onPress?: () => void;
-  soon?: boolean; // not built yet: a "Coming soon" badge and no tap
 }
