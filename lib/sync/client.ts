@@ -1,6 +1,6 @@
 import { KEY_HEADER } from '@/shared/sync-protocol';
 import type { BeginRequest, BeginResponse, Refusal, StatusResponse } from '@/shared/sync-types';
-import { acquireSyncLock } from './lock';
+import { withSyncLock } from './lock';
 import { baseUrl, getPairing, setLastSynced } from './pairing';
 import { SYNC_TIMEOUTS } from '@/constants/motion';
 import { SYNC_HOSTS } from '@/constants/storage';
@@ -61,14 +61,8 @@ export async function fetchStatus(pairing: Pairing, timeoutMs = SYNC_TIMEOUTS.re
 
 type SyncOptions = { force?: boolean; timeoutMs?: number; pairing?: Pairing | null };
 
-export async function syncNow(io: SyncIO, opts: SyncOptions = {}): Promise<SyncResult> {
-  const release = acquireSyncLock();
-  if (!release) return { ok: false, reason: 'busy' };
-  try {
-    return await runSync(io, opts);
-  } finally {
-    release();
-  }
+export function syncNow(io: SyncIO, opts: SyncOptions = {}): Promise<SyncResult> {
+  return withSyncLock(() => runSync(io, opts));
 }
 
 async function runSync(io: SyncIO, opts: SyncOptions): Promise<SyncResult> {
@@ -124,18 +118,12 @@ async function runSync(io: SyncIO, opts: SyncOptions): Promise<SyncResult> {
 }
 
 // On app open: send a copy if the PC program is open, otherwise nothing.
-// One at a time: coming back to the app while a copy is still going adds
-// nothing.
-let quietRunning = false;
-
+// Coming back to the app while a copy is still going adds nothing: syncNow
+// answers busy.
 export async function quietSync(io: SyncIO): Promise<void> {
-  if (quietRunning) return;
-  quietRunning = true;
   try {
     await syncNow(io, { timeoutMs: SYNC_TIMEOUTS.quietMs });
   } catch {
     // never bothers the user
-  } finally {
-    quietRunning = false;
   }
 }

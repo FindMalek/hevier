@@ -1,6 +1,6 @@
 import { KEY_HEADER } from '@/shared/sync-protocol';
 import { fetchStatus } from './client';
-import { acquireSyncLock } from './lock';
+import { withSyncLock } from './lock';
 import { baseUrl } from './pairing';
 import { adoptDeviceId } from './deviceId';
 import type { Pairing, SyncFailure, SyncIO } from '@/types/sync';
@@ -8,14 +8,15 @@ import type { Pairing, SyncFailure, SyncIO } from '@/types/sync';
 // Restore from PC: the PC's copy replaces everything on this phone. Every
 // file is downloaded and checked first; any failure leaves the phone as it was.
 // The phone then takes the copy's device id, so its next syncs replace that copy.
-export async function restoreFromPc(io: SyncIO, pairing: Pairing): Promise<{ ok: true } | SyncFailure> {
-  const release = acquireSyncLock();
-  if (!release) return { ok: false, reason: 'busy' };
-  try {
-    return await restore(io, pairing);
-  } finally {
-    release();
-  }
+export function restoreFromPc(io: SyncIO, pairing: Pairing): Promise<{ ok: true } | SyncFailure> {
+  return withSyncLock(async () => {
+    try {
+      return await restore(io, pairing);
+    } catch (e) {
+      console.warn('[sync] restore failed', e);
+      return { ok: false, reason: 'error' };
+    }
+  });
 }
 
 async function restore(io: SyncIO, pairing: Pairing): Promise<{ ok: true } | SyncFailure> {

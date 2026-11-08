@@ -61,7 +61,7 @@ async function pcHolds(files: Record<string, string>, workouts = 312, lastWorkou
 // would replace the phone's data. `hold` pauses each download once it is on
 // disk (`downloaded` says the first one is); `wipeOnCleanup` makes cleanup
 // delete the staged files like the real one.
-function fakePhone(opts: { truncate?: string; hold?: Promise<void>; wipeOnCleanup?: boolean } = {}) {
+function fakePhone(opts: { truncate?: string; hold?: Promise<void>; wipeOnCleanup?: boolean; failReplace?: Error } = {}) {
   let firstDownloaded = () => {};
   const downloaded = new Promise<void>((resolve) => (firstDownloaded = resolve));
   const staging = fs.mkdtempSync(path.join(os.tmpdir(), 'hevier-staging-'));
@@ -83,6 +83,7 @@ function fakePhone(opts: { truncate?: string; hold?: Promise<void>; wipeOnCleanu
       return { status: res.status, size: body.length };
     },
     replaceAll: async (paths) => {
+      if (opts.failReplace) throw opts.failReplace;
       if (paths.some((p) => !fs.existsSync(path.join(staging, p)))) throw new Error('staged files are gone');
       replaced.push(paths);
     },
@@ -160,12 +161,20 @@ describe('restoreFromPc', () => {
     expect(phone.replaced).toEqual([['hevier.db', 'media/a.jpg']]);
   });
 
-  it('a restore waits for a sync under way', async () => {
+  it('a restore answers busy while a sync runs', async () => {
     await pcHolds({ 'hevier.db': 'db-1' });
     const phone = fakePhone();
     const syncing = syncNow(phone.io, { pairing }); // takes the lock before its first await
     expect(await restoreFromPc(phone.io, pairing)).toMatchObject({ ok: false, reason: 'busy' });
     await syncing;
+  });
+
+  it('a swap that throws answers error and frees the lock', async () => {
+    await pcHolds({ 'hevier.db': 'db-1' });
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const phone = fakePhone({ failReplace: new Error('disk full') });
+    expect(await restoreFromPc(phone.io, pairing)).toEqual({ ok: false, reason: 'error' });
+    expect(isSyncBusy()).toBe(false);
   });
 
   it('no copy on the PC', async () => {

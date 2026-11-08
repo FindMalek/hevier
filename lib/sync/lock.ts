@@ -11,6 +11,18 @@ export function acquireSyncLock(): (() => void) | null {
   };
 }
 
+// Runs `run` while holding the lock; answers busy without running it when
+// something else holds it. The lock is freed however `run` ends.
+export async function withSyncLock<T>(run: () => Promise<T>): Promise<T | { ok: false; reason: 'busy' }> {
+  const release = acquireSyncLock();
+  if (!release) return { ok: false, reason: 'busy' };
+  try {
+    return await run();
+  } finally {
+    release();
+  }
+}
+
 // For a screen to say so before it asks the user anything.
 export function isSyncBusy(): boolean {
   return held;
