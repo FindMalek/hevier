@@ -84,7 +84,9 @@ export default function LogRunScreen() {
     if (!saved) return;
     const next = legsFelt === felt ? null : felt;
     setLegsFelt(next);
-    saveRunFeedback(saved.workoutId, saved.verdictShown, next);
+    saveRunFeedback(saved.workoutId, saved.verdictShown, next).catch((e) =>
+      console.warn('[run] feedback save failed', e)
+    );
   };
 
   return (

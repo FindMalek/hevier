@@ -26,10 +26,12 @@ export default function SettingsScreen() {
   const [runOn, setRunOn] = useState(false);
   useFocusEffect(
     useCallback(() => {
-      getRunSettings().then((s) => {
-        setRun(s);
-        isRunOn(s).then(setRunOn);
-      });
+      getRunSettings()
+        .then((s) => {
+          setRun(s);
+          return isRunOn(s).then(setRunOn);
+        })
+        .catch((e) => console.warn('[run] settings load failed', e));
     }, [])
   );
   const changeRun = (patch: Partial<RunSettings>) => {
@@ -37,7 +39,7 @@ export default function SettingsScreen() {
     const next = { ...run, ...patch };
     setRun(next);
     if (patch.enabled !== undefined) setRunOn(!!patch.enabled);
-    saveRunSettings(next);
+    saveRunSettings(next).catch((e) => console.warn('[run] settings save failed', e));
   };
   return (
     <Screen>

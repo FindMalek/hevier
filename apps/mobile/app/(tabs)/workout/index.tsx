@@ -51,7 +51,9 @@ export default function WorkoutTab() {
 
   const reload = useCallback(() => {
     getRoutineOverview().then(setOverview);
-    isRunOn().then(setRunOn);
+    isRunOn()
+      .then(setRunOn)
+      .catch((e) => console.warn('[run] setting check failed', e));
   }, []);
   useFocusEffect(reload);
 
