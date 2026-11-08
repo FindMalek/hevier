@@ -7,6 +7,9 @@ export const MS_PER_DAY = 24 * MS_PER_HOUR;
 
 export const SECONDS_PER_MINUTE = 60;
 export const SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
+export const MINUTES_PER_HOUR = 60;
+export const HOURS_PER_DAY = 24;
+export const HOURS_ON_CLOCK = 12;
 
 export const DAYS_PER_WEEK = 7;
 

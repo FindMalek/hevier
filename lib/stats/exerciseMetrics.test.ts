@@ -51,6 +51,14 @@ describe('exercise page', () => {
     ]);
   });
 
+  it('warm-up sets count towards neither the personal records nor the chart above them', () => {
+    const sessions = [
+      session('2026-10-01T10:00:00Z', [{ weightKg: 80, reps: 8 }, { weightKg: 120, reps: 3, setType: 'warmup' }]),
+    ];
+    expect(personalRecords('weight_reps', sessions)[0]).toEqual({ label: 'Heaviest Weight', value: '80 kg' });
+    expect(chartPoints(sessions, METRICS.weight_reps[0]).map((p) => p.value)).toEqual([80]);
+  });
+
   it('skips sessions with nothing to plot, and has no records without history', () => {
     const sessions = [session('2026-10-01T10:00:00Z', [{ durationSeconds: null }])];
     expect(chartPoints(sessions, METRICS.duration[0])).toEqual([]);

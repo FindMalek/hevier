@@ -84,6 +84,9 @@ export const SYNC_TIMEOUTS = {
   stallMs: 30_000,
 };
 
+// app/sync-scan.tsx: how long the camera ignores a code the user said no to.
+export const SYNC_SCAN_RETRY_MS = 5000;
+
 // How often a scrolling list reports its position: about once a frame.
 export const SCROLL_EVENTS = {
   throttleMs: 16,

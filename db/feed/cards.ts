@@ -81,6 +81,7 @@ export function buildCards(workouts: WorkoutRow[], rows: WorkoutSetRow[]): Worko
       workoutId: r.workout_id,
       exerciseId: r.exercise_id,
       type: r.type,
+      setType: set.setType,
       weightKg: r.weight_kg,
       reps: r.reps,
       durationSeconds: r.duration_seconds,
