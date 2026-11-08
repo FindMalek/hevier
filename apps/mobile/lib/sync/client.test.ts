@@ -16,6 +16,7 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
 }));
 const { getLastRefusal, onRefusalChange, quietSync, syncNow } = await import('./client');
 const { getLastSynced } = await import('./pairing');
+const { isSyncBusy } = await import('./lock');
 type SyncIO = import('@/types/sync').SyncIO;
 type Pairing = import('@/types/sync').Pairing;
 
@@ -107,6 +108,31 @@ describe('syncNow', () => {
     expect(await syncNow(other.io, { pairing })).toMatchObject({ ok: false, reason: 'otherDevice' });
     expect((await syncNow(other.io, { pairing, force: true })).ok).toBe(true);
     expect(store.current()?.deviceId).toBe('emulator');
+  });
+});
+
+describe('a transfer that stops moving', () => {
+  it('answers timeout, frees the lock and cleans up; the next sync works', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const stuck = fakePhone({ 'hevier.db': 'db-1' });
+    stuck.io.upload = () => new Promise<number>(() => {}); // a dropped Wi-Fi: never answers, ignores the abort
+    expect(await syncNow(stuck.io, { pairing, stallMs: 50 })).toEqual({ ok: false, reason: 'timeout' });
+    expect(isSyncBusy()).toBe(false);
+    expect(stuck.cleanups()).toBeGreaterThan(0);
+    expect(await syncNow(fakePhone({ 'hevier.db': 'db-1' }).io, { pairing })).toMatchObject({ ok: true });
+  });
+
+  it('is not cut off while bytes keep moving, however long the whole upload takes', async () => {
+    const slow = fakePhone({ 'hevier.db': 'db-1' });
+    const upload = slow.io.upload;
+    slow.io.upload = async (url, p, headers, hooks) => {
+      for (let i = 0; i < 8; i++) {
+        await new Promise((r) => setTimeout(r, 25));
+        hooks?.onProgress();
+      }
+      return upload(url, p, headers, hooks);
+    };
+    expect(await syncNow(slow.io, { pairing, stallMs: 80 })).toMatchObject({ ok: true });
   });
 });
 
