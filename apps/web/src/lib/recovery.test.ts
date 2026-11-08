@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { SESSIONS, recoveryState, recoveryWindow, summarize } from './recovery';
+import { RECENTLY_TRAINED_DAYS, RECOVERY_WINDOWS } from '../../../mobile/constants/training';
+import { GREEN_VISIBLE_HOURS, SESSIONS, recoveryState, recoveryWindow, summarize } from './recovery';
 
 describe('recoveryWindow', () => {
   it('follows the table in docs/science/recovery.md', () => {
@@ -32,5 +33,19 @@ describe('summarize', () => {
     expect(out.partly).toContain('QUADS');
     expect(out.ready).toContain('ADDUCTORS');
     expect(out.heavy).toHaveLength(0);
+  });
+});
+
+describe('mirrors the app', () => {
+  it('uses the same recovery windows as apps/mobile/constants/training.ts', () => {
+    RECOVERY_WINDOWS.forEach((w, index) => {
+      expect(recoveryWindow(w.from)).toEqual({ heavyUntil: w.redHours, partlyUntil: w.hours });
+      const below = index === 0 ? null : { heavyUntil: RECOVERY_WINDOWS[index - 1].redHours, partlyUntil: RECOVERY_WINDOWS[index - 1].hours };
+      expect(recoveryWindow(w.from - 0.01)).toEqual(below);
+    });
+  });
+
+  it('shows green for as long as the app does', () => {
+    expect(GREEN_VISIBLE_HOURS).toBe(RECENTLY_TRAINED_DAYS * 24);
   });
 });
