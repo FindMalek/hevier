@@ -3,16 +3,13 @@ name: Release
 # Push to main: release-please keeps a release pull request up to date. Merging it
 # tags vX.Y.Z and creates a draft release; the builds below run in the same workflow
 # (tags made with GITHUB_TOKEN start no other workflow) and publish the release.
-# Run it by hand with a tag to build and publish an existing tag again.
+# To build and publish an existing tag again, run it from that tag:
+# gh workflow run release.yml --ref v1.2.3 (or pick the tag in "Use workflow from").
+# The builds always use the commit the workflow itself runs on, never an input.
 on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      tag:
-        description: Build and publish an existing tag (v1.2.3) instead of running release-please
-        type: string
-        default: ''
 
 concurrency:
   group: release
@@ -35,7 +32,7 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         id: rp
-        if: inputs.tag == ''
+        if: github.ref_type != 'tag'
         with:
           # A pull request opened with GITHUB_TOKEN starts no checks: set RELEASE_PLEASE_TOKEN to a token that does.
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
@@ -46,7 +43,7 @@ jobs:
       - name: Tag to build
         id: tag
         env:
-          TAG: ${{ inputs.tag || steps.rp.outputs.tag_name }}
+          TAG: ${{ github.ref_type == 'tag' && github.ref_name || steps.rp.outputs.tag_name }}
         run: |
           [[ -z "$TAG" || "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "::error::$TAG is not vX.Y.Z"; exit 1; }
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
@@ -57,7 +54,6 @@ jobs:
     if: needs.please.outputs.tag != ''
     uses: ./.github/workflows/android.yml
     with:
-      ref: ${{ needs.please.outputs.tag }}
       release: true
       version: ${{ needs.please.outputs.version }}
     secrets: inherit
@@ -67,7 +63,6 @@ jobs:
     if: needs.please.outputs.tag != ''
     uses: ./.github/workflows/sync-binaries.yml
     with:
-      ref: ${{ needs.please.outputs.tag }}
       version: ${{ needs.please.outputs.version }}
 
   publish:
