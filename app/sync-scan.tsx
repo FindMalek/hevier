@@ -4,31 +4,46 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Stack, useRouter } from 'expo-router';
 
 import { InnerHeader } from '@/components/ui/InnerHeader';
-import { parsePairLink, savePairing } from '@/lib/sync/pairing';
+import { PairDialog } from '@/components/sync/PairDialog';
+import { useSavePairing } from '@/hooks/useSavePairing';
+import { parsePairLink } from '@/lib/sync/pairing';
+import type { FoundPairing } from '@/types/sync';
 import { COLORS, LINE_HEIGHTS, TYPE, withAlpha } from '@/constants/theme';
 import { BORDER_WIDTHS, RADIUS, SPACE } from '@/constants/layout';
+import { SYNC_SCAN_RETRY_MS } from '@/constants/motion';
 import { SYNC_SCAN_SIZES } from '@/constants/sizes';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
 
-// Scans the QR code in the Hevier Sync window on the PC, remembers the PC,
-// then goes back to the Sync screen.
+// Scans the QR code in the Hevier Sync window on the PC, asks to pair with the
+// PC it shows, then goes back to the Sync screen.
 export default function SyncScanScreen() {
   const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
   const [wrongCode, setWrongCode] = useState(false);
-  const done = useRef(false);
+  const [found, setFound] = useState<FoundPairing | null>(null);
+  const { confirm, saving, error, clearError } = useSavePairing(() => router.back());
+  // Camera frames keep reporting the code the user just refused. A ref, not
+  // state: the next frame must see it at once, without waiting for a render.
+  const refused = useRef({ code: '', until: 0 });
 
-  async function scanned(data: string) {
-    if (done.current) return;
+  function scanned(data: string) {
+    if (found) return;
+    if (data === refused.current.code && Date.now() < refused.current.until) return;
     const pairing = parsePairLink(data);
     if (!pairing) {
       setWrongCode(true);
       return;
     }
-    done.current = true;
-    await savePairing(pairing);
-    router.back();
+    // Two frames can arrive before the render that shows the dialog: the first one wins.
+    setFound((current) => current ?? { pairing, code: data });
+  }
+
+  function cancel() {
+    if (saving || !found) return;
+    refused.current = { code: found.code, until: Date.now() + SYNC_SCAN_RETRY_MS };
+    clearError();
+    setFound(null);
   }
 
   return (
@@ -53,6 +68,7 @@ export default function SyncScanScreen() {
           </View>
         )
       )}
+      <PairDialog pairing={found?.pairing ?? null} error={error} onConfirm={() => confirm(found?.pairing ?? null)} onCancel={cancel} />
     </Screen>
   );
 }
