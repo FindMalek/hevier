@@ -31,8 +31,8 @@ export function Science() {
             Counts what builds muscle.
           </h2>
           <p className="lead">
-            Most apps count every set the same. Hevier counts the ones that matter, and each rule names the study it comes
-            from.
+            Most apps count every set the same. Hevier counts the ones that matter, and the research behind each rule is
+            linked.
           </p>
         </div>
 
