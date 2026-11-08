@@ -76,12 +76,12 @@ jobs:
       matrix:
         include:
           - name: expo-doctor
-            run: npx expo-doctor
+            run: pnpm dlx expo-doctor@1.21.6
           - name: android-bundle
-            run: npx expo export --platform android
+            run: pnpm exec expo export --platform android
           - name: prebuild
             run: |
-              npx expo prebuild --platform android --no-install --clean
+              pnpm exec expo prebuild --platform android --no-install --clean
               grep -q 'hevier {' android/app/build.gradle
               git diff --exit-code -- package.json app.json
     steps:
@@ -98,8 +98,17 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # The download script is pinned to the v1.7.12 commit and fetches that release.
       - name: actionlint
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+          # linux_amd64 line of actionlint_1.7.12_checksums.txt from the release
+          ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
         run: |
-          bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/914e7df21a07ef503a81201c76d2b11c789d3fca/scripts/download-actionlint.bash) 1.7.12
-          ./actionlint -color
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          (
+            cd "$RUNNER_TEMP"
+            curl --proto '=https' --proto-redir '=https' --tlsv1.2 -fsSLO "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${archive}"
+            echo "${ACTIONLINT_SHA256}  ${archive}" | sha256sum --check --strict
+            tar -xzf "$archive" actionlint
+          )
+          "$RUNNER_TEMP/actionlint" -color

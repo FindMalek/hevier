@@ -97,7 +97,7 @@ jobs:
 
       - name: Prebuild
         working-directory: apps/mobile
-        run: npx expo prebuild --platform android --no-install
+        run: pnpm exec expo prebuild --platform android --no-install
 
       # withHevierRelease signs the release build with the key described in
       # ~/.config/hevier/keystore.properties, or with the debug key without it.
