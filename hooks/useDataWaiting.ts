@@ -14,25 +14,27 @@ export function useDataWaiting(): { message: string | null; trying: boolean; ret
   const [message, setMessage] = useState<string | null>(null);
   const [trying, setTrying] = useState(false);
 
-  useEffect(() => {
-    getDb().then(
+  // At start a failure for another reason is only logged: the app opens as it
+  // always did. A retry is the user asking, so it answers either way.
+  const tryOpen = useCallback((byUser: boolean) => {
+    return getDb().then(
       () => setMessage(null),
       (e) => {
         if (e instanceof DataWaitingError) setMessage(e.message);
+        else if (byUser) setMessage(STILL_CLOSED);
         else console.warn('[db] open failed', e);
       }
     );
   }, []);
 
+  useEffect(() => {
+    void tryOpen(false);
+  }, [tryOpen]);
+
   const retry = useCallback(() => {
     setTrying(true);
-    getDb()
-      .then(
-        () => setMessage(null),
-        (e) => setMessage(e instanceof DataWaitingError ? e.message : STILL_CLOSED)
-      )
-      .finally(() => setTrying(false));
-  }, []);
+    void tryOpen(true).finally(() => setTrying(false));
+  }, [tryOpen]);
 
   return { message, trying, retry };
 }
