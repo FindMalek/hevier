@@ -1,6 +1,6 @@
 # Run Recovery: spec for Hevier
 
-Status: design only, nothing in the repo changed. Written 2026-11-07 against `main` @ b5c4394 (Expo SDK 57, expo-sqlite, vitest 5, migrations up to 010).
+Status: design only, nothing in the repo changed. Written 2026-11-07 against `main` @ b5c4394 (Expo SDK 57, expo-sqlite, vitest 5, migrations up to 010). Migration numbers below were renumbered on 2026-11-08: upstream added 011 to 014 (body weights, device id, openGym update, Lat Pulldown), so the next free number is 015.
 User: occasional runner, runs early morning (about 06:30), lifts evening or later, wants to know WHEN to run and HOW HARD.
 Numbers in section 6 and 8 were produced by a throwaway reference implementation (not in the repo) so the tests match the formulas.
 Source tags: [v] = abstract/record read this session, [m] = from memory, re-check before quoting in-app.
@@ -209,8 +209,8 @@ Order of caps: `rest (0) < strength_only (1) < easy (2) < quality (3)`.
 
 ## 4. Data
 
-### 4.1 Run as a workout (migration 011, no new table)
-`db/migrations/011_run.ts`, wired into `MIGRATIONS` and `index.test.ts` (version 11):
+### 4.1 Run as a workout (migration 015, no new table)
+`db/migrations/015_run.ts`, wired into `MIGRATIONS` and `index.test.ts` (version 15):
 ```ts
 export const sql = `
 INSERT OR IGNORE INTO exercises (id, name, type, catalogue_id, is_custom, body_part, target_muscle, secondary_muscles, equipment, category)
@@ -223,8 +223,8 @@ VALUES ('run', 'Run', 'distance_duration', NULL, 1, 'cardio', 'cardiovascular sy
 - Consumers to update (grep `FOOTBALL` shows the full list): `lib/training/effort.ts` `recovery()` (skip `RUN`, as it does football, so 'Cardio' never gets a window), `lib/training/conditioning.ts` (`cardioMinutes`: Run counts `RUN_HARD_MIN_RPE`+ as vigorous 1.0, else moderate 0.5, WHO 2020), `lib/workout/activeWorkout.ts` (rest timer 0 for Run, like football), `components/log-workout/LogExercise.tsx` (RPE chips for Run).
 - CSV import (`scripts/import-csv.ts`) and sync need no change: they carry the whole SQLite file.
 
-### 4.2 New tables (migration 012)
-`db/migrations/012_run_recovery.ts`:
+### 4.2 New tables (migration 016)
+`db/migrations/016_run_recovery.ts`:
 ```sql
 CREATE TABLE run_checkins (
   date        TEXT PRIMARY KEY,                       -- local yyyy-mm-dd of the run slot
@@ -241,10 +241,10 @@ CREATE TABLE run_feedback (                           -- audit trail of the mode
   legs_felt     TEXT CHECK (legs_felt IN ('heavy','ok'))
 );
 ```
-- Update `db/migrations/index.test.ts` expected tables (adds `run_checkins`, `run_feedback`; count 12) and `user_version` 12.
+- Update `db/migrations/index.test.ts` expected tables (adds `run_checkins`, `run_feedback`; count 13, it is 11 today) and `user_version` 16.
 - Settings (slot minutes, on/off) in `app_state` under a new `STORAGE_KEYS.runSettings = 'run.settings'` (JSON). Never rename existing keys (rule in `constants/storage.ts`).
 
-### 4.3 Phase 3 table (migration 013)
+### 4.3 Phase 3 table (migration 017)
 ```sql
 CREATE TABLE readiness_samples (
   id TEXT PRIMARY KEY, date TEXT NOT NULL,
@@ -399,19 +399,19 @@ Fixtures: build `StatSet` helpers like the ones in `lib/training/effort.test.ts`
 | 30 | Cross-source safety | baseline from `healthkit`, today `health_connect` | no strain (separate baselines) |
 | 31 | `recovery()` ignores `Run`: a lone run set creates no 'Cardio' state | | map has no Cardio entry |
 | 32 | `conditioning`: 30 min Run RPE 4 -> 15 vigorous-equivalent min; RPE 8 -> 30 | | 15; 30 |
-| 33 | Migration 011/012: tables, `Run` exercise exists once, `user_version` 12, idempotent rerun | sql.js | per `index.test.ts` style |
+| 33 | Migration 015/016: tables, `Run` exercise exists once, `user_version` 16, idempotent rerun | sql.js | per `index.test.ts` style |
 | 34 | `saveCheckIn` upserts per date; `getCheckIn` null when absent | sql.js wrapper | |
 
 Dev tip: `/check-touched` runs only these files.
 
 ## 9. Phasing (PR-sized)
 1. **Science + pure model** (no UI, no DB): `docs/science/running.md` (this spec's section 2 and 7.3, in the style of `recovery.md`), `constants/run.ts`, `types/run.ts`, `lib/training/run.ts`, `lib/training/runReadiness.ts`, both `.test.ts` files (tests 1-30). Uses `StatSet` as is (runs faked in tests).
-2. **Run exercise + data plumbing**: `db/migrations/011_run.ts`, `db/migrations/index.ts`, `index.test.ts`, `types/stats.ts` (`distanceKm`), `db/stats/queries.ts`, `rows.ts`, `statSets.ts`, `lib/training/effort.ts` (skip Run), `lib/training/conditioning.ts` (+test), `lib/training/rpe.ts` (+test), `lib/workout/activeWorkout.ts`, `constants/labels.ts`. Tests 31-33.
-3. **Log run**: `app/run/log.tsx` (or RPE chips inside `components/log-workout/LogExercise.tsx` for `Run`), `constants/run.ts` copy labels, `db/run/feedback.ts`, migration 012 (tables only, if not already shipped with PR5). Home/Workout entry point.
+2. **Run exercise + data plumbing**: `db/migrations/015_run.ts`, `db/migrations/index.ts`, `index.test.ts`, `types/stats.ts` (`distanceKm`), `db/stats/queries.ts`, `rows.ts`, `statSets.ts`, `lib/training/effort.ts` (skip Run), `lib/training/conditioning.ts` (+test), `lib/training/rpe.ts` (+test), `lib/workout/activeWorkout.ts`, `constants/labels.ts`. Tests 31-33.
+3. **Log run**: `app/run/log.tsx` (or RPE chips inside `components/log-workout/LogExercise.tsx` for `Run`), `constants/run.ts` copy labels, `db/run/feedback.ts`, migration 016 (tables only, if not already shipped with PR5). Home/Workout entry point.
 4. **Today card, no check-in yet**: `hooks/useRunReadiness.ts`, `components/run/ReadinessCard.tsx`, `components/run/WhyList.tsx`, `app/run/index.tsx`, compact card in `app/statistics/body.tsx` (Recovery view), settings slot + on/off in `app/settings.tsx`, `constants/storage.ts` (`runSettings`), disclaimer sheet.
-5. **Check-in**: migration 012, `db/run/checkins.ts`, `db/run/queries.ts`, `rows.ts`, `components/run/CheckInRow.tsx`, test 34. Gates `tired`, `drained_short_sleep`, `ill_or_pain`, `legs sore`.
+5. **Check-in**: migration 016, `db/run/checkins.ts`, `db/run/queries.ts`, `rows.ts`, `components/run/CheckInRow.tsx`, test 34. Gates `tired`, `drained_short_sleep`, `ill_or_pain`, `legs sore`.
 6. **Week and calendar**: `app/run/week.tsx`, `components/run/LoadBars.tsx`, `IntensityBar.tsx`, `LegVsRunStrip.tsx` (what-if sheet using `withLegDay`), `lib/training/runWeeks.ts` (+test) for weekly bars. Nice-to-have: evening notification "Tomorrow 6:30: strength only", reusing the notification code in `lib/workoutNotification.ts`.
-7. **Wearables (separate, can slip)**: read Expo SDK 57 docs first; Health Connect / HealthKit read-only module + config plugin (`plugins/`), migration 013, `db/run/readiness.ts`, `autonomicStrain` wired into gates, settings toggle and permission copy. Dev build required.
+7. **Wearables (separate, can slip)**: read Expo SDK 57 docs first; Health Connect / HealthKit read-only module + config plugin (`plugins/`), migration 017, `db/run/readiness.ts`, `autonomicStrain` wired into gates, settings toggle and permission copy. Dev build required.
 
 Each PR keeps lint (`warnings fail`) and `npx tsc --noEmit` clean, per `AGENTS.md`.
 

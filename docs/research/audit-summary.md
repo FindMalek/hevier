@@ -5,6 +5,12 @@ A short version of the code audit done on 2026-11-07 against `main` at `b5c4394`
 old paths (`lib/`, `backup-server/`, `shared/`, `package-lock.json`); they map to
 `apps/mobile/lib/`, `apps/sync/`, `packages/shared/` and `pnpm-lock.yaml`.
 
+Re-checked on 2026-11-08 against the monorepo branch after upstream `main` at
+`28face9` (PR #2: body weight, onboarding, native tab bar, migrations 011 to 014,
+openGym data update) was merged in. Every finding below is still open. Two
+entries were updated for that merge: A-17 (the guard also compares the newest
+workout date now) and P-01 (the profile query moved).
+
 This is a summary, not the raw file. The raw audit had line numbers, repro notes
 and a list of proposed PRs, and its proof tests lived outside the repo (10 tests,
 all passing). What is kept here: every finding, its severity, how sure the audit
@@ -18,7 +24,7 @@ search the file named in "Where".
   - `confirmed`: the code was read and the claim was shown with a test, or the code leaves no doubt.
   - `likely`: the code path was read but not run end to end (often needs a device).
   - `suspected`: reasoned from the code, needs measuring.
-- **Status:** every finding was still open when this summary was written. Check the
+- **Status:** every finding was still open when this summary was written and when it was re-checked after the upstream merge (see above). Check the
   code before you rely on one, and check [ROADMAP.md](../../ROADMAP.md) for the item
   that owns it.
 - Findings marked `likely` or `suspected` are not bugs until someone reproduces
@@ -34,6 +40,9 @@ coverage was 43 percent with screens and components included. The monorepo move
 (R-01) removes the extra install. The generated types are still needed: run
 `pnpm mobile` once.
 
+On 2026-11-08, with upstream `main` at `28face9` merged in, `pnpm check` passes
+with 391 tests (366 in the app, 15 in Hevier Sync, 10 in the shared package).
+
 ## Bugs
 
 | ID | Sev | Conf | Where | Problem | Roadmap |
@@ -41,11 +50,11 @@ coverage was 43 percent with screens and components included. The monorepo move
 | A-10 | high | likely | `apps/mobile/lib/sync/expoIO.ts`, `apps/mobile/lib/sync/restore.ts`, `apps/mobile/app/sync.tsx` | Restore deletes the live database and media before copying the new files in. A failure in between leaves the phone with no data, and the screen shows nothing. The message "your phone's data was not changed" is only true before that step. | R-04 |
 | A-11 | high | likely | `apps/mobile/app/_layout.tsx`, `apps/mobile/lib/sync/client.ts`, `apps/mobile/lib/sync/expoIO.ts` | A quiet sync that finishes during a restore download deletes the staged restore files, so the restore then fails after the live data was already removed. Nothing stops the two from overlapping. | R-04 |
 | A-12 | med | confirmed | `apps/sync/store.ts` | The PC swaps `current/` with two renames. A crash or a Windows lock between them leaves no `current/`, the PC says "No backup yet", and the next commit deletes the only good copy. | R-06 |
-| A-13 | med | confirmed | `apps/mobile/db/migrations/index.ts`, `apps/mobile/db/migrations/009_warmup_sets.ts` | A migration and its version bump are not in one transaction. A crash halfway through the table rebuild in 009 leaves a stray table, and every later launch fails. | R-05 |
+| A-13 | med | confirmed | `apps/mobile/db/migrations/index.ts`, `apps/mobile/db/migrations/009_warmup_sets.ts` | A migration and its version bump are not in one transaction. A crash halfway through the table rebuild in 009 leaves a stray table, and every later launch fails. Migration 013 (a long list of updates) runs the same way. | R-05 |
 | A-14 | med | likely | `apps/mobile/modules/workout-notification/android/` (`WorkoutNotificationService.kt`) | The service can stop itself without calling `startForeground`, which makes Android throw and crash the app. `startForeground` itself is not guarded. | R-07 |
 | A-15 | med | likely | `apps/mobile/modules/home-widgets/android/` (`RedrawScheduler.kt`, `Widgets.kt`, manifest) | The midnight redraw alarm is not booked again after a reboot or a date or time zone change, so widgets show stale days until the app opens. | R-07 |
 | A-16 | med | suspected | `apps/mobile/lib/sync/client.ts` | Uploads and `/commit` have no timeout. A PC that sleeps mid-upload can leave the spinner running and block later quiet syncs. | R-04 |
-| A-17 | med | confirmed | `packages/shared/sync-protocol.ts` | The "wiped phone" guard compares workout counts only. Deleting one workout makes every quiet sync refuse until "Send anyway". Delete one and add one is not detected. | R-06 |
+| A-17 | med | confirmed | `packages/shared/sync-protocol.ts` | The "wiped phone" guard compares workout counts, and since PR #2 also the start of the newest workout (`older`). Deleting one workout, or the newest one, makes every quiet sync refuse until "Send anyway". Delete one and add one is not detected by the count. | R-06 |
 | A-18 | med | confirmed | `apps/mobile/lib/stats/records.ts`, `apps/mobile/db/records/queries.ts` | Warm-up sets are not excluded from records. A heavy warm-up can fire the PR toast and raise the bests that later sets must beat. Needs a product decision first. | R-12 |
 | A-19 | low | confirmed | `apps/mobile/lib/stats/profileCharts.ts` | `barScale` loops forever if any value is `NaN` or `Infinity`, which hangs the JS thread. `NaN` is reachable from an unparseable end time. | R-08 |
 | A-20 | low | confirmed | `apps/mobile/lib/format/setFormat.ts`, `apps/mobile/lib/format/duration.ts` | Number parsing accepts hex, exponents, negatives and fractions for reps and seconds, so a stray input can store negative volume. | R-08 |
@@ -79,7 +88,7 @@ and `debuggable` is off by default.
 
 | ID | Sev | Conf | Where | Problem | Roadmap |
 |---|---|---|---|---|---|
-| P-01 | med | suspected | `apps/mobile/db/feed/cards.ts`, `apps/mobile/db/stats/statSets.ts`, `apps/mobile/db/profile/queries.ts` | Home, Profile and statistics load every set ever into JS, and one workout page forces the full list. About 50k rows after ten years of training. Not measured. | R-36 |
+| P-01 | med | suspected | `apps/mobile/db/feed/cards.ts`, `apps/mobile/db/stats/statSets.ts`, `apps/mobile/db/sessions/sessions.ts` (was `db/profile/queries.ts`) | Home, Profile and statistics load every set ever into JS, and one workout page forces the full list. About 50k rows after ten years of training. Not measured. | R-36 |
 | P-02 | med | likely | `apps/mobile/components/exercise-page/HistoryTab.tsx` | Every session renders in a plain `ScrollView`, and set badges are recomputed per set. Unbounded for a popular exercise. | R-28 |
 | P-03 | low | suspected | `apps/mobile/app/log-workout.tsx` | The screen root subscribes to the whole active workout, so each keystroke re-renders it. | R-36 |
 | P-04 | low | suspected | `apps/mobile/lib/refreshHomeWidgets.ts` | 169 recovery evaluations on every background transition; the memo is keyed by a fresh array. | R-36 |

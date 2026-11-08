@@ -58,6 +58,20 @@ their original paths and commands, apart from the one edit listed below.
 
 `audit-summary.md` already uses the new paths.
 
+## Changes since the research
+
+Upstream `main` at `28face9` (PR #2) landed after the research and was merged
+into the monorepo branch. What it changes for these notes:
+
+- Migrations 011 to 014 exist (body weights, device id, openGym data update,
+  Lat Pulldown). The next free number is 015, so the migration numbers in
+  `running.md` were shifted by four (011 to 015, 012 to 016, 013 to 017).
+- The catalogue now has 5,593 exercises, not 5,632. Counts of "5,600+" in
+  `market.md` are the research snapshot and stay as written.
+- The bottom tab bar is native and `components/ui/TabBar.tsx` is gone. Body
+  weight logging, a first-run setup and a "newest data wins" check in sync
+  were added. `audit-summary.md` notes the two findings this touches (A-17, P-01).
+
 ## Edits made when copying
 
 - `market.md`: one absolute path on the researcher's machine (in the feature
