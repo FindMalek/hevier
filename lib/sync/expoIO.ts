@@ -86,15 +86,19 @@ function setAside(backup: Directory): void {
 }
 
 // Copied, not moved: a file moved out of the cache keeps Android's cache
-// marking. The synchronous copy throws here, not after the restore is "done".
-function moveIn(paths: string[]): void {
+// marking. One file at a time, each awaited: the swap is finished (or has
+// thrown) before the gate is released. The async copy runs off the JS thread,
+// so the screen keeps drawing; copySync would freeze it for as long as the
+// whole library takes. The gate keeps the rest of the app out meanwhile, and a
+// kill in the middle of a copy is what the crash test models.
+async function moveIn(paths: string[]): Promise<void> {
   sqliteDir().create({ intermediates: true, idempotent: true });
-  stagedFile(STORAGE_FILES.database).copySync(new File(sqliteDir(), STORAGE_FILES.database));
+  await stagedFile(STORAGE_FILES.database).copy(new File(sqliteDir(), STORAGE_FILES.database));
   for (const folder of SYNC_FOLDERS) {
     new Directory(Paths.document, folder).create({ intermediates: true, idempotent: true });
   }
   for (const path of paths) {
-    if (path !== STORAGE_FILES.database) stagedFile(path).copySync(localFile(path));
+    if (path !== STORAGE_FILES.database) await stagedFile(path).copy(localFile(path));
   }
 }
 
@@ -253,7 +257,7 @@ export const expoIO: SyncIO = {
       try {
         setAside(backup);
         new File(backup, RESTORE_MARKERS.setAside).create();
-        moveIn(paths);
+        await moveIn(paths);
         new File(backup, RESTORE_MARKERS.committed).create();
       } catch (e) {
         if (!recoverBackup()) throw new KeptBackupError(e);

@@ -78,7 +78,7 @@ vi.mock('expo-file-system', () => {
       op('create ' + this.path);
       fs.writeFileSync(this.path, '', { flag: 'wx' });
     }
-    copySync(dest: File) {
+    async copy(dest: File) {
       if (!fs.existsSync(path.dirname(dest.path))) throw new Error('destination does not exist');
       if (fs.existsSync(dest.path)) throw new Error('destination already exists');
       const body = fs.readFileSync(this.path);

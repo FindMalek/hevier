@@ -7,6 +7,7 @@ const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hevier-io-'));
 
 // What breaks next, by file or folder name; each entry fires once.
 const failing = { copy: '', moveAside: '', moveBack: '', deleteBackup: '', stuck: '' };
+const slow = { copyMs: 0 };
 
 function breakOnce(key: keyof typeof failing, name: string): boolean {
   if (failing[key] !== name) return false;
@@ -51,7 +52,8 @@ vi.mock('expo-file-system', () => {
     create() {
       fs.writeFileSync(this.path, '', { flag: 'wx' });
     }
-    copySync(dest: File) {
+    async copy(dest: File) {
+      if (slow.copyMs) await new Promise((resolve) => setTimeout(resolve, slow.copyMs));
       if (breakOnce('copy', this.name)) throw new Error('disk full');
       fs.copyFileSync(this.path, dest.path, fs.constants.COPYFILE_EXCL);
     }
@@ -139,10 +141,13 @@ beforeEach(() => {
   fs.rmSync(root, { recursive: true, force: true });
   asyncStorage.clear();
   Object.assign(failing, { copy: '', moveAside: '', moveBack: '', deleteBackup: '', stuck: '' });
+  slow.copyMs = 0;
   put(DOC, 'SQLite/hevier.db', databaseBytes(LATEST, 'old'));
   put(DOC, 'SQLite/hevier.db-wal', 'old-wal');
   put(DOC, 'media/old.jpg', 'old-photo');
 });
+
+const sleepFor = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 describe('expoIO.replaceAll', () => {
   it('a staged file that never arrived leaves the phone as it was', async () => {
@@ -254,6 +259,23 @@ describe('expoIO.replaceAll', () => {
     await expect(expoIO.replaceAll(['hevier.db', 'media/a.jpg'])).resolves.toBeUndefined();
     expect(read('SQLite/hevier.db')).toContain('new');
     expect(has('restore-backup')).toBe(false);
+  });
+
+  it('the gate stays closed until the last copy has finished', async () => {
+    await getDb();
+    stageNewData();
+    slow.copyMs = 40;
+    let opened = false;
+    const swap = expoIO.replaceAll(['hevier.db', 'media/a.jpg']);
+    await sleepFor(10);
+    void getDb().then(() => (opened = true));
+    await sleepFor(10);
+    expect(opened).toBe(false);
+    await swap;
+    expect(read('SQLite/hevier.db')).toContain('new');
+    expect(read('media/a.jpg')).toBe('photo-a');
+    await sleepFor(10);
+    expect(opened).toBe(true);
   });
 
   it('swaps in the new data and drops the old', async () => {
