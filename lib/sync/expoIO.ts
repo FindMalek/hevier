@@ -47,13 +47,13 @@ function trashDir(): Directory {
   return new Directory(Paths.document, STORAGE_FOLDERS.restoreTrash);
 }
 
-function restoreItems(): RestoreItem[] {
-  const dbFile = STORAGE_FILES.database;
-  return [
-    ...[dbFile, `${dbFile}-wal`, `${dbFile}-shm`, `${dbFile}-journal`].map((name) => ({ name, folder: false })),
-    ...SYNC_FOLDERS.map((name) => ({ name, folder: true })),
-  ];
-}
+// What a restore replaces: the database with its side files, and the photo folders.
+const RESTORE_ITEMS: RestoreItem[] = [
+  ...[STORAGE_FILES.database, `${STORAGE_FILES.database}-wal`, `${STORAGE_FILES.database}-shm`, `${STORAGE_FILES.database}-journal`].map(
+    (name) => ({ name, folder: false })
+  ),
+  ...SYNC_FOLDERS.map((name) => ({ name, folder: true })),
+];
 
 function liveOf(item: RestoreItem): File | Directory {
   return item.folder ? new Directory(Paths.document, item.name) : new File(sqliteDir(), item.name);
@@ -78,7 +78,7 @@ function verifyStaged(paths: string[]): void {
 }
 
 function setAside(backup: Directory): void {
-  for (const item of restoreItems()) {
+  for (const item of RESTORE_ITEMS) {
     const live = liveOf(item);
     if (live.exists) live.moveSync(item.folder ? backup : keptOf(item, backup));
   }
@@ -123,6 +123,29 @@ function discardBackup(): boolean {
   return true;
 }
 
+// One item of the old data. When the backup holds it, it replaces the live
+// one (noted with `.back` first, so a second try after a failure doesn't take
+// it for new data). When it doesn't, the live one is new data that was half
+// copied in, and goes, unless it was already put back.
+function putBack(item: RestoreItem, backup: Directory, newDataStarted: boolean): boolean {
+  try {
+    const kept = keptOf(item, backup);
+    const live = liveOf(item);
+    const back = new File(backup, `${item.name}.back`);
+    if (kept.exists) {
+      if (!back.exists) back.create();
+      if (live.exists) live.delete();
+      kept.moveSync(live);
+    } else if (newDataStarted && !back.exists && live.exists) {
+      live.delete();
+    }
+    return true;
+  } catch (e) {
+    console.warn('[sync] put back failed', item.name, e);
+    return false;
+  }
+}
+
 // Puts the old data back from restore-backup, going by what is in it: only an
 // item the backup holds replaces the live one, so nothing is deleted unless
 // its original is there to take its place. An item put back is noted (`.back`),
@@ -141,22 +164,8 @@ function recoverBackup(): boolean {
     console.warn('[sync] put back failed', e);
     ok = false;
   }
-  for (const item of restoreItems()) {
-    try {
-      const kept = keptOf(item, backup);
-      const live = liveOf(item);
-      const back = new File(backup, `${item.name}.back`);
-      if (kept.exists) {
-        if (!back.exists) back.create();
-        if (live.exists) live.delete();
-        kept.moveSync(live);
-      } else if (newDataStarted && !back.exists && live.exists) {
-        live.delete();
-      }
-    } catch (e) {
-      console.warn('[sync] put back failed', item.name, e);
-      ok = false;
-    }
+  for (const item of RESTORE_ITEMS) {
+    if (!putBack(item, backup, newDataStarted)) ok = false;
   }
   return ok && discardBackup();
 }
