@@ -416,8 +416,6 @@ export const STATISTICS_MONTHLY_SIZES = {
 // components/ui/SwipeToDelete.tsx
 export const SWIPE_TO_DELETE_SIZES = {
   open: 120,
-  activateX: 12, // sideways travel before a swipe starts
-  failY: 10, // up or down travel that leaves the touch to the page scroll
 };
 
 // app/sync-scan.tsx
