@@ -92,7 +92,7 @@ body {
 }
 
 :focus-visible {
-  outline: 3px solid rgba(0, 113, 227, 0.55);
+  outline: 3px solid #0071e3;
   outline-offset: 3px;
   border-radius: 10px;
 }
