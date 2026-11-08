@@ -27,9 +27,11 @@ Where each token lives. The rules are in `AGENTS.md` under "Design system".
 Shared components in `apps/mobile/components/ui/`: `ActionBar`, `Avatar`,
 `BottomSheet`, `Button`, `Confetti`, `ConfirmDialog`, `Divider`, `EmptyState`,
 `Icons`, `InnerHeader`, `MetricPills`, `NameDialog`, `Pill`, `ReorderList`,
-`Screen`, `Stat`, `SwipeToDelete`, `TabBar`, `TabHeader`, `Toggle`,
-`WheelPicker`. Their props are in `components/ui/types.ts`. Open the component
-before you copy its look.
+`Screen`, `Stat`, `SwipeToDelete`, `TabHeader`, `Toggle`, `WheelPicker`,
+`WorkoutIcon`, `WorkoutPill`. Their props are in `components/ui/types.ts`. Open
+the component before you copy its look. There is no `TabBar` component: the
+bottom tab bar is native (`apps/mobile/app/(tabs)/_layout.tsx`, drawables from
+`apps/mobile/plugins/android-res/`), see `native-modules.md`.
 
 ## Checklist for a new screen or component
 

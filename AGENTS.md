@@ -66,7 +66,7 @@ Docs: https://docs.expo.dev/eas/index.md
 
 ## How to work in this repo
 
-- **Find the item first.** Work comes from an issue and, usually, a roadmap ID in `ROADMAP.md` (`R-04`). Stay inside that item. If it says "needs a product decision", stop and ask the human.
+- **Find the item first.** Work comes from an issue and, usually, a roadmap ID in `ROADMAP.md` (`R-04`). `ROADMAP.md` lists the GitHub issue next to each item (the audit fixes are issues #3 to #19). Stay inside that item. If it says "needs a product decision", stop and ask the human.
 - **Read the rules for the area before you edit it.** `CONTRIBUTING.md` (code rules, binding) and the files in `.claude/rules/`, whatever tool you use: `database-migrations.md`, `native-modules.md`, `sync-and-data-safety.md`, `ui-design-system.md`.
 - **Locate before you read.** Search for the symbol or file, then read the line range you need. Give every grep an include pattern (`--include='*.ts'`). Never search or open `packages/catalogue/exercises.json` (3.5 MB, one match can flood your context), lockfiles, `coverage/`, `.turbo/` or build output.
 - **Smallest diff that works.** One concern per change. No drive-by refactors, no renames nobody asked for, no new files unless the change needs them, no new documentation files unless asked.
@@ -105,7 +105,7 @@ Few tests, each one worth having.
 - **While iterating, run only what you touched:**
 
   ```bash
-  pnpm --filter @hevier/mobile exec vitest run lib/sync/pairing.test.ts   # one file
+  pnpm --filter @hevier/mobile exec vitest run lib/sync/client.test.ts    # one file
   pnpm turbo run test --filter=@hevier/sync                                # one package
   ```
 
@@ -117,6 +117,7 @@ The app is dark only. Every screen is styled from tokens so the whole app stays 
 
 - **No raw values in screens.** Colours, sizes, spacing, radii, font sizes, motion and labels come from `apps/mobile/constants/` (`COLORS`, `TYPE`, `FONTS`, `SPACE`, `RADIUS`, `SIZES`, `HIT_SLOPS`, ...). If a value is missing, add it to the right constants file, named for what it is. `.claude/rules/ui-design-system.md` says which file holds what.
 - **Use the shared pieces** in `apps/mobile/components/ui/` (`Button`, `BottomSheet`, `ConfirmDialog`, `InnerHeader`, `Pill`, `Toggle`, ...) before writing a new one. Feature components go in `components/<feature>/`.
+- **The bottom tab bar is native**, not a component: `NativeTabs` in `apps/mobile/app/(tabs)/_layout.tsx`, with icons and sizes from `apps/mobile/plugins/android-res/` copied in by `apps/mobile/plugins/withHevierTabBar.js`. The floating workout pill is `components/ui/WorkoutPill.tsx`, drawn by each tab screen.
 - **Types and SQL have fixed homes.** Types in `types/` (or a feature's `types.ts`), SQL text only in `db/<topic>/queries.ts`, row shapes in `rows.ts`, maths in `lib/`. A list of choices is a constant with `as const`, and its type is derived from it.
 - **Dark UI, one accent.** No light theme and no new accent colours without a decision from the owner. Status colours are fixed: `danger`, `caution` and `warmup`, `success`, `done`.
 - **Accessibility is part of the component, not a later pass.** Every `Pressable` gets `accessibilityRole`. Every icon-only control gets `accessibilityLabel`. Toggles and ticked sets expose their state. Targets are at least 48 dp (use `hitSlop` from `HIT_SLOPS` when the visual is smaller). Never rely on colour alone: add a letter, an icon or text. Give text room to grow; do not fix heights that clip large fonts.
@@ -175,7 +176,7 @@ Do not assume a screen "should look right". Run it and look.
 
 1. Install and generate types if needed: `pnpm install`, then `pnpm mobile` once writes `expo-env.d.ts` and `.expo/types/`.
 2. Build the app on an emulator or a phone with USB debugging: `pnpm android`. After that `pnpm mobile` serves JS changes. After adding or moving files restart with `pnpm mobile --clear`.
-3. Use demo data, never real data. `apps/mobile/scripts/load-device.sh apps/mobile/scripts/fixtures/sample-workouts.csv` loads the sample history onto the connected device. It **replaces** the app's data on that device, so use an emulator. Without the licensed media the app shows exercise placeholders, which is what a screenshot should show.
+3. A fresh install with no workouts opens a first-run setup over Home (name, figure, body weight; each step can be skipped). Skip it before you take screenshots. Use demo data, never real data. `apps/mobile/scripts/load-device.sh apps/mobile/scripts/fixtures/sample-workouts.csv` loads the sample history onto the connected device. It **replaces** the app's data on that device, so use an emulator. Without the licensed media the app shows exercise placeholders, which is what a screenshot should show.
 4. Take the screenshot with `adb exec-out screencap -p > shot.png` (adb comes with the Android SDK) or the emulator's camera button. Open the image and check it against the design rules: tokens, spacing, dark theme, nothing clipped.
 5. Check the states that matter, not only the happy one: empty, long text, many items, an error, a large system font (Settings, Display, Font size).
 6. For a changed screen, attach **before and after** to the pull request. Do not commit the images unless you are updating the README screenshots in `docs/images/screens/`.
