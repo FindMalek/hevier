@@ -12,3 +12,8 @@ export const SHORT_VOLUME_FROM_KG = 1000;
 export const BODY_WEIGHT_EQUIPMENT = 'body weight';
 // What the Body weight field accepts, in kg.
 export const BODY_WEIGHT_LIMITS = { minKg: 20, maxKg: 400 };
+
+// Imported pounds are written in kg, rounded to this many decimals
+// (135 lb = 61.235 kg); imported miles in km the same way.
+export const KG_PER_LB = 0.45359237;
+export const CONVERTED_DECIMALS = 4;
