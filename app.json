@@ -56,7 +56,8 @@
         }
       ],
       "./plugins/withHevierRelease",
-      "./plugins/withHevierTabBar"
+      "./plugins/withHevierTabBar",
+      "./plugins/withHevierRefreshRate"
     ],
     "experiments": {
       "typedRoutes": true
