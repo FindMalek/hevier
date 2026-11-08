@@ -15,7 +15,7 @@ cleanup() {
   local status=$?
   kill "$pid" 2>/dev/null || true
   wait "$pid" 2>/dev/null || true
-  [ "$status" = 0 ] || cat "$log"
+  [[ "$status" == 0 ]] || cat "$log"
   rm -rf "$dir"
 }
 trap cleanup EXIT
@@ -27,9 +27,9 @@ for _ in $(seq 1 30); do
 done
 
 code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port/")
-[ "$code" = 401 ] || { echo "expected 401 without a key, got $code"; exit 1; }
+[[ "$code" == 401 ]] || { echo "expected 401 without a key, got $code"; exit 1; }
 
 key=$(cat "$dir/backup/key.txt")
 code=$(curl -s -o /dev/null -w '%{http_code}' -H "x-hevier-key: $key" "http://127.0.0.1:$port/status")
-[ "$code" != 401 ] || { echo "the key from key.txt was refused"; exit 1; }
+[[ "$code" != 401 ]] || { echo "the key from key.txt was refused"; exit 1; }
 echo "smoke test passed: 401 without a key, $code with it"

@@ -16,7 +16,7 @@ fail() {
 subject=${BASH_REMATCH[4]}
 words=$(wc -w <<< "$subject" | tr -d ' ')
 
-[ "$words" -le 5 ] || fail "The subject has $words words."
+[[ "$words" -le 5 ]] || fail "The subject has $words words."
 [[ $subject =~ ^[a-z0-9] ]] || fail "The subject must start in lowercase."
 [[ $subject != *. ]] || fail "The subject must not end with a period."
 echo "PR title ok: $title"
