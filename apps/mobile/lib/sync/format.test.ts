@@ -20,6 +20,7 @@ describe('syncMessage', () => {
     );
     expect(syncMessage({ ok: false, reason: 'otherDevice' })).toBe('This copy came from another phone. Replace it?');
     expect(syncMessage({ ok: false, reason: 'error' })).toBe('Sync failed. Try again.');
+    expect(syncMessage({ ok: false, reason: 'timeout' })).toMatch(/stopped answering/);
     expect(syncMessage({ ok: true, at: '' })).toBe('Synced');
   });
 });
