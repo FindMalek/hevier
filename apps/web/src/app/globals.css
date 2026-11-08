@@ -1430,7 +1430,7 @@ details.sources li a {
   position: relative;
   z-index: 2;
   width: min(100%, 470px);
-  margin-bottom: -10px;
+  margin-bottom: 16px;
   transition: transform 0.9s var(--spring);
 }
 .notif img {
@@ -2060,5 +2060,27 @@ details.sources li a {
       0 1px 0 #fff inset,
       0 0 0 1px rgba(16, 24, 40, 0.12),
       0 14px 26px -12px rgba(16, 24, 40, 0.3);
+  }
+}
+
+
+/* Small screens: the map stays pinned while you scrub the controls under it. */
+@media (max-width: 959px) {
+  .map-panel {
+    position: sticky;
+    top: 78px;
+    z-index: 4;
+    padding: 12px 12px 10px;
+  }
+  .bodies figure {
+    max-width: 118px;
+  }
+  .bodies figcaption {
+    margin-top: 2px;
+  }
+}
+@media (min-width: 640px) and (max-width: 959px) {
+  .bodies figure {
+    max-width: 150px;
   }
 }

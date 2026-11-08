@@ -30,7 +30,7 @@ export const SITE = {
 
 export const CTA = HAS_APK_RELEASE
   ? { label: 'Download for Android', navLabel: 'Get the APK', href: SITE.releases }
-  : { label: 'Get it on GitHub', navLabel: 'Get it', href: SITE.getStarted };
+  : { label: 'Get it on GitHub', navLabel: 'Get Hevier', href: SITE.getStarted };
 
 export const NAV_LINKS = [
   { href: '#features', label: 'Features' },
