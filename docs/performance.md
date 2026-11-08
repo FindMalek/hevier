@@ -1,44 +1,41 @@
 # Performance
 
-How Hevier asks for the display's full refresh rate, what was changed for
-smoothness, and how to measure it on a phone. Numbers marked "laptop" were
-measured with vitest on a development machine. Nothing here was measured on a
-phone yet: there was no device with a 90 or 120 hz display.
+How to measure Hevier's smoothness on a phone, what was found on a real 120 hz
+phone, and what was changed. Numbers marked "laptop" were measured with vitest
+on a development machine.
 
 ## What was changed (issue #28)
 
 | Change | Where | Why |
 |---|---|---|
-| Android asks for the highest refresh rate | `plugins/withHevierRefreshRate.js` | Many phones keep an app at 60 hz unless its window asks for more. React Native does not ask. |
-| iPhone ProMotion above 60 hz | `app.json`: `ios.infoPlist.CADisableMinimumFrameDurationOnPhone` | iPhones with ProMotion cap an app at 60 hz without this key. |
-| iOS bundle id | `app.json`: `ios.bundleIdentifier` (`com.hevier.app`, same as Android) | iOS builds need one. |
-| Set rows swipe on the UI thread | `components/ui/SwipeToDelete.tsx`, `lib/swipeToDelete.ts` | Every set row in Log Workout had a `PanResponder`: each touch move went through the JS thread. Now the row follows the finger in a reanimated worklet and JS runs only when the row is deleted. |
 | Last 7 days strip skips old sets | `lib/stats/stats.ts` (`lastSevenDays`) | It built a `Date` for every set ever logged. Now it compares milliseconds first. |
 
-### Android refresh rate, in detail
+## What a real 120 hz phone showed
 
-The config plugin adds a block to the generated `MainActivity.kt`, right after
-`super.onCreate`. It reads the display's supported modes, keeps the ones with
-the current resolution, and sets the window's `preferredRefreshRate` to the
-fastest of them.
+The owner tested the first version of this change on a Galaxy S23 FE (release
+build). It asked Android for the display's fastest refresh rate (a config plugin
+that set the window's `preferredRefreshRate`), moved the set-row swipe to a
+reanimated worklet, and set the iOS ProMotion key. Findings:
 
-- Android's frame rate guide says to use `WindowManager.LayoutParams.preferredRefreshRate`
-  when an app only wants a refresh rate. `Surface.setFrameRate` is aimed at
-  video surfaces (and API 30+), `preferredDisplayModeId` forces one display
-  mode (for resolution changes or heavy mode switches) and is more rigid.
-- Same resolution only, so the screen never changes size.
-- The block is tagged (`hevier-refresh-rate`) and replaced, not repeated, so
-  running prebuild again is safe. `android/` is generated: never edit it by hand.
-- Rebuild the app after pulling this change: `npx expo run:android`.
+- **Refresh rate.** With the phone on Adaptive motion smoothness, Samsung already
+  runs Hevier at 120 hz while scrolling and drops to 60 hz when the screen is
+  idle, without any request from the app. With the plugin the app stayed at
+  120 hz while idle, which costs battery for nothing. On Standard the plugin does
+  nothing. So the request was dropped: an app cannot do better than the phone's
+  own setting here, and Adaptive already gives 120 hz where it matters.
+- **Swipe to delete.** A swipe that starts on the KG or REPS box did not move the
+  row, and neither did swiping an open row closed from the boxes. The boxes cover
+  almost half of the row, so most swipes in a workout failed. The old
+  `PanResponder` handles both. The worklet version was removed.
+- **iOS keys.** The bundle id and `CADisableMinimumFrameDurationOnPhone` do
+  nothing until the iOS build works (#14), so they belong with that work.
 
-The system may still choose a lower rate: battery saver, thermal limits, a
-phone setting that caps the rate, or OEM per-app rules (some Samsung and Xiaomi
-phones have their own switch). The app does not retry or fight it.
+A second try at moving the swipe to the UI thread needs a gesture that can start
+on top of the text inputs (not just a pan on the row), and a test on a real
+phone before it is merged.
 
 ### What is not covered
 
-- The rate is requested once, in `onCreate`. Moving the app between displays
-  (a foldable's two screens) does not ask again.
 - `ReorderList` (Reorder Folders, Reorder Exercises, Cycle) still uses
   `PanResponder` with a JS-driven drag. The lists are short; moving it to the UI
   thread would need the order change to wait for the drop, which is a bigger
@@ -137,7 +134,7 @@ rate the screen really ran at (8.3 ms is 120 hz, 16.7 ms is 60 hz).
 2. Same phone, same data (`scripts/load-device.sh` copies a history in; it needs a build made with `HEVIER_DEBUGGABLE=1`, see `plugins/withHevierRelease.js`), same
    battery and display settings, screen at the same brightness, app killed
    before each run.
-3. Do the same gesture for the same time (for the swipe change: open Log
+3. Do the same gesture for the same time (for example: open Log
    Workout with 5 exercises and swipe set rows for 10 seconds), `reset` before,
    read after. Repeat 3 times and keep the median.
 4. Compare: janky frames percentage, 95th and 99th percentile frame time,
@@ -145,12 +142,8 @@ rate the screen really ran at (8.3 ms is 120 hz, 16.7 ms is 60 hz).
 
 ## Known, not verified
 
-- No run on a real 90 or 120 hz Android phone or on an iPhone. The refresh
-  rate request is checked only by the generated `MainActivity.kt` text and by a
-  successful prebuild; the Kotlin was not compiled here (no Android SDK).
-- The swipe-to-delete gesture feel (when it starts, how it settles, how it
-  shares a touch with the page scroll and the text inputs in the row) was not
-  tried on a device. Tune `SWIPE_TO_DELETE_SIZES` in `constants/sizes.ts` if
-  it starts too late or too early.
-- iOS does not fully run yet (issue #14): the prebuild output was checked, an
-  iOS build was not.
+- The laptop numbers are for `lastSevenDays` only. No frame times were measured
+  for this change.
+- The swipe gesture is the old `PanResponder` again, so it behaves as before.
+  `ReorderList` and the set rows still do their drag work on the JS thread.
+- iOS does not fully run yet (issue #14): nothing here was checked on an iPhone.
