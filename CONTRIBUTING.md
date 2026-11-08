@@ -22,7 +22,7 @@ The same checks run before every commit (`.githooks/pre-commit`, turned on by
 `pnpm install`). Unused variables, imports and parameters fail: remove them,
 or prefix a parameter you must keep with `_`.
 
-GitHub runs the same checks on every pull request (`.github/workflows/check.yml`),
+GitHub runs the same checks on every pull request (`.github/workflows/ci.yml`),
 then a [SonarQube Cloud](https://sonarcloud.io) scan: bugs, code smells,
 duplication, security hotspots, and test coverage on the lines you changed.
 Coverage counts the logic (`apps/mobile/lib/`, `db/`, `stores/`,
