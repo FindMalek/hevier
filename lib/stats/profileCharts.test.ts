@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PROFILE_RANGES } from '@/constants/profile';
 import { startOfWeek } from '@/lib/date';
 import type { ProfileSession } from '@/types/profile';
-import { barLabel, barScale, bars, headline, periodLabel, streakWeeks, tickLabel, totalHours } from './profileCharts';
+import { barLabel, barScale, bars, headline, metricValue, periodLabel, streakWeeks, tickLabel, totalHours } from './profileCharts';
 
 const range = (label: string) => PROFILE_RANGES.find((r) => r.label === label)!;
 
@@ -87,6 +87,16 @@ describe('profile', () => {
     expect(headline(19200, 'volume')).toBe('19k kg');
     expect(headline(800, 'volume')).toBe('800 kg');
     expect(headline(270, 'reps')).toBe('270 Reps');
+  });
+
+  it('reads a session with an unreadable length or volume as 0, so bars and headline stay numbers', () => {
+    expect(metricValue({ ...session('2026-10-01T10:00:00Z', 1), durationSeconds: NaN }, 'duration')).toBe(0);
+    expect(metricValue({ ...session('2026-10-01T10:00:00Z', 1), volumeKg: Infinity }, 'volume')).toBe(0);
+  });
+
+  it('ignores values that are not finite instead of looping forever', () => {
+    expect(barScale([NaN, 4.1, Infinity])).toEqual(barScale([4.1]));
+    expect(barScale([NaN]).ticks).toEqual([0]);
   });
 
   it("puts the grid at 1/2/5 steps: 2 hrs, 10k kg, 100 reps", () => {

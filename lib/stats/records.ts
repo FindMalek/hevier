@@ -10,6 +10,7 @@ import { setVolumeKg } from '@/lib/volume';
 // Personal records while logging:
 // a completed set that beats the exercise's history, and every set completed
 // before it in this workout, gets a medal and a toast ("Best 1RM - 106.67 kg").
+// Warm-up sets never set a record and never raise the bar.
 
 // Estimated one-rep max (Epley), 106.67 for 80kg x 10.
 export function epley1RM(weightKg: number, reps: number): number {
@@ -20,6 +21,7 @@ export function epley1RM(weightKg: number, reps: number): number {
 export function exerciseBests(sets: Omit<HistorySet, 'workoutId' | 'type'>[]): Map<string, Bests> {
   const result = new Map<string, Bests>();
   for (const r of sets) {
+    if (r.setType === 'warmup') continue;
     let bests = result.get(r.exerciseId);
     if (!bests) {
       bests = { weightKg: null, oneRmKg: null, volumeKg: null, reps: null, durationSeconds: null, distanceKm: null };
@@ -84,9 +86,9 @@ export function setRecords(type: ExerciseType, history: Bests | null, sets: Acti
   if (!history) return [];
   const index = sets.findIndex((s) => s.key === setKey);
   const set = sets[index];
-  if (!set?.done) return [];
+  if (!set?.done || set.setType === 'warmup') return [];
   const bar: Bests = { ...history };
-  for (const earlier of sets.slice(0, index)) if (earlier.done) raise(bar, measureSet(earlier));
+  for (const earlier of sets.slice(0, index)) if (earlier.done && earlier.setType !== 'warmup') raise(bar, measureSet(earlier));
   const m = measureSet(set);
   const records: SetRecord[] = [];
   for (const kind of KINDS[type]) {
@@ -131,6 +133,7 @@ export function workoutRecords(sets: HistorySet[]): {
     const broken = new Set<RecordKind>();
     for (let k = i; k < j; k++) {
       const s = sets[k];
+      if (s.setType === 'warmup') continue;
       const m = measure(s.weightKg, s.reps, s.durationSeconds, s.distanceKm);
       // The first time an exercise is done is not a record.
       if (history) {

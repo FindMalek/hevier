@@ -16,6 +16,10 @@ export const PROFILE_RANGES = [
   { label: PERIOD_LABELS.allTime, unit: 'month', count: null },
 ] as const;
 
+// Limits that keep the bar chart's grid search finite whatever the values.
+export const MAX_SCALE_MAGNITUDES = 400;
+export const MAX_SCALE_TICKS = 100;
+
 // The profile's name and @username until they're set in Edit Profile. Put your
 // own in .env (see .env.example); Expo builds them into the app.
 export const PROFILE_DEFAULTS = {

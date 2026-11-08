@@ -60,9 +60,11 @@ const RECORDS: Record<ExerciseType, { label: string; metric: Metric }[]> = {
   ],
 };
 
+const workingSets = (sets: WorkoutSet[]) => sets.filter((s) => s.setType !== 'warmup');
+
 export function personalRecords(type: ExerciseType, sessions: ExerciseSession[]): { label: string; value: string }[] {
   return RECORDS[type]
-    .map(({ label, metric }) => ({ label, best: max(sessions.map((s) => metric.value(s.sets))), unit: metric.unit }))
+    .map(({ label, metric }) => ({ label, best: max(sessions.map((s) => metric.value(workingSets(s.sets)))), unit: metric.unit }))
     .filter((r) => r.best !== null)
     .map((r) => ({ label: r.label, value: formatValue(r.best!, r.unit) }));
 }
@@ -70,7 +72,7 @@ export function personalRecords(type: ExerciseType, sessions: ExerciseSession[])
 // One point per session that has something to plot.
 export function chartPoints(sessions: ExerciseSession[], metric: Metric) {
   return sessions
-    .map((s) => ({ session: s, value: metric.value(s.sets) }))
+    .map((s) => ({ session: s, value: metric.value(workingSets(s.sets)) }))
     .filter((p): p is { session: ExerciseSession; value: number } => p.value !== null);
 }
 
