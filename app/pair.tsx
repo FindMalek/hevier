@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 
 import { PairDialog } from '@/components/sync/PairDialog';
-import { parsePairLink, savePairing } from '@/lib/sync/pairing';
+import { useSavePairing } from '@/hooks/useSavePairing';
+import { parsePairLink } from '@/lib/sync/pairing';
 import { Screen } from '@/components/ui/Screen';
 
 // hevier://pair?host=…&port=…&key=… (adb for the emulator, or any link): asks
@@ -11,29 +12,21 @@ export default function Pair() {
   const router = useRouter();
   const { host, port, key } = useLocalSearchParams<{ host?: string; port?: string; key?: string }>();
   const pairing = useMemo(() => parsePairLink(`hevier://pair?host=${host ?? ''}&port=${port ?? ''}&key=${key ?? ''}`), [host, port, key]);
-
-  const saving = useRef(false);
+  const { confirm, saving } = useSavePairing(() => router.replace('/sync'));
 
   useEffect(() => {
     if (!pairing) router.replace('/sync');
   }, [pairing, router]);
 
-  async function confirm() {
-    if (saving.current) return;
-    saving.current = true;
-    try {
-      await savePairing(pairing!);
-      router.replace('/sync');
-    } catch (e) {
-      console.warn('[sync] could not save the pairing', e);
-      saving.current = false;
-    }
+  function cancel() {
+    if (saving) return;
+    router.replace('/sync');
   }
 
   return (
     <Screen>
       <Stack.Screen options={{ headerShown: false }} />
-      <PairDialog pairing={pairing} onConfirm={confirm} onCancel={() => !saving.current && router.replace('/sync')} />
+      <PairDialog pairing={pairing} onConfirm={() => confirm(pairing)} onCancel={cancel} />
     </Screen>
   );
 }

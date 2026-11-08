@@ -3,6 +3,16 @@ import type { FileEntry, Refusal } from '@/shared/sync-types';
 // Where the PC's Hevier Sync window is, and its key (lib/sync/pairing.ts).
 export type Pairing = { host: string; port: number; key: string };
 
+// A code the scanner read: the PC it names and the text it was read from.
+export type FoundPairing = { pairing: Pairing; code: string };
+
+// hooks/useSavePairing.ts: `confirm` saves the pairing; `saving` is true from
+// the tap until a failed save lets the user try again.
+export interface SavePairingState {
+  confirm: (pairing: Pairing | null) => Promise<void>;
+  saving: boolean;
+}
+
 // How lib/sync/client.ts reaches the files, so it runs in tests.
 export interface SyncIO {
   // A fresh database copy plus the photos, ready to send.

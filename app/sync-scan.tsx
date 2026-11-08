@@ -5,8 +5,9 @@ import { Stack, useRouter } from 'expo-router';
 
 import { InnerHeader } from '@/components/ui/InnerHeader';
 import { PairDialog } from '@/components/sync/PairDialog';
-import { parsePairLink, savePairing } from '@/lib/sync/pairing';
-import type { Pairing } from '@/types/sync';
+import { useSavePairing } from '@/hooks/useSavePairing';
+import { parsePairLink } from '@/lib/sync/pairing';
+import type { FoundPairing } from '@/types/sync';
 import { COLORS, LINE_HEIGHTS, TYPE, withAlpha } from '@/constants/theme';
 import { BORDER_WIDTHS, RADIUS, SPACE } from '@/constants/layout';
 import { SYNC_SCAN_RETRY_MS } from '@/constants/motion';
@@ -20,42 +21,28 @@ export default function SyncScanScreen() {
   const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
   const [wrongCode, setWrongCode] = useState(false);
-  const [found, setFound] = useState<Pairing | null>(null);
-  const done = useRef(false);
-  const saving = useRef(false);
-  const lastCode = useRef('');
+  const [found, setFound] = useState<FoundPairing | null>(null);
+  const { confirm, saving } = useSavePairing(() => router.back());
+  // Camera frames keep reporting the code the user just refused. A ref, not
+  // state: the next frame must see it at once, without waiting for a render.
   const refused = useRef({ code: '', until: 0 });
 
   function scanned(data: string) {
-    if (done.current) return;
+    if (found) return;
     if (data === refused.current.code && Date.now() < refused.current.until) return;
     const pairing = parsePairLink(data);
     if (!pairing) {
       setWrongCode(true);
       return;
     }
-    done.current = true;
-    lastCode.current = data;
-    setFound(pairing);
-  }
-
-  async function confirm() {
-    if (saving.current) return;
-    saving.current = true;
-    try {
-      await savePairing(found!);
-      router.back();
-    } catch (e) {
-      console.warn('[sync] could not save the pairing', e);
-      saving.current = false;
-    }
+    // Two frames can arrive before the render that shows the dialog: the first one wins.
+    setFound((current) => current ?? { pairing, code: data });
   }
 
   function cancel() {
-    if (saving.current) return;
-    refused.current = { code: lastCode.current, until: Date.now() + SYNC_SCAN_RETRY_MS };
+    if (saving || !found) return;
+    refused.current = { code: found.code, until: Date.now() + SYNC_SCAN_RETRY_MS };
     setFound(null);
-    done.current = false;
   }
 
   return (
@@ -80,7 +67,7 @@ export default function SyncScanScreen() {
           </View>
         )
       )}
-      <PairDialog pairing={found} onConfirm={confirm} onCancel={cancel} />
+      <PairDialog pairing={found?.pairing ?? null} onConfirm={() => confirm(found?.pairing ?? null)} onCancel={cancel} />
     </Screen>
   );
 }
