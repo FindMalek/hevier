@@ -89,6 +89,7 @@ function row(overrides: Partial<CsvRow>): CsvRow {
     distance_km: '',
     duration_seconds: '',
     rpe: '',
+    rowNumber: 1,
     ...overrides,
   };
 }
@@ -183,12 +184,12 @@ describe('transformRows', () => {
 
   it('skips and reports rows with a bad number, a bad date or no data, and keeps the rest', () => {
     const rows = [
-      row({ set_index: '0' }),
-      row({ set_index: '1', weight_kg: 'heavy' }),
-      row({ set_index: '2', start_time: 'last Tuesday' }),
-      row({ set_index: '3', reps: '1e999' }),
-      row({ set_index: '', reps: '8' }),
-      row({ exercise_title: 'Empty', weight_kg: '', reps: '' }),
+      row({ rowNumber: 1, set_index: '0' }),
+      row({ rowNumber: 2, set_index: '1', weight_kg: 'heavy' }),
+      row({ rowNumber: 3, set_index: '2', start_time: 'last Tuesday' }),
+      row({ rowNumber: 4, set_index: '3', reps: '1e999' }),
+      row({ rowNumber: 5, set_index: '', reps: '8' }),
+      row({ rowNumber: 6, exercise_title: 'Empty', weight_kg: '', reps: '' }),
     ];
     const result = transformRows(rows);
     expect(result.workouts[0].exercises).toHaveLength(1);

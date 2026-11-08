@@ -5,11 +5,13 @@ import { CONVERTED_DECIMALS, KG_PER_LB } from '@/constants/weight';
 import type { ExerciseType } from '@/types/exercise';
 import type { SetType } from '@/types/workout';
 import type {
+  CsvColumn,
   CsvRow,
   ParsedCsv,
   RawRow,
   SkippedRow,
   TransformOptions,
+  TransformResult,
   TransformedWorkout,
   TransformedWorkoutExercise,
 } from '@/types/import';
@@ -61,7 +63,7 @@ export function parseCsvText(text: string): ParsedCsv {
     }
     const raw: RawRow = Object.fromEntries(header.map((name, k) => [name, record[k]]));
     rows.push({
-      ...(Object.fromEntries(CSV_COLUMNS.map((c) => [c, raw[c] ?? ''])) as unknown as CsvRow),
+      ...(Object.fromEntries(CSV_COLUMNS.map((c) => [c, raw[c] ?? ''])) as Record<CsvColumn, string>),
       weight_kg: metricColumn(raw, WEIGHT_COLUMNS.kg, WEIGHT_COLUMNS.lbs, KG_PER_LB),
       distance_km: metricColumn(raw, DISTANCE_COLUMNS.km, DISTANCE_COLUMNS.miles, KM_PER_MILE),
       rowNumber,
@@ -90,12 +92,6 @@ function inferExerciseType(rowsForExercise: CsvRow[]): ExerciseType | null {
   return null;
 }
 
-export interface TransformResult {
-  exerciseTypes: Map<string, ExerciseType>;
-  workouts: TransformedWorkout[];
-  skipped: SkippedRow[];
-}
-
 // Throws what is wrong with a row: a value that is not a number or a date.
 function checkRow(r: CsvRow, timeZone: string): void {
   if (r.set_index.trim() === '' || !Number.isFinite(Number(r.set_index))) {
@@ -111,12 +107,12 @@ function checkRow(r: CsvRow, timeZone: string): void {
 export function transformRows(allRows: CsvRow[], { timeZone = machineTimeZone() }: TransformOptions = {}): TransformResult {
   const skipped: SkippedRow[] = [];
   const valid: { r: CsvRow; n: number }[] = [];
-  allRows.forEach((r, i) => {
+  allRows.forEach((r) => {
     try {
       checkRow(r, timeZone);
-      valid.push({ r, n: r.rowNumber ?? i + 1 });
+      valid.push({ r, n: r.rowNumber });
     } catch (error) {
-      skipped.push({ row: r.rowNumber ?? i + 1, reason: (error as Error).message });
+      skipped.push({ row: r.rowNumber, reason: (error as Error).message });
     }
   });
   const rowsByExerciseName = new Map<string, CsvRow[]>();

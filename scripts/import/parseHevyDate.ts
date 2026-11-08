@@ -79,11 +79,11 @@ function hour24(hour: number, meridiem: string | undefined): number {
 
 function parts(value: string): DateParts | null {
   let m = MONTH_FIRST_DATE.exec(value);
-  if (m) return [Number(m[3]), monthIndex(m[1]), Number(m[2]), hour24(Number(m[4]), m[7]), Number(m[5]), Number(m[6] ?? 0)];
+  if (m) return { year: Number(m[3]), month: monthIndex(m[1]), day: Number(m[2]), hour: hour24(Number(m[4]), m[7]), minute: Number(m[5]), second: Number(m[6] ?? 0) };
   m = DAY_FIRST_DATE.exec(value);
-  if (m) return [Number(m[3]), monthIndex(m[2]), Number(m[1]), hour24(Number(m[4]), m[7]), Number(m[5]), Number(m[6] ?? 0)];
+  if (m) return { year: Number(m[3]), month: monthIndex(m[2]), day: Number(m[1]), hour: hour24(Number(m[4]), m[7]), minute: Number(m[5]), second: Number(m[6] ?? 0) };
   m = NUMERIC_DATE.exec(value);
-  if (m) return [Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]), Number(m[6] ?? 0)];
+  if (m) return { year: Number(m[1]), month: Number(m[2]) - 1, day: Number(m[3]), hour: Number(m[4]), minute: Number(m[5]), second: Number(m[6] ?? 0) };
   return null;
 }
 
@@ -100,9 +100,9 @@ export function parseHevyDate(value: string, timeZone = machineTimeZone()): stri
     if (Number.isNaN(t)) throw fail();
     return new Date(t).toISOString();
   }
-  const p = parts(text);
-  if (!p || p[1] < 0 || p[0] < MIN_IMPORT_YEAR) throw fail();
-  const [year, month, day, hour, minute, second] = p;
+  const parsed = parts(text);
+  if (!parsed || parsed.month < 0 || parsed.year < MIN_IMPORT_YEAR) throw fail();
+  const { year, month, day, hour, minute, second } = parsed;
   const wall = new Date(Date.UTC(year, month, day, hour, minute, second));
   const valid =
     wall.getUTCMonth() === month &&
