@@ -13,7 +13,7 @@ export function PairDialog({ pairing, error, onConfirm, onCancel }: PairDialogPr
 
   useEffect(() => {
     if (!pairing) return;
-    getPairing()
+    void getPairing()
       .catch((e) => {
         console.warn('[sync] could not read the current pairing', e);
         return null;
