@@ -7,7 +7,7 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
     setItem: async (k: string, v: string) => void stored.set(k, v),
   },
 }));
-const { baseUrl, getLastSynced, getPairing, parsePairLink, savePairing, setLastSynced } = await import('./pairing');
+const { baseUrl, getLastSynced, getPairing, isLocalHost, parsePairLink, savePairing, setLastSynced } = await import('./pairing');
 
 const KEY = '0123456789abcdef0123456789abcdef';
 
@@ -28,9 +28,33 @@ describe('parsePairLink', () => {
       'hevier://pair?host=192.168.1.23&port=4873&key=abc',
       `hevier://pair?port=4873&key=${KEY}`,
       `hevier://other?host=192.168.1.23&port=4873&key=${KEY}`,
+      'hevier://pair?host=192.168.1.23&port=4873&key=%E0%A4%A',
       'hello',
     ]) {
       expect(parsePairLink(text), text).toBeNull();
+    }
+  });
+});
+
+describe('parsePairLink port range', () => {
+  it('accepts ports up to 65535 and rejects the rest', () => {
+    expect(parsePairLink(`hevier://pair?host=192.168.1.23&port=65535&key=${KEY}`)?.port).toBe(65535);
+    for (const port of ['65536', '99999', '0']) {
+      expect(parsePairLink(`hevier://pair?host=192.168.1.23&port=${port}&key=${KEY}`), port).toBeNull();
+    }
+  });
+});
+
+describe('isLocalHost', () => {
+  it('accepts a PC on the home network or cable', () => {
+    for (const host of ['192.168.1.23', '10.0.2.2', '172.16.0.5', '172.31.9.9', '127.0.0.1', '169.254.3.4', 'localhost', 'my-pc.local']) {
+      expect(isLocalHost(host), host).toBe(true);
+    }
+  });
+
+  it('flags any other address', () => {
+    for (const host of ['evil.example.com', '8.8.8.8', '172.32.0.1', '192.169.1.1', '192.168.1.1.evil.com', 'local.evil.com', 'x.local.evil.com', 'localhost.evil.com', 'mylocalhost']) {
+      expect(isLocalHost(host), host).toBe(false);
     }
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lastSyncedLabel, restoreMessage, syncMessage } from './format';
+import { lastSyncedLabel, pairMessage, restoreMessage, syncMessage } from './format';
 
 describe('lastSyncedLabel', () => {
   const now = new Date(2026, 9, 24, 20, 0);
@@ -30,5 +30,26 @@ describe('restoreMessage', () => {
     expect(restoreMessage({ deviceId: 'a', date, workouts: 312, files: [] }, new Date(2026, 9, 25, 9, 0))).toBe(
       'Restore from PC?\n\nBackup from 24 Oct 18:42, 312 workouts. This replaces everything on this phone, including a workout in progress.'
     );
+  });
+});
+
+describe('pairMessage', () => {
+  const next = { host: '192.168.1.23', port: 4873, key: '' };
+
+  it('names the host, and warns when it is outside the local network', () => {
+    expect(pairMessage(next, true, null)).toMatch(/^Pair with 192\.168\.1\.23:4873\?/);
+    const warning = pairMessage({ ...next, host: 'evil.example.com' }, false, null);
+    expect(warning).toContain('evil.example.com:4873 is outside your local network');
+    expect(warning).toContain('Only continue if you know this address');
+  });
+
+  it('says it replaces the PC this phone is already paired with', () => {
+    const current = { host: '192.168.1.40', port: 4873, key: '' };
+    expect(pairMessage(next, true, current)).toMatch(/\n\nThis replaces your current PC \(192\.168\.1\.40\)\.$/);
+    expect(pairMessage({ ...next, host: 'evil.example.com' }, false, current)).toContain('This replaces your current PC (192.168.1.40).');
+  });
+
+  it('says nothing about a current PC when the phone is not paired', () => {
+    expect(pairMessage(next, true, null)).not.toContain('replaces');
   });
 });

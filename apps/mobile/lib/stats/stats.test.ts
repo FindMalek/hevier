@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { StatSet } from '@/types/stats';
-import { change, hardWindow, lastSevenDays, mainExercises, monthReport, muscleSplit, periods, setsPerBodyPart, setsPerMuscle } from './stats';
+import { change, daysLogged, hardWindow, lastSevenDays, mainExercises, monthReport, muscleSplit, periods, setsPerBodyPart, setsPerMuscle } from './stats';
 
 const set = (startTime: string, extra: Partial<StatSet> = {}): StatSet => ({
   workoutId: startTime,
@@ -23,6 +23,10 @@ describe('statistics', () => {
     const days = lastSevenDays([set(at(9, 12)), set(at(9, 14))], new Date(2026, 9, 14, 21));
     expect(days.map((d) => d.date.getDate())).toEqual([8, 9, 10, 11, 12, 13, 14]);
     expect(days.map((d) => d.trained)).toEqual([false, false, false, false, true, false, true]);
+  });
+
+  it('averages over a week when the first set has an unreadable start', () => {
+    expect(daysLogged([set('not a date')], new Date(2026, 9, 14))).toBe(7);
   });
 
   it('counts sets per primary muscle, without cardio', () => {

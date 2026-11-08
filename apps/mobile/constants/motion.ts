@@ -79,6 +79,9 @@ export const SYNC_TIMEOUTS = {
   quietMs: 2000, // the quiet copy on app open: gives up fast
 };
 
+// app/sync-scan.tsx: how long the camera ignores a code the user said no to.
+export const SYNC_SCAN_RETRY_MS = 5000;
+
 // How often a scrolling list reports its position: about once a frame.
 export const SCROLL_EVENTS = {
   throttleMs: 16,
