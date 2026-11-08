@@ -40,11 +40,12 @@ export function Science() {
           <article className="card rule" data-reveal style={delay(0)}>
             <div className="big grad-text">1</div>
             <h3 className="h3">Hard sets count.</h3>
+            <p>The research: muscle growth rises as sets end closer to failure.</p>
+            <SourceChips ids={['robinson']} />
             <p>
-              A set that ends at failure, or within about 3 reps of it, counts as one. Easier sets count less. Warm-ups
+              Hevier’s choice: a set within about 3 reps of failure counts as one, easier sets count less, and warm-ups
               get a small credit.
             </p>
-            <SourceChips ids={['robinson']} />
           </article>
 
           <article className="card rule" data-reveal style={delay(80)}>
@@ -57,16 +58,16 @@ export function Science() {
           </article>
 
           <article className="card rule" data-reveal style={delay(0)}>
-            <div className="big grad-text">3 | 4+</div>
+            <div className="big grad-text">3, then 4+</div>
             <h3 className="h3">Maintain, then grow.</h3>
             <p>
-              3 hard sets a week kept muscle size for 32 weeks in one study. 4 or more is the smallest weekly dose
-              shown to grow it.
+              In one study of young adults, 3 sets a week kept muscle size for 32 weeks. A model of 67 studies puts 4
+              sets a week as the smallest dose that grew muscle. Under 3 has not been tested.
             </p>
             <div className="zones" aria-hidden>
               <div className="z1">
                 <b>Under 3</b>
-                Below maintenance
+                Untested
               </div>
               <div className="z2">
                 <b>3</b>

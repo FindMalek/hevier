@@ -30,7 +30,7 @@ export const SOURCES: Source[] = [
     cite: 'Bickel et al. 2011',
     journal: 'Med Sci Sports Exerc',
     pmid: '21131862',
-    note: '3 quad sets a week kept muscle size for 32 weeks.',
+    note: 'In young adults, 3 quad sets a week kept muscle size for 32 weeks.',
   },
   {
     id: 'moran',
