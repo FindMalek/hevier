@@ -34,10 +34,22 @@ describe('restoreMessage', () => {
 });
 
 describe('pairMessage', () => {
+  const next = { host: '192.168.1.23', port: 4873, key: '' };
+
   it('names the host, and warns when it is outside the local network', () => {
-    expect(pairMessage({ host: '192.168.1.23', port: 4873, key: '' }, true)).toMatch(/^Pair with 192\.168\.1\.23:4873\?/);
-    const warning = pairMessage({ host: 'evil.example.com', port: 4873, key: '' }, false);
+    expect(pairMessage(next, true, null)).toMatch(/^Pair with 192\.168\.1\.23:4873\?/);
+    const warning = pairMessage({ ...next, host: 'evil.example.com' }, false, null);
     expect(warning).toContain('evil.example.com:4873 is outside your local network');
     expect(warning).toContain('Only continue if you know this address');
+  });
+
+  it('says it replaces the PC this phone is already paired with', () => {
+    const current = { host: '192.168.1.40', port: 4873, key: '' };
+    expect(pairMessage(next, true, current)).toMatch(/\n\nThis replaces your current PC \(192\.168\.1\.40\)\.$/);
+    expect(pairMessage({ ...next, host: 'evil.example.com' }, false, current)).toContain('This replaces your current PC (192.168.1.40).');
+  });
+
+  it('says nothing about a current PC when the phone is not paired', () => {
+    expect(pairMessage(next, true, null)).not.toContain('replaces');
   });
 });

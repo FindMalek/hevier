@@ -5,3 +5,9 @@ export interface PairDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
 }
+
+// A pairing waiting for confirmation, with the PC this phone is paired with now.
+export interface PairingWithCurrent {
+  pairing: Pairing;
+  current: Pairing | null;
+}
