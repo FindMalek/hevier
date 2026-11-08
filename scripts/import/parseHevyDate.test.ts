@@ -12,6 +12,8 @@ describe('parseHevyDate', () => {
   describe('formats', () => {
     readsAs('reads 12-hour, 24-hour and numeric dates', [
       ['Oct 1, 2026, 12:05 AM', 'UTC', '2026-10-01T00:05:00.000Z'],
+      ['Oct 1, 2026, 12:30 PM', 'UTC', '2026-10-01T12:30:00.000Z'],
+      ['1 Oct 2026, 1:15 PM', 'UTC', '2026-10-01T13:15:00.000Z'],
       ['1 Oct 2026, 18:00', 'UTC', '2026-10-01T18:00:00.000Z'],
       ['2026-10-01 18:00:30', 'America/New_York', '2026-10-01T22:00:30.000Z'],
     ]);
@@ -52,6 +54,10 @@ describe('parseHevyDate', () => {
     'someday',
     'Oct 1, 0099, 6:00 PM',
     '2026-10-01 18:00:00 +02:00',
+    'Oct 1, 2026, 13:00 PM',
+    'Oct 1, 2026, 0:30 PM',
+    'Oct 1, 2026, 13:00 AM',
+    '1 Oct 2026, 0:30 AM',
   ])('rejects %s', (text) => {
     expect(() => parseHevyDate(text, 'UTC')).toThrow('Could not parse date');
   });

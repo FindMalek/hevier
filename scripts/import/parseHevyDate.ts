@@ -72,8 +72,9 @@ function monthIndex(name: string): number {
   return MONTH_KEYS.indexOf(name.slice(0, 3).toLowerCase());
 }
 
-function hour24(hour: number, meridiem: string | undefined): number {
+function hour24(hour: number, meridiem: string | undefined): number | null {
   if (!meridiem) return hour;
+  if (hour < 1 || hour > HOURS_ON_CLOCK) return null;
   return (hour % HOURS_ON_CLOCK) + (meridiem.toUpperCase() === 'PM' ? HOURS_ON_CLOCK : 0);
 }
 
@@ -81,11 +82,13 @@ function readParts(value: string): DateParts | null {
   const named = MONTH_FIRST_DATE.exec(value) ?? DAY_FIRST_DATE.exec(value);
   if (named?.groups) {
     const { year, month, day, hour, minute, second, meridiem } = named.groups;
+    const hourOfDay = hour24(Number(hour), meridiem);
+    if (hourOfDay === null) return null;
     return {
       year: Number(year),
       month: monthIndex(month),
       day: Number(day),
-      hour: hour24(Number(hour), meridiem),
+      hour: hourOfDay,
       minute: Number(minute),
       second: Number(second ?? 0),
     };
