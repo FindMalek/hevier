@@ -9,7 +9,7 @@ import { Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { Profiler, useEffect } from 'react';
-import { AppState } from 'react-native';
+import { AppState, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
@@ -19,8 +19,13 @@ import { alertTimerDone } from '@/lib/prFeedback';
 import { refreshHomeWidgets } from '@/lib/refreshHomeWidgets';
 import { quietSync } from '@/lib/sync/client';
 import { expoIO } from '@/lib/sync/expoIO';
+import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Screen } from '@/components/ui/Screen';
+import { useDataWaiting } from '@/hooks/useDataWaiting';
 import { useWorkoutNotification } from '@/hooks/useWorkoutNotification';
 import { STARTUP_DELAYS } from '@/constants/motion';
+import { SPACE } from '@/constants/layout';
 import { FONTS } from '@/constants/theme';
 import { NAVIGATION_THEME } from '@/constants/navigation';
 
@@ -85,6 +90,26 @@ function HomeWidgets() {
   return null;
 }
 
+// Shown instead of the app while data from an interrupted restore can't be
+// put back yet: nothing is lost, and opening the app again retries it.
+function DataWaiting({ message, trying, onRetry }: { message: string; trying: boolean; onRetry: () => void }) {
+  return (
+    <Screen style={styles.waiting}>
+      <StatusBar style="light" />
+      <EmptyState
+        title="Your data is waiting"
+        message={message}
+        action={<Button label="Try again" busy={trying} onPress={onRetry} style={styles.retry} />}
+      />
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  waiting: { justifyContent: 'center', paddingHorizontal: SPACE.xl },
+  retry: { marginTop: SPACE.xl, alignSelf: 'stretch' },
+});
+
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     Figtree_400Regular,
@@ -92,6 +117,8 @@ export default function RootLayout() {
     Figtree_600SemiBold,
     Figtree_700Bold,
   });
+
+  const { message: dataWaiting, trying, retry } = useDataWaiting();
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -108,6 +135,10 @@ export default function RootLayout() {
   // can be what opened the app).
   if (!loaded) {
     return <WorkoutNotification />;
+  }
+
+  if (dataWaiting) {
+    return <DataWaiting message={dataWaiting} trying={trying} onRetry={retry} />;
   }
 
   // The gesture root: dragging routines on the Workout tab (components/routines/RoutineDrag.tsx).

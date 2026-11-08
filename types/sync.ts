@@ -17,8 +17,12 @@ export interface SyncIO {
 
 export type SyncFailure = {
   ok: false;
-  reason: 'notPaired' | 'pcNotFound' | 'wrongKey' | 'busy' | Refusal['reason'] | 'error';
+  reason: 'notPaired' | 'pcNotFound' | 'wrongKey' | 'busy' | 'restoreKept' | Refusal['reason'] | 'error';
   pc?: Refusal['pc'];
   phoneWorkouts?: number;
 };
 export type SyncResult = { ok: true; at: string } | SyncFailure;
+
+// One thing a restore sets aside: a database file (in documents/SQLite) or a
+// photo folder (in documents).
+export type RestoreItem = { name: string; folder: boolean };

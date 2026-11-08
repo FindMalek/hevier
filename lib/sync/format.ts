@@ -32,6 +32,8 @@ export function syncMessage(result: SyncResult, usb = false): string {
       return "This phone's last workout is older than the one in the PC copy. Not sent.";
     case 'otherDevice':
       return 'This copy came from another phone. Replace it?';
+    case 'restoreKept':
+      return 'Restore failed, and some of your data is in a safe copy on this phone. Close Hevier and open it again to put it back.';
     case 'busy':
       return 'Another sync or restore is still running. Try again in a moment.';
     case 'error':
