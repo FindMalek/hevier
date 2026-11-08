@@ -5,7 +5,7 @@ import initSqlJs, { type Database } from 'sql.js';
 import { MIGRATIONS } from '../db/migrations';
 import { moveFootballSql } from '../db/migrations/006_football';
 import { INSERT_SET, INSERT_WORKOUT, INSERT_WORKOUT_EXERCISE } from '../db/workouts/queries';
-import { MAX_SKIPPED_SHARE, SHOWN_SKIPPED_ROWS, TIME_ZONE_ENV } from '@/constants/import';
+import { MAX_SKIPPED_SHARE, SHOWN_SKIPPED_ROWS, TIME_ZONE_ENV } from '@/constants/hevyCsv';
 import { parseCsvText, transformRows } from './import/parseCsv';
 import { checkTimeZone, machineTimeZone } from './import/parseHevyDate';
 import { catalogueExerciseType, toHevyName } from './import/catalogue';

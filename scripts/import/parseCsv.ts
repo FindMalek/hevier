@@ -1,12 +1,7 @@
 import { parse } from 'csv-parse/sync';
-import {
-  CONVERTED_DECIMALS,
-  CSV_COLUMNS,
-  DISTANCE_COLUMNS,
-  KG_PER_LB,
-  KM_PER_MILE,
-  WEIGHT_COLUMNS,
-} from '@/constants/import';
+import { CSV_COLUMNS, DISTANCE_COLUMNS, WEIGHT_COLUMNS } from '@/constants/hevyCsv';
+import { KM_PER_MILE } from '@/constants/distance';
+import { CONVERTED_DECIMALS, KG_PER_LB } from '@/constants/weight';
 import type { ExerciseType } from '@/types/exercise';
 import type { SetType } from '@/types/workout';
 import type {

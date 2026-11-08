@@ -1,17 +1,23 @@
 import {
   DATE_WITH_ZONE,
   DAY_FIRST_DATE,
-  HOURS_ON_CLOCK,
-  HOURS_PER_DAY,
-  MINUTES_PER_HOUR,
   MIN_IMPORT_YEAR,
-  MONTH_ABBREVIATIONS,
   MONTH_FIRST_DATE,
+  MONTH_KEYS,
   NUMERIC_DATE,
   TIME_ZONE_ENV,
   UNKNOWN_TIME_ZONE,
-} from '@/constants/import';
-import { MS_PER_DAY, MS_PER_MINUTE, MS_PER_SECOND, SECONDS_PER_MINUTE } from '@/constants/time';
+} from '@/constants/hevyCsv';
+import {
+  DATE_LOCALE,
+  HOURS_ON_CLOCK,
+  HOURS_PER_DAY,
+  MINUTES_PER_HOUR,
+  MS_PER_DAY,
+  MS_PER_MINUTE,
+  MS_PER_SECOND,
+  SECONDS_PER_MINUTE,
+} from '@/constants/time';
 import type { DateParts } from '@/types/import';
 
 const formatters = new Map<string, Intl.DateTimeFormat>();
@@ -31,7 +37,7 @@ function formatterFor(timeZone: string): Intl.DateTimeFormat {
   let format = formatters.get(timeZone);
   if (!format) {
     try {
-      format = new Intl.DateTimeFormat('en-US', {
+      format = new Intl.DateTimeFormat(DATE_LOCALE, {
         timeZone,
         hourCycle: 'h23',
         year: 'numeric',
@@ -63,7 +69,7 @@ function offsetMinutes(ms: number, timeZone: string): number {
 }
 
 function monthIndex(name: string): number {
-  return MONTH_ABBREVIATIONS.indexOf(name.slice(0, 3).toLowerCase() as (typeof MONTH_ABBREVIATIONS)[number]);
+  return MONTH_KEYS.indexOf(name.slice(0, 3).toLowerCase());
 }
 
 function hour24(hour: number, meridiem: string | undefined): number {
