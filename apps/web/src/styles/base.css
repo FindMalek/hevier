@@ -128,7 +128,7 @@ a {
 
 .h2 {
   margin: 0;
-  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-size: clamp(2.4rem, 5.2vw, 4.4rem);
   line-height: 0.98;
   letter-spacing: -0.045em;
   font-weight: 640;

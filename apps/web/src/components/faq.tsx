@@ -115,9 +115,9 @@ export const FAQ_ITEMS: Item[] = [
 
 export function Faq() {
   return (
-    <section id="faq" data-section="faq" className="section" aria-labelledby="faq-title">
-      <div className="wrap">
-        <div className="section-head center" data-reveal>
+    <section id="faq" data-section="faq" className="section faq-section" aria-labelledby="faq-title">
+      <div className="wrap faq-grid">
+        <div className="section-head">
           <p className="eyebrow">FAQ</p>
           <h2 id="faq-title" className="h2">
             Questions, answered straight.

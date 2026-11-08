@@ -4,56 +4,47 @@ import { ArrowRightIcon, DownloadIcon, GithubIcon, TerminalIcon } from './icons'
 
 export function Get() {
   return (
-    <section id="get" data-section="get" className="section section-soft" aria-labelledby="get-title">
+    <section id="get" data-section="get" className="section get" aria-labelledby="get-title">
       <div className="wrap">
-        <div className="section-head center" data-reveal>
-          <p className="eyebrow">Get Hevier</p>
-          <h2 id="get-title" className="h2">
-            {HAS_APK_RELEASE ? 'Free to download.' : 'Free to run.'}
-            <br />
-            Open to read.
-          </h2>
-        </div>
-
-        <div className="get">
-          <div className="card get-main" data-reveal>
-            <p className="card-kicker">Android</p>
+        <h2 id="get-title" className="stack stack-lg" data-reveal>
+          <span>{HAS_APK_RELEASE ? 'Free to download.' : 'Free to run.'}</span>
+          <span>Open to read.</span>
+        </h2>
+        <div className="get-grid">
+          <article className="card glass" data-reveal>
+            <p className="eyebrow">Android</p>
             <h3 className="h3">{HAS_APK_RELEASE ? 'Download the APK.' : 'Build it from source.'}</h3>
-            <p className="lead" style={{ marginTop: 12, maxWidth: 460 }}>
+            <p className="lead">
               {HAS_APK_RELEASE
                 ? 'Grab the latest build from the GitHub releases page. No account, no store sign-in.'
                 : 'There is no APK release yet. The README shows how to build and install it on your phone. Releases will appear on GitHub.'}
             </p>
-            <div className="cta-row" style={{ justifyContent: 'flex-start' }}>
+            <div className="cta-row">
               <a href={CTA.href} className="btn btn-primary">
-                {HAS_APK_RELEASE ? <DownloadIcon /> : <TerminalIcon />}
+                {HAS_APK_RELEASE ? <DownloadIcon size={18} /> : <TerminalIcon size={18} />}
                 {CTA.label}
               </a>
             </div>
-            <div style={{ marginTop: 30, paddingTop: 22, borderTop: '1px solid var(--line)' }}>
-              <p className="card-kicker" style={{ color: '#6b6b72' }}>
-                iOS
-              </p>
-              <p className="lead" style={{ fontSize: 18 }}>
-                Coming to iOS. It is in progress, with no release date yet.
-              </p>
+            <div className="ios">
+              <p className="eyebrow">iOS</p>
+              <p>Coming to iOS. It is in progress, with no release date yet.</p>
             </div>
-          </div>
-
-          <div className="card" data-reveal style={{ '--d': '100ms' } as CSSProperties}>
-            <p className="card-kicker">Open source</p>
+          </article>
+          <article className="card glass" data-reveal style={{ '--d': '100ms' } as CSSProperties}>
+            <p className="eyebrow">Open source</p>
             <h3 className="h3">Read it. Fix it. Make it yours.</h3>
-            <p className="lead" style={{ marginTop: 12, fontSize: 18 }}>
+            <p className="lead">
               AGPL-3.0. Pull requests are welcome, and the exercise catalogue takes one file per exercise.
             </p>
             <pre className="code" tabIndex={0} aria-label="Commands to run Hevier from source">
               <code>
-                <span>$ </span>git clone {SITE.repo}{'\n'}
+                <span>$ </span>git clone {SITE.repo}
+                {'\n'}
                 <span>$ </span>pnpm install{'\n'}
                 <span>$ </span>pnpm android
               </code>
             </pre>
-            <div className="cta-row" style={{ justifyContent: 'flex-start' }}>
+            <div className="cta-row">
               <a href={SITE.repo} className="btn btn-glass btn-sm">
                 <GithubIcon size={18} />
                 View the code
@@ -63,7 +54,7 @@ export function Get() {
                 <ArrowRightIcon size={16} />
               </a>
             </div>
-          </div>
+          </article>
         </div>
       </div>
     </section>

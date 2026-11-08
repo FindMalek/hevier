@@ -41,7 +41,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 100svh;
+  height: max(100svh, 700px);
   padding-top: calc(var(--nav-h) + 16px);
   padding-bottom: 18px;
   overflow: hidden;
@@ -56,7 +56,6 @@
     position: sticky;
     top: 0;
     height: 100svh;
-    min-height: 0;
   }
 }
 

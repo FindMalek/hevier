@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import { CTA, HAS_APK_RELEASE, SITE } from '@/lib/site';
 import { MAX_HOURS, STAGES, frame } from '@/lib/afterglow';
-import { Body, Halo } from './body';
+import { Body, Halo } from './body-figure';
 import { DownloadIcon, GithubIcon, TerminalIcon } from './icons';
 import { PhoneRecovery } from './phone-recovery';
 

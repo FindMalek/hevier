@@ -1,5 +1,5 @@
 import { counts } from '@/lib/afterglow';
-import { Body } from './body';
+import { Body } from './body-figure';
 
 const DAYS = [
   { d: 'S', n: 31, on: true },

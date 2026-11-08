@@ -5,8 +5,6 @@ import { compactPath } from '@/lib/compact-path';
 // the app draws, rewritten as whole-unit relative paths. Every path is written once in BodyDefs
 // and each figure on the page is a <use> of it, so a figure only costs a few bytes. Fills read
 // --f-GROUP custom properties, which inherit into the <use> from the figure's wrapper.
-const VIEWBOX = '195 60 634 1390';
-
 export type BodyView = 'front' | 'back';
 
 const DIAGRAMS: Record<BodyView, BodyDiagram> = { front: MALE_FRONT, back: MALE_BACK };
@@ -54,28 +52,6 @@ export function BodyDefs() {
         <ViewDefs view="front" />
         <ViewDefs view="back" />
       </defs>
-    </svg>
-  );
-}
-
-interface BodyProps {
-  view: BodyView;
-  className?: string;
-}
-
-export function Body({ view, className }: BodyProps) {
-  return (
-    <svg viewBox={VIEWBOX} className={`body ${className ?? ''}`} aria-hidden focusable="false">
-      <use href={`#hv-${view}`} />
-    </svg>
-  );
-}
-
-// A blurred, single-colour copy of the muscles, used as a halo behind a figure.
-export function Halo({ view, className }: BodyProps) {
-  return (
-    <svg viewBox={VIEWBOX} className={`body halo ${className ?? ''}`} aria-hidden focusable="false">
-      <use href={`#hv-${view}-halo`} />
     </svg>
   );
 }

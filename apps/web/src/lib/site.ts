@@ -35,8 +35,8 @@ export const CTA = HAS_APK_RELEASE
   : { label: 'Build from source', navLabel: 'Get Hevier', href: SITE.getStarted };
 
 export const NAV_LINKS = [
-  { href: '#features', label: 'Features' },
-  { href: '#recovery', label: 'Recovery map' },
+  { href: '#sets', label: 'Sets' },
+  { href: '#week', label: 'Your week' },
   { href: '#science', label: 'Science' },
   { href: '#privacy', label: 'Privacy' },
   { href: '#faq', label: 'FAQ' },
