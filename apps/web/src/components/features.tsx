@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { CheckIcon, MedalIcon } from './icons';
 import { Phone } from './phone';
 
 const delay = (ms: number) => ({ '--d': `${ms}ms` }) as CSSProperties;
@@ -21,7 +22,7 @@ export function Features() {
         </div>
 
         <div className="bento">
-          <article className="card card-wide lift s4 card-tint-blue" data-reveal style={delay(0)}>
+          <article className="card card-wide card-logging lift s4 card-tint-blue" data-reveal style={delay(0)}>
             <div className="card-text">
               <p className="card-kicker">Logging</p>
               <h3 className="h3">Built for the set you are doing right now.</h3>
@@ -31,20 +32,33 @@ export function Features() {
               </p>
             </div>
             <div className="card-chips" aria-hidden>
-              <span className="mini-chip glass">
-                <span className="swatch-dot sw-partly" />
-                <span>
-                  01:57
-                  <small>Rest timer</small>
-                </span>
-              </span>
-              <span className="mini-chip glass">
-                <span className="swatch-dot sw-ready" />
-                <span>
-                  190 kg x 9
-                  <small>Previous, same set</small>
-                </span>
-              </span>
+              <div className="set-card glass">
+                <div className="set-head">
+                  <b>Leg Press (Machine)</b>
+                  <span className="rest">Rest 01:57</span>
+                </div>
+                <div className="set-row warm done">
+                  <i>W</i>
+                  <span>95 kg x 10</span>
+                  <em>
+                    <CheckIcon size={13} />
+                  </em>
+                </div>
+                <div className="set-row">
+                  <i>1</i>
+                  <span>190 kg x 9</span>
+                </div>
+                <div className="set-row">
+                  <i>2</i>
+                  <span>190 kg x 9</span>
+                </div>
+                <div className="pr-note">
+                  <span className="medal">
+                    <MedalIcon />
+                  </span>
+                  <span>Live PR medals: heaviest weight, estimated 1RM, best set volume</span>
+                </div>
+              </div>
             </div>
             <div className="card-media" style={{ '--show': '380px' } as CSSProperties}>
               <Phone
@@ -118,7 +132,7 @@ export function Features() {
             </div>
           </article>
 
-          <article className="card card-wide lift s4" data-reveal style={delay(80)}>
+          <article className="card card-wide card-center lift s4" data-reveal style={delay(80)}>
             <div className="card-text">
               <p className="card-kicker">Your data</p>
               <h3 className="h3">Bring your history. Back it up your way.</h3>

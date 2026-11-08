@@ -67,3 +67,21 @@ export function ExternalIcon({ size = 14, className }: IconProps) {
     </svg>
   );
 }
+
+export function MedalIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg {...base(size)} strokeWidth={2.4} className={className}>
+      <circle cx="12" cy="9" r="5" />
+      <path d="m9 13.5-2 7 5-2.5 5 2.5-2-7" />
+    </svg>
+  );
+}
+
+export function LockIcon({ size = 16, className }: IconProps) {
+  return (
+    <svg {...base(size)} strokeWidth={2.4} className={className}>
+      <rect x="5" y="11" width="14" height="9" rx="2.5" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}

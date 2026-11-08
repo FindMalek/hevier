@@ -18,8 +18,8 @@ export function Hero() {
             <span className="grad-text">Recover smart.</span>
           </h1>
           <p className="lead" data-rise style={{ '--i': 2 } as React.CSSProperties}>
-            Hevier is a workout tracker that shows which muscles have recovered and counts sets the way the research says
-            they count. No account. No ads. No subscription.
+            A workout tracker that shows which muscles have recovered and counts sets the way the research does. No
+            account. No ads. No subscription.
           </p>
           <div className="cta-row" data-rise style={{ '--i': 3 } as React.CSSProperties}>
             <a href={SITE.releases} className="btn btn-primary">
@@ -36,7 +36,24 @@ export function Hero() {
           </p>
         </div>
 
-        <div className="stage">
+        <div className="stage-wrap">
+          <div className="chips" aria-hidden>
+            <div className="float-chip glass chip-a" data-rise style={{ '--i': 6 } as React.CSSProperties} aria-hidden>
+              <span className="swatch sw-ready" />
+              <span>
+              Legs
+              <small>Likely ready</small>
+            </span>
+          </div>
+            <div className="float-chip glass chip-b" data-rise style={{ '--i': 7 } as React.CSSProperties} aria-hidden>
+              <span className="swatch sw-heavy" />
+              <span>
+              Chest
+              <small>Heavy recent load</small>
+            </span>
+          </div>
+          </div>
+          <div className="stage">
           <div className="slot slot-l" style={{ '--delay': '520ms' } as React.CSSProperties}>
             <div className="par">
               <Phone src="/screens/home.webp" alt="Hevier home screen showing the next workout in the cycle" sizes="(min-width: 768px) 280px, 190px" />
@@ -59,19 +76,6 @@ export function Hero() {
             </div>
           </div>
 
-          <div className="float-chip glass chip-a" data-rise style={{ '--i': 6 } as React.CSSProperties} aria-hidden>
-            <span className="swatch sw-ready" />
-            <span>
-              Legs
-              <small>Likely ready</small>
-            </span>
-          </div>
-          <div className="float-chip glass chip-b" data-rise style={{ '--i': 7 } as React.CSSProperties} aria-hidden>
-            <span className="swatch sw-heavy" />
-            <span>
-              Chest
-              <small>Heavy recent load</small>
-            </span>
           </div>
         </div>
       </div>
