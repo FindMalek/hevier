@@ -8,6 +8,7 @@ import type { BeginRequest, BeginResponse, Manifest, Refusal } from '@hevier/sha
 //   key.txt     the secret the phone must send (made on first run)
 //   current/    the copy: hevier.db, media/, profile/, manifest.json
 //   incoming/   a copy being received; swapped in only when complete
+//   old/        the previous copy, only while a swap is in progress
 export type Store = ReturnType<typeof createStore>;
 
 export class StoreError extends Error {
@@ -27,7 +28,18 @@ export function createStore(dir: string) {
 
   const currentDir = path.join(dir, 'current');
   const incomingDir = path.join(dir, 'incoming');
+  const oldDir = path.join(dir, 'old');
   let pending: BeginRequest | null = null;
+
+  // A swap interrupted after current/ moved to old/ leaves no current/:
+  // put the last good copy back.
+  function restoreOld(): void {
+    if (fs.existsSync(path.join(currentDir, 'manifest.json')) || !fs.existsSync(oldDir)) return;
+    fs.rmSync(currentDir, { recursive: true, force: true });
+    fs.renameSync(oldDir, currentDir);
+  }
+
+  restoreOld();
 
   function current(): Manifest | null {
     try {
@@ -38,6 +50,7 @@ export function createStore(dir: string) {
   }
 
   function begin(req: BeginRequest): BeginResponse | Refusal {
+    restoreOld();
     const held = current();
     const reason = checkAccept(held, req);
     if (reason) return { reason, pc: { workouts: held!.workouts, date: held!.date } };
@@ -81,12 +94,21 @@ export function createStore(dir: string) {
       }
     }
     fs.writeFileSync(path.join(incomingDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
-    const oldDir = path.join(dir, 'old');
+    restoreOld();
     fs.rmSync(oldDir, { recursive: true, force: true });
     if (fs.existsSync(currentDir)) fs.renameSync(currentDir, oldDir);
-    fs.renameSync(incomingDir, currentDir);
-    fs.rmSync(oldDir, { recursive: true, force: true });
+    try {
+      fs.renameSync(incomingDir, currentDir);
+    } catch (error) {
+      restoreOld();
+      throw error;
+    }
     pending = null;
+    try {
+      fs.rmSync(oldDir, { recursive: true, force: true });
+    } catch {
+      // The new copy is live; the next commit removes it.
+    }
     return manifest;
   }
 
