@@ -42,9 +42,9 @@ export const expoIO: SyncIO = {
     return { deviceId: await getDeviceId(), workouts: await countWorkouts(), lastWorkout: await lastWorkoutStart(), files };
   },
 
-  async upload(url, path, headers) {
+  async upload(url, path, headers, hooks) {
     try {
-      const result = await localFile(path).upload(url, { httpMethod: 'PUT', headers });
+      const result = await localFile(path).upload(url, { httpMethod: 'PUT', headers, ...hooks });
       return result.status;
     } catch (e) {
       console.warn('[sync] upload failed', path, e);
@@ -59,11 +59,11 @@ export const expoIO: SyncIO = {
     if (staging.exists) staging.delete();
   },
 
-  async download(url, path, headers) {
+  async download(url, path, headers, hooks) {
     const dest = stagedFile(path);
     dest.parentDirectory.create({ intermediates: true, idempotent: true });
     // Rejects on anything but a 2xx answer.
-    const file = await File.downloadFileAsync(url, dest, { headers, idempotent: true });
+    const file = await File.downloadFileAsync(url, dest, { headers, idempotent: true, ...hooks });
     return { status: 200, size: file.size };
   },
 
