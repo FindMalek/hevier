@@ -3,6 +3,7 @@ import { SECTIONS, openPage } from './helpers';
 
 // Baselines are JPEG to keep the repository small. They are compared with a small
 // tolerance, with animations off and reduced motion on, so runs are deterministic.
+// The hero baseline is the static layout (no pin, 0 h); the scrub states are covered by hero.spec.ts.
 const shot = { type: 'jpeg', quality: 60, animations: 'disabled', scale: 'css' } as const;
 const tolerance = { maxDiffPixelRatio: 0.02, threshold: 0.25 };
 
@@ -25,4 +26,12 @@ test('above the fold with the navigation bar', async ({ page }) => {
   await openPage(page, { hideChrome: false });
   await page.addStyleTag({ content: '.skip-link { visibility: hidden !important; }' });
   expect(await capture(page)).toMatchSnapshot('fold.jpg', tolerance);
+});
+
+test('pinned hero at 48 hours', async ({ page }) => {
+  await openPage(page, { hideChrome: false, motion: true });
+  await page.addStyleTag({ content: '.skip-link { visibility: hidden !important; }' });
+  await page.locator('[data-ag-slider]').fill('48');
+  await page.waitForTimeout(800);
+  expect(await capture(page)).toMatchSnapshot('pinned-48h.jpg', tolerance);
 });

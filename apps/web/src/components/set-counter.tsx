@@ -65,10 +65,9 @@ export function SetCounter() {
                 className="setbtn"
                 data-full={credit === 1 ? '' : undefined}
                 onClick={() => cycle(i)}
-                aria-label={`Set ${i + 1}: ${label.big === 'F' || label.big === 'W' ? label.small : `${label.big} ${label.small}`}, counts ${fmt(credit)}. Tap to change.`}
+                aria-label={`${label.big} ${label.small}, set ${i + 1}, counts ${fmt(credit)}. Tap to change.`}
               >
-                <b>{label.big}</b>
-                <small>{label.small}</small>
+                <b>{label.big}</b> <small>{label.small}</small>
               </button>
               <span className="credit" aria-hidden>
                 {fmt(credit)}
