@@ -7,7 +7,7 @@ import type { ActiveExercise, ActiveSet, ActiveWorkout } from '@/types/workout';
 
 let nextId = 0;
 vi.mock('expo-crypto', () => ({ randomUUID: () => `id${++nextId}` }));
-const { needsBodyWeight, newSet, nextSetLike, orderByKeys, shouldAskEffort, shouldAskRating, shouldAskRepsLeft, startingRest, workoutStats } = await import('./activeWorkout');
+const { elapsedSeconds, needsBodyWeight, newSet, nextSetLike, orderByKeys, shouldAskEffort, shouldAskRating, shouldAskRepsLeft, startingRest, workoutStats } = await import('./activeWorkout');
 
 const set = (from: Partial<ActiveSet>) => newSet(from);
 const exercise = (name: string, sets: ActiveSet[]) => ({ key: name, name, sets }) as unknown as ActiveExercise;
@@ -22,6 +22,12 @@ describe('nextSetLike', () => {
 
   it('is empty when there is no set yet', () => {
     expect(nextSetLike([]).weight).toBe('');
+  });
+});
+
+describe('elapsedSeconds', () => {
+  it('is 0 when the start time cannot be read', () => {
+    expect(elapsedSeconds({ startTime: 'garbage' } as ActiveWorkout, Date.now())).toBe(0);
   });
 });
 

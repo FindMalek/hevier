@@ -1,23 +1,32 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 
-import { parsePairLink, savePairing } from '@/lib/sync/pairing';
+import { PairDialog } from '@/components/sync/PairDialog';
+import { useSavePairing } from '@/hooks/useSavePairing';
+import { parsePairLink } from '@/lib/sync/pairing';
 import { Screen } from '@/components/ui/Screen';
 
-// hevier://pair?host=…&port=…&key=… (the QR in the Hevier Sync window, or
-// adb for the emulator): remember the PC, then show the Sync screen.
+// hevier://pair?host=…&port=…&key=… (adb for the emulator, or any link): asks
+// before remembering the PC, then shows the Sync screen.
 export default function Pair() {
   const router = useRouter();
   const { host, port, key } = useLocalSearchParams<{ host?: string; port?: string; key?: string }>();
+  const pairing = useMemo(() => parsePairLink(`hevier://pair?host=${host ?? ''}&port=${port ?? ''}&key=${key ?? ''}`), [host, port, key]);
+  const { confirm, saving, error } = useSavePairing(() => router.replace('/sync'));
 
   useEffect(() => {
-    const pairing = parsePairLink(`hevier://pair?host=${host ?? ''}&port=${port ?? ''}&key=${key ?? ''}`);
-    (pairing ? savePairing(pairing) : Promise.resolve()).then(() => router.replace('/sync'));
-  }, [host, port, key, router]);
+    if (!pairing) router.replace('/sync');
+  }, [pairing, router]);
+
+  function cancel() {
+    if (saving) return;
+    router.replace('/sync');
+  }
 
   return (
     <Screen>
       <Stack.Screen options={{ headerShown: false }} />
+      <PairDialog pairing={pairing} error={error} onConfirm={() => confirm(pairing)} onCancel={cancel} />
     </Screen>
   );
 }

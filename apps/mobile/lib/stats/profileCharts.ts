@@ -1,3 +1,4 @@
+import { MAX_SCALE_MAGNITUDES, MAX_SCALE_TICKS } from '@/constants/profile';
 import { SECONDS_PER_HOUR } from '@/constants/time';
 import { SHORT_VOLUME_FROM_KG } from '@/constants/weight';
 import { startOfDay, startOfMonth, startOfWeek } from '@/lib/date';
@@ -17,10 +18,15 @@ function step(d: Date, unit: BarUnit, steps = 1): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + steps * (unit === 'week' ? 7 : 1));
 }
 
+const METRIC_VALUES: Record<ProfileMetric, (s: ProfileSession) => number> = {
+  duration: (s) => s.durationSeconds / SECONDS_PER_HOUR, // hours, so the grid lands on whole hours
+  volume: (s) => s.volumeKg,
+  reps: (s) => s.reps,
+};
+
 export function metricValue(s: ProfileSession, metric: ProfileMetric): number {
-  if (metric === 'duration') return s.durationSeconds / SECONDS_PER_HOUR; // hours, so the grid lands on whole hours
-  if (metric === 'volume') return s.volumeKg;
-  return s.reps;
+  const value = METRIC_VALUES[metric](s);
+  return Number.isFinite(value) ? value : 0;
 }
 
 // One bar per day, week or month up to the current one, empty ones included.
@@ -88,13 +94,14 @@ export function tickLabel(value: number, step: number, metric: ProfileMetric): s
 }
 
 // Bars run from 0 to the tallest one; grid lines at the first 1/2/5 step
-// that leaves at most four of them (2 hrs, 10k kg, 100 reps).
+// that leaves at most four of them (2 hrs, 10k kg, 100 reps). Values that
+// aren't finite numbers are ignored.
 export function barScale(values: number[]) {
-  const max = Math.max(0, ...values);
+  const max = Math.max(0, ...values.filter(Number.isFinite));
   if (max === 0) return { max: 1, step: 1, ticks: [0] };
   let magnitude = 10 ** Math.floor(Math.log10(max / 4));
-  let step = magnitude;
-  for (;;) {
+  let step = max;
+  for (let i = 0; i < MAX_SCALE_MAGNITUDES; i++) {
     const s = [1, 2, 5].map((m) => m * magnitude).find((c) => max / c <= 4);
     if (s !== undefined) {
       step = s;
@@ -103,7 +110,7 @@ export function barScale(values: number[]) {
     magnitude *= 10;
   }
   const ticks: number[] = [];
-  for (let t = 0; t <= max + 1e-9; t += step) ticks.push(Number(t.toPrecision(12)));
+  for (let t = 0; t <= max + 1e-9 && ticks.length < MAX_SCALE_TICKS; t += step) ticks.push(Number(t.toPrecision(12)));
   return { max, step, ticks };
 }
 

@@ -127,7 +127,8 @@ export function hasCompletedSets(workout: ActiveWorkout) {
 // The Duration: time since the start, less the time spent paused.
 export function elapsedSeconds(workout: ActiveWorkout, now: number): number {
   const until = workout.pausedAt ?? now;
-  return Math.max(0, Math.floor((until - Date.parse(workout.startTime)) / 1000 - (workout.pausedSeconds ?? 0)));
+  const seconds = Math.floor((until - Date.parse(workout.startTime)) / 1000 - (workout.pausedSeconds ?? 0));
+  return seconds > 0 ? seconds : 0;
 }
 
 export function pauseTimer(workout: ActiveWorkout, now: number): ActiveWorkout {
