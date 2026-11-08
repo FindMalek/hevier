@@ -49,6 +49,8 @@
   estimated 1RM, best set volume, most reps, longest time or distance
 - **"Reps left"** after your last set, so the app knows how hard it was
 - **Per-hand weight** for dumbbell exercises
+- **Body weight** (Profile → Body weight): pull-ups, dips and other body weight
+  exercises count the weight you logged as weight lifted
 - A **clock** with a timer and a stopwatch, and Keep Awake while you train
 - Edit, copy or delete a past workout, save one as a routine, or log a workout
   for a past day from the calendar
@@ -183,7 +185,8 @@ only, so make your routines in the app.
 The exercise stills and clips are licensed by Gym visual to openGym only, so
 they are **not** in this repository. Without them the app shows a placeholder.
 If you have your own licensed copy, put it in `packages/catalogue/media/` and
-`apps/mobile/scripts/load-device.sh` copies it onto the device.
+`apps/mobile/scripts/load-device.sh` copies it onto the device. Settings →
+Exercise pictures switches the pictures between a male and a female figure.
 
 ### Hevier Sync (PC backup)
 
