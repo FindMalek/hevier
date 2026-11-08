@@ -23,7 +23,7 @@ import {
   RUN_SPIKE_SHORTEN,
 } from '@/constants/run';
 import type { MuscleGroup } from '@/types/muscles';
-import type { IntensityMinutes, LoadState, RunKind, RunLog } from '@/types/run';
+import type { CheckIn, CheckInChange, IntensityMinutes, LoadState, RunKind, RunLog } from '@/types/run';
 import type { RecoveryState, StatSet } from '@/types/stats';
 
 // The maths of run readiness that needs no check-in: how big each run was, how
@@ -35,6 +35,15 @@ import type { RecoveryState, StatSet } from '@/types/stats';
 // choose, only for someone who has logged a run (a lifter who never runs sees nothing).
 export function runIsOn(enabled: boolean | null, hasRun: boolean): boolean {
   return enabled ?? hasRun;
+}
+
+const blankCheckIn = (date: string): CheckIn => ({ date, feel: null, sleepHours: null, legsSore: false, pain: false, sick: false });
+
+// The check-in after a tap, built on the one before it (never on what was loaded), so two
+// quick taps both stay. `change` is the fields to set, or a function of the check-in as it is.
+export function applyCheckIn(current: CheckIn | null, change: CheckInChange, date: string): CheckIn {
+  const base = current ?? blankCheckIn(date);
+  return { ...base, ...(typeof change === 'function' ? change(base) : change), date: base.date };
 }
 
 // Session load in arbitrary units: minutes × how hard it felt (1–10).

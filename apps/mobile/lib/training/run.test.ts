@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/db/client', () => ({ getDb: async () => null }));
 const { recovery, setEfforts } = await import('./effort');
-const { easyPace, intensityMinutes, legScore, loadState, runIsOn, runKind, runLoad, runsOf, suggestMinutes } = await import('./run');
+const { applyCheckIn, easyPace, intensityMinutes, legScore, loadState, runIsOn, runKind, runLoad, runsOf, suggestMinutes } = await import('./run');
 type StatSet = import('@/types/stats').StatSet;
 type RunLog = import('@/types/run').RunLog;
 
@@ -67,6 +67,15 @@ describe('run load', () => {
 
   it('runsOf leaves out a run with no time', () => {
     expect(logs([{ ...runSet(1, 0, 4), seconds: null }])).toEqual([]);
+  });
+});
+
+describe('applyCheckIn', () => {
+  it('quick taps build on each other: drained, then pain, then pain again', () => {
+    const drained = applyCheckIn(null, { feel: 'drained' }, '2026-11-10');
+    const pain = applyCheckIn(drained, (c) => ({ pain: !c.pain }), '2026-11-10');
+    expect(pain).toEqual({ date: '2026-11-10', feel: 'drained', sleepHours: null, legsSore: false, pain: true, sick: false });
+    expect(applyCheckIn(pain, (c) => ({ pain: !c.pain }), '2026-11-10').pain).toBe(false);
   });
 });
 

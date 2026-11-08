@@ -6,12 +6,10 @@ import { getCheckIn, saveCheckIn } from '@/db/run/checkIns';
 import { getRunSettings, saveRunSettings } from '@/db/run/settings';
 import { getStatSets } from '@/db/stats/statSets';
 import { dayKey } from '@/lib/date';
-import { runIsOn, runsOf } from '@/lib/training/run';
+import { applyCheckIn, runIsOn, runsOf } from '@/lib/training/run';
 import { forecast, nextRunSlotMs } from '@/lib/training/runReadiness';
 import { RUN, RUN_FORECAST_DAYS } from '@/constants/run';
 import type { CheckIn, CheckInChange, RunLoaded, RunScreenData, RunSettings } from '@/types/run';
-
-const blankCheckIn = (date: string): CheckIn => ({ date, feel: null, sleepHours: null, legsSore: false, pain: false, sick: false });
 
 async function load(): Promise<{ loaded: RunLoaded; checkIn: CheckIn | null }> {
   const [settings, sets] = await Promise.all([getRunSettings(), getStatSets()]);
@@ -57,8 +55,7 @@ export function useRunReadiness() {
   const updateCheckIn = useCallback(
     (change: CheckInChange) => {
       if (!loaded) return;
-      const current = latest.current ?? blankCheckIn(dayKey(new Date(loaded.slotMs)));
-      const next = { ...current, ...(typeof change === 'function' ? change(current) : change), date: current.date };
+      const next = applyCheckIn(latest.current, change, dayKey(new Date(loaded.slotMs)));
       latest.current = next;
       setCheckIn(next);
       writes.current = writes.current.then(() => saveCheckIn(next)).catch((e) => console.warn('Check-in not saved', e));
