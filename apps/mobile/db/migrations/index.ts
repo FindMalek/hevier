@@ -37,14 +37,21 @@ export const MIGRATIONS: Migration[] = [
   { version: 16, sql: migration016 },
 ];
 
+async function applyMigration(db: MigratableDb, migration: Migration): Promise<void> {
+  try {
+    await db.execAsync(`BEGIN;\n${migration.sql}\n${setUserVersion(migration.version)};\nCOMMIT;`);
+  } catch (error) {
+    await db.execAsync('ROLLBACK').catch(() => undefined);
+    throw error;
+  }
+}
 
 export async function runMigrations(db: MigratableDb): Promise<void> {
   const row = await db.getFirstAsync<UserVersionRow>(SELECT_USER_VERSION);
   const currentVersion = row?.user_version ?? 0;
   for (const migration of MIGRATIONS) {
     if (migration.version > currentVersion) {
-      await db.execAsync(migration.sql);
-      await db.execAsync(setUserVersion(migration.version));
+      await applyMigration(db, migration);
     }
   }
 }
