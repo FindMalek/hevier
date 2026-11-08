@@ -155,7 +155,7 @@
   .p-widgets {
     grid-column: span 6;
   }
-  .wgrid {
+  .p-widgets .wgrid {
     grid-template-columns: repeat(4, 1fr);
   }
 }

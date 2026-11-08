@@ -182,6 +182,27 @@
   transform: translateY(2.4%);
   filter: blur(18px);
 }
+.ag-fig::after {
+  content: '';
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: -1%;
+  height: 3.4%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(20 28 70 / 0.3), transparent);
+  filter: blur(5px);
+  pointer-events: none;
+}
+.ag-stage::after,
+.ag-dock::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(90% 130% at 0% 0%, color-mix(in srgb, var(--tone) 11%, transparent), transparent 64%);
+  pointer-events: none;
+}
 .ag-fig .body:not(.halo) {
   position: relative;
 }

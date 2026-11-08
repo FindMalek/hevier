@@ -14,7 +14,7 @@ pnpm + Turborepo. `pnpm-workspace.yaml` lists `apps/*` and `packages/*`; shared 
 
 - `apps/mobile` (`@hevier/mobile`) — the Expo app (`app/`, `components/`, `hooks/`, `stores/`, `lib/`, `db/`, `constants/`, `types/`, `modules/`, `plugins/`, `assets/`, `app.json`, `scripts/`). Run every Expo command from this folder. `@/` imports resolve inside it.
 - `apps/sync` (`@hevier/sync`) — Hevier Sync, the PC backup program.
-- `apps/web` (`@hevier/web`) — the landing page: Next.js App Router, Tailwind v4, static export to `out/`. No analytics or third-party scripts, and it must stay that way: the product promises none. Screenshots in `public/screens/` come from `docs/images/screens/` (`node scripts/optimize-images.mjs`). Never add openGym exercise pictures.
+- `apps/web` (`@hevier/web`) — the landing page: Next.js App Router, Tailwind v4, static export to `out/`. No analytics or third-party scripts, and it must stay that way: the product promises none. The page draws the app screens in HTML (no screenshots); `public/screens/app-icon.webp` comes from `node scripts/optimize-images.mjs`, and `public/og.png` from `node scripts/make-og.mjs`. Never add openGym exercise pictures.
 - `packages/shared` (`@hevier/shared`) — sync protocol used by the app and `apps/sync`.
 - `packages/catalogue` (`@hevier/catalogue`) — exercise catalogue JSON + openGym notice.
 - `packages/config-typescript`, `packages/config-eslint` — shared tsconfig / eslint config.
