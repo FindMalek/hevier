@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ASYNC_STORAGE_KEYS, LOCAL_HOST_PATTERNS } from '@/constants/storage';
+import { ASYNC_STORAGE_KEYS, LOCAL_HOST_PATTERNS, MAX_PORT } from '@/constants/storage';
 import type { Pairing } from '@/types/sync';
 
 // Which PC this phone syncs with, read from the QR code in the Hevier Sync
@@ -24,7 +24,7 @@ export function parsePairLink(text: string): Pairing | null {
   const host = params.get('host') ?? '';
   const port = Number(params.get('port'));
   const key = params.get('key') ?? '';
-  if (!/^[A-Za-z0-9.-]+$/.test(host) || !Number.isInteger(port) || port <= 0 || !/^[0-9a-f]{32}$/.test(key)) return null;
+  if (!/^[A-Za-z0-9.-]+$/.test(host) || !Number.isInteger(port) || port <= 0 || port > MAX_PORT || !/^[0-9a-f]{32}$/.test(key)) return null;
   return { host, port, key };
 }
 

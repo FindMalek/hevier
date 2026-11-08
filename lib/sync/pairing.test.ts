@@ -36,6 +36,15 @@ describe('parsePairLink', () => {
   });
 });
 
+describe('parsePairLink port range', () => {
+  it('accepts ports up to 65535 and rejects the rest', () => {
+    expect(parsePairLink(`hevier://pair?host=192.168.1.23&port=65535&key=${KEY}`)?.port).toBe(65535);
+    for (const port of ['65536', '99999', '0']) {
+      expect(parsePairLink(`hevier://pair?host=192.168.1.23&port=${port}&key=${KEY}`), port).toBeNull();
+    }
+  });
+});
+
 describe('isLocalHost', () => {
   it('accepts a PC on the home network or cable', () => {
     for (const host of ['192.168.1.23', '10.0.2.2', '172.16.0.5', '172.31.9.9', '127.0.0.1', '169.254.3.4', 'localhost', 'my-pc.local']) {

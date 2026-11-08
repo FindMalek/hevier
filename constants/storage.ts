@@ -54,6 +54,9 @@ export const SYNC_HOSTS = {
   usb: '127.0.0.1', // over the USB cable (adb reverse maps the phone's port to the PC's)
 };
 
+// The highest TCP port a pairing link may name (lib/sync/pairing.ts).
+export const MAX_PORT = 65535;
+
 // Hosts that count as a PC on the same network or cable (lib/sync/pairing.ts).
 export const LOCAL_HOST_PATTERNS: readonly RegExp[] = [
   /^localhost$/i,
