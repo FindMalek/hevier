@@ -8,11 +8,7 @@
     "scheme": "hevier",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.hevier.app",
-      "infoPlist": {
-        "CADisableMinimumFrameDurationOnPhone": true
-      }
+      "supportsTablet": true
     },
     "android": {
       "package": "com.hevier.app",
@@ -60,8 +56,7 @@
         }
       ],
       "./plugins/withHevierRelease",
-      "./plugins/withHevierTabBar",
-      "./plugins/withHevierRefreshRate"
+      "./plugins/withHevierTabBar"
     ],
     "experiments": {
       "typedRoutes": true
