@@ -16,6 +16,10 @@ describe('durationSecondsOf', () => {
     expect(durationSecondsOf('2026-01-01T10:00:00.000Z', '2026-01-01T09:00:00.000Z')).toBe(0);
   });
 
+  it('counts an unparseable end time as 0', () => {
+    expect(durationSecondsOf('2026-01-01T10:00:00.000Z', 'not a date')).toBe(0);
+  });
+
   it('rounds to the nearest second', () => {
     expect(durationSecondsOf('2026-01-01T10:00:00.000Z', '2026-01-01T10:00:01.499Z')).toBe(1);
     expect(durationSecondsOf('2026-01-01T10:00:00.000Z', '2026-01-01T10:00:01.500Z')).toBe(2);
