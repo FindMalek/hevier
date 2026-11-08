@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react';
 import {
   DEFAULT_HOURS,
   DEFAULT_SESSION,
@@ -31,6 +31,7 @@ export function RecoveryDemo() {
   const [hours, setHours] = useState(DEFAULT_HOURS);
   const [selected, setSelected] = useState<MuscleKey | null>(null);
   const [announce, setAnnounce] = useState('');
+  const touched = useRef(false);
 
   const session = sessionById(sessionId);
 
@@ -43,6 +44,7 @@ export function RecoveryDemo() {
   }, [session, hours]);
 
   useEffect(() => {
+    if (!touched.current) return;
     const timer = window.setTimeout(() => {
       setAnnounce(
         `${hours} hours after ${session.label.toLowerCase()}: ${summary.heavy.length} heavy, ${summary.partly.length} partly recovered, ${summary.ready.length} likely ready.`,
@@ -83,6 +85,7 @@ export function RecoveryDemo() {
               type="button"
               aria-pressed={s.id === sessionId}
               onClick={() => {
+                touched.current = true;
                 setSessionId(s.id);
                 setSelected(null);
               }}
@@ -112,7 +115,10 @@ export function RecoveryDemo() {
         value={hours}
         style={{ '--pct': `${(hours / MAX_HOURS) * 100}%` } as CSSProperties}
         aria-valuetext={`${hours} hours since your workout`}
-        onChange={(event) => setHours(Number(event.target.value))}
+        onChange={(event) => {
+            touched.current = true;
+            setHours(Number(event.target.value));
+          }}
       />
       <div className="ticks" aria-hidden>
         <span>0 h</span>
