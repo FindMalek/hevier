@@ -101,7 +101,7 @@ export function Features() {
           <article className="card lift s3 card-tint-lilac" data-reveal style={delay(80)}>
             <div className="card-text">
               <p className="card-kicker">Exercises</p>
-              <h3 className="h3">5,600+ exercises.</h3>
+              <h3 className="h3">5,500+ exercises.</h3>
               <p>
                 Barbell, dumbbell, cable, machine, band and bodyweight versions of every common movement. Search by name,
                 equipment or muscle.

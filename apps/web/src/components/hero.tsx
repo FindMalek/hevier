@@ -87,7 +87,7 @@ export function Hero() {
 
 export function Facts() {
   const items = [
-    ['5,600+', 'exercises'],
+    ['5,500+', 'exercises'],
     ['4', 'home-screen widgets'],
     ['0', 'accounts, ads or trackers'],
     ['AGPL-3.0', 'open source'],

@@ -101,11 +101,11 @@ say that too.
 
 <br clear="right">
 
-### 5,600+ exercises
+### 5,500+ exercises
 
 <img src="docs/images/screens/exercises.png" alt="Exercise search: many variations of each movement" width="230" align="right">
 
-The library has **5,600+ exercises** with their muscles and step-by-step
+The library has **5,500+ exercises** with their muscles and step-by-step
 instructions (from [openGym](#credits)): every common movement in barbell,
 dumbbell, cable, machine, band and bodyweight versions. Search by name, filter
 by equipment or muscle, and each one gets its own page with your progress

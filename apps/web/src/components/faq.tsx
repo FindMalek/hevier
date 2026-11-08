@@ -94,7 +94,7 @@ export const FAQ_ITEMS: Item[] = [
     a: (
       <p>
         The stills and clips that come with the open exercise catalogue are licensed to its author only, so they cannot be
-        shared with Hevier. The app shows a placeholder. The 5,600+ names, muscles and instructions are all there.
+        shared with Hevier. The app shows a placeholder. The 5,500+ names, muscles and instructions are all there.
       </p>
     ),
   },
