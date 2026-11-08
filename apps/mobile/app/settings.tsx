@@ -1,10 +1,15 @@
+import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { CaretRight } from 'phosphor-react-native/src/icons/CaretRight';
 import { Desktop } from 'phosphor-react-native/src/icons/Desktop';
 import { PersonSimple } from 'phosphor-react-native/src/icons/PersonSimple';
 
+import { RunSettingsRows } from '@/components/run/RunSettingsRows';
 import { InnerHeader } from '@/components/ui/InnerHeader';
+import { getRunSettings, isRunOn, saveRunSettings } from '@/db/run/settings';
+import { RUN_SETTINGS_SECTION } from '@/constants/runCopy';
+import type { RunSettings } from '@/types/run';
 import { COLORS, TYPE } from '@/constants/theme';
 import { LAYOUT, SPACE } from '@/constants/layout';
 import { ICON_SIZES, SETTINGS_SIZES, SIZES } from '@/constants/sizes';
@@ -12,10 +17,28 @@ import { Screen } from '@/components/ui/Screen';
 import { setDrawings, useDrawings } from '@/stores/drawings';
 
 // Settings, opened from the gear on Profile: which figure the exercise
-// pictures show (a tap switches it), and Sync with PC.
+// pictures show (a tap switches it), Running (the run readiness) and Sync with PC.
 export default function SettingsScreen() {
   const router = useRouter();
   const drawings = useDrawings();
+  const [run, setRun] = useState<RunSettings | null>(null);
+  // Whether the run readiness shows: the choice, or (not chosen yet) whether a run was logged.
+  const [runOn, setRunOn] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      getRunSettings().then((s) => {
+        setRun(s);
+        isRunOn(s).then(setRunOn);
+      });
+    }, [])
+  );
+  const changeRun = (patch: Partial<RunSettings>) => {
+    if (!run) return;
+    const next = { ...run, ...patch };
+    setRun(next);
+    if (patch.enabled !== undefined) setRunOn(!!patch.enabled);
+    saveRunSettings(next);
+  };
   return (
     <Screen>
       <Stack.Screen options={{ headerShown: false }} />
@@ -29,6 +52,8 @@ export default function SettingsScreen() {
           <Text style={styles.title}>Exercise pictures</Text>
           <Text style={styles.value}>{drawings === 'male' ? 'Male' : 'Female'}</Text>
         </Pressable>
+        <Text style={styles.section}>{RUN_SETTINGS_SECTION}</Text>
+        {run && <RunSettingsRows settings={run} on={runOn} onChange={changeRun} />}
         <Text style={styles.section}>Data</Text>
         <Pressable style={({ pressed }) => [styles.row, pressed && styles.pressed]} onPress={() => router.push('/sync')}>
           <Desktop size={ICON_SIZES.xxl} color={COLORS.text} />
