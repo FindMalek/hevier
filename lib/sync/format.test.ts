@@ -34,6 +34,14 @@ describe('restoreMessage', () => {
   });
 });
 
+describe('restoreMessage space', () => {
+  it('says how much room a restore needs: the download, the new data and the old data at once', () => {
+    const date = new Date(2026, 9, 24, 18, 42).toISOString();
+    const files = [{ path: 'hevier.db', size: 10 * 1024 * 1024 }, { path: 'media/a.jpg', size: 502 * 1024 * 1024 }];
+    expect(restoreMessage({ deviceId: 'a', date, workouts: 3, files }, new Date(2026, 9, 25, 9, 0))).toContain('needs about 1.5 GB free');
+  });
+});
+
 describe('pairMessage', () => {
   const next = { host: '192.168.1.23', port: 4873, key: '' };
 

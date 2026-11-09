@@ -1,5 +1,6 @@
-import { KEY_HEADER } from '@/shared/sync-protocol';
+import { KEY_HEADER, isValidPath } from '@/shared/sync-protocol';
 import { fetchStatus } from './client';
+import { KeptBackupError } from './keptBackup';
 import { withSyncLock } from './lock';
 import { baseUrl } from './pairing';
 import { TransferTimeout, withStallTimeout } from './transfer';
@@ -28,6 +29,7 @@ async function restore(io: SyncIO, pairing: Pairing, stallMs: number): Promise<{
 
   const headers = { [KEY_HEADER]: pairing.key };
   const files = status.backup.files;
+  if (!files.every((f) => isValidPath(f.path))) return { ok: false, reason: 'error' };
   await io.cleanup(); // an old half-done restore
   for (const f of files) {
     const url = `${baseUrl(pairing)}/file?path=${encodeURIComponent(f.path)}`;
@@ -41,7 +43,13 @@ async function restore(io: SyncIO, pairing: Pairing, stallMs: number): Promise<{
       return { ok: false, reason: timedOut ? 'timeout' : 'error' };
     }
   }
-  await io.replaceAll(files.map((f) => f.path));
+  try {
+    await io.replaceAll(files.map((f) => f.path));
+  } catch (e) {
+    console.warn('[sync] restore failed', e);
+    await io.cleanup();
+    return { ok: false, reason: e instanceof KeptBackupError ? 'restoreKept' : 'error' };
+  }
   // The data is already back: failing to note the copy's id only means the next
   // sync asks once ("another phone"), so it must not turn the restore into an error.
   await adoptDeviceId(status.backup.deviceId).catch((e) => console.warn('[sync] could not keep the restored device id', e));

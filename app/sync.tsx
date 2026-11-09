@@ -29,6 +29,7 @@ export default function SyncScreen() {
   const [pairing, setPairing] = useState<Pairing | null | undefined>(undefined);
   const [last, setLast] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [restoring, setRestoring] = useState(false); // a restore is running: the label says so
   const [result, setResult] = useState<SyncResult | null>(null);
   const [usb, setUsb] = useState(false); // the last sync went over the cable (its retry does too)
   const [note, setNote] = useState<string | null>(null); // restore messages
@@ -81,11 +82,13 @@ export default function SyncScreen() {
   async function restore() {
     setBackup(null);
     setBusy(true);
+    setRestoring(true);
     const r = await restoreFromPc(expoIO, pairing!);
     if (r.ok) {
       await reloadAppAsync();
       return;
     }
+    setRestoring(false);
     setBusy(false);
     if (r.reason === 'error') setNote("Restore failed. Your phone's data was not changed.");
     else setResult(r);
@@ -124,6 +127,8 @@ export default function SyncScreen() {
               {!result.ok && result.reason === 'otherDevice' && <Button label="Replace" variant="outline" size="compact" onPress={() => sync(true)} />}
             </View>
           )}
+
+          {restoring && <Text style={[styles.message, styles.messageOk]}>Restoring… keep Hevier open, a big library takes a while.</Text>}
 
           {note && <Text style={styles.message}>{note}</Text>}
 
