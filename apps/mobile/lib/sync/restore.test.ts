@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
@@ -24,6 +25,7 @@ const { fetchStatus, quietSync, syncNow } = await import('./client');
 const { getDeviceId } = await import('./deviceId');
 const { isSyncBusy } = await import('./lock');
 const { restoreFromPc } = await import('./restore');
+const { KeptBackupError } = await import('./keptBackup');
 type SyncIO = import('@/types/sync').SyncIO;
 type Pairing = import('@/types/sync').Pairing;
 
@@ -60,8 +62,9 @@ async function pcHolds(files: Record<string, string>, workouts = 312, lastWorkou
 // The new phone: downloads land in a staging folder; replaceAll records what
 // would replace the phone's data. `hold` pauses each download once it is on
 // disk (`downloaded` says the first one is); `wipeOnCleanup` makes cleanup
-// delete the staged files like the real one. `stall` writes the first bytes of
-// a download and then never answers, ignoring the abort, like a dropped Wi-Fi.
+// delete the staged files like the real one; `failReplace` is what the swap
+// throws. `stall` writes the first bytes of a download and then never answers,
+// ignoring the abort, like a dropped Wi-Fi.
 function fakePhone(opts: { truncate?: string; hold?: Promise<void>; wipeOnCleanup?: boolean; stall?: boolean; failReplace?: Error } = {}) {
   let firstDownloaded = () => {};
   const downloaded = new Promise<void>((resolve) => (firstDownloaded = resolve));
@@ -120,6 +123,26 @@ describe('restoreFromPc', () => {
     expect(stored.get('hevier.sync.deviceId')).toBe('phone-a');
   });
 
+  it.each(['media/../hevier.db', 'media/sub/a.jpg', '/etc/passwd'])('a manifest naming %s is refused before anything is downloaded', async (bad) => {
+    const server = http.createServer((_req, res) => {
+      res.setHeader('content-type', 'application/json');
+      res.end(JSON.stringify({ backup: { deviceId: 'phone-a', date: '2026-10-24T16:42:00.000Z', workouts: 1, files: [{ path: bad, size: 1 }] } }));
+    });
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const phone = fakePhone();
+    let downloads = 0;
+    const download = phone.io.download;
+    phone.io.download = async (...args) => {
+      downloads++;
+      return download(...args);
+    };
+    const hostile = { ...pairing, port: (server.address() as AddressInfo).port };
+    expect(await restoreFromPc(phone.io, hostile)).toMatchObject({ ok: false, reason: 'error' });
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    expect(downloads).toBe(0);
+    expect(phone.replaced).toEqual([]);
+  });
+
   it('a broken download leaves the phone untouched', async () => {
     await pcHolds({ 'hevier.db': 'db-1', 'media/a.jpg': 'photo-a' });
     const phone = fakePhone({ truncate: 'media/a.jpg' });
@@ -149,6 +172,21 @@ describe('restoreFromPc', () => {
     expect(phone.replaced).toEqual([['hevier.db']]);
   });
 
+  it('a swap that fails is reported as an error', async () => {
+    await pcHolds({ 'hevier.db': 'db-1' });
+    const phone = fakePhone({ failReplace: new Error('disk full'), wipeOnCleanup: true });
+    expect(await restoreFromPc(phone.io, pairing)).toMatchObject({ ok: false, reason: 'error' });
+    expect(() => phone.staged('hevier.db')).toThrow();
+    // The phone's data is still its own, so it keeps its own id.
+    expect(stored.get('hevier.sync.deviceId')).toBeUndefined();
+  });
+
+  it('a swap that could not put everything back says the data is kept', async () => {
+    await pcHolds({ 'hevier.db': 'db-1' });
+    const phone = fakePhone({ failReplace: new KeptBackupError(new Error('disk full')) });
+    expect(await restoreFromPc(phone.io, pairing)).toMatchObject({ ok: false, reason: 'restoreKept' });
+  });
+
   it('the quiet sync on app open leaves a restore under way alone', async () => {
     await pcHolds({ 'hevier.db': 'db-1', 'media/a.jpg': 'photo-a' });
     let release = () => {};
@@ -171,10 +209,13 @@ describe('restoreFromPc', () => {
     await syncing;
   });
 
-  it('a swap that throws answers error and frees the lock', async () => {
+  it('a restore that throws anywhere answers error and frees the lock', async () => {
     await pcHolds({ 'hevier.db': 'db-1' });
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const phone = fakePhone({ failReplace: new Error('disk full') });
+    const phone = fakePhone();
+    phone.io.cleanup = async () => {
+      throw new Error('cannot clean');
+    };
     expect(await restoreFromPc(phone.io, pairing)).toEqual({ ok: false, reason: 'error' });
     expect(isSyncBusy()).toBe(false);
   });
