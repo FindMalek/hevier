@@ -1,21 +1,16 @@
-import { fileURLToPath } from 'node:url';
-import { configDefaults, defineConfig } from 'vitest/config';
+import { defineConfig } from 'vitest/config';
 
-// Lets tests resolve the same `@/…` imports the app uses (tsconfig "paths").
+// Only for `pnpm test:coverage` (CI, read by Sonar): runs every package's
+// tests in one process so coverage/lcov.info has paths relative to the repo.
 export default defineConfig({
-  resolve: {
-    alias: { '@': fileURLToPath(new URL('.', import.meta.url)) },
-  },
-  // .claude/ holds temporary copies of the project (git worktrees); never test those.
   test: {
-    exclude: [...configDefaults.exclude, '.claude/**'],
-    // `npm run test:coverage` (CI): coverage/lcov.info, read by Sonar.
+    projects: ['apps/mobile', 'apps/sync', 'packages/shared'],
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'lcov'],
       reportsDirectory: 'coverage',
-      include: ['**/*.{ts,tsx}'],
-      exclude: ['**/*.test.ts', '**/*.d.ts', 'node_modules/**', 'scripts/local/**', '.expo/**', 'coverage/**', '**/*.config.*'],
+      include: ['apps/**/*.{ts,tsx}', 'packages/**/*.{ts,tsx}'],
+      exclude: ['**/*.test.ts', '**/*.d.ts', '**/node_modules/**', 'apps/mobile/scripts/local/**', '**/.expo/**', '**/coverage/**', '**/*.config.*'],
     },
   },
 });
