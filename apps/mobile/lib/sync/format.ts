@@ -12,7 +12,17 @@ export function lastSyncedLabel(iso: string | null, now = new Date()): string {
 
 // The Restore from PC confirmation.
 export function restoreMessage(backup: Manifest, now = new Date()): string {
-  return `Restore from PC?\n\nBackup from ${lastSyncedLabel(backup.date, now)}, ${backup.workouts} workouts. This replaces everything on this phone, including a workout in progress.`;
+  const base = `Restore from PC?\n\nBackup from ${lastSyncedLabel(backup.date, now)}, ${backup.workouts} workouts. This replaces everything on this phone, including a workout in progress.`;
+  const bytes = backup.files.reduce((sum, f) => sum + f.size, 0);
+  return bytes > 0 ? `${base}\n\nWhile it runs the phone needs about ${sizeLabel(bytes * RESTORE_SPACE_FACTOR)} free: the download, the new copy and your current data are all kept until it is done.` : base;
+}
+
+// A restore keeps three copies at once: the staged download, the new data, and the old data set aside.
+const RESTORE_SPACE_FACTOR = 3;
+
+function sizeLabel(bytes: number): string {
+  const mb = bytes / (1024 * 1024);
+  return mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${Math.max(1, Math.round(mb))} MB`;
 }
 
 // The Pair with PC confirmation, shown before a scanned or opened link is
@@ -41,6 +51,8 @@ export function syncMessage(result: SyncResult, usb = false): string {
       return "This phone's last workout is older than the one in the PC copy. Not sent.";
     case 'otherDevice':
       return 'This copy came from another phone. Replace it?';
+    case 'restoreKept':
+      return 'Restore failed, and some of your data is in a safe copy on this phone. Close Hevier and open it again to put it back.';
     case 'timeout':
       return 'The PC stopped answering during the transfer. Check the Wi-Fi and try again.';
     case 'busy':

@@ -19,6 +19,8 @@ import { alertTimerDone } from '@/lib/prFeedback';
 import { refreshHomeWidgets } from '@/lib/refreshHomeWidgets';
 import { quietSync } from '@/lib/sync/client';
 import { expoIO } from '@/lib/sync/expoIO';
+import { DataWaiting } from '@/components/sync/DataWaiting';
+import { useDataWaiting } from '@/hooks/useDataWaiting';
 import { useWorkoutNotification } from '@/hooks/useWorkoutNotification';
 import { STARTUP_DELAYS } from '@/constants/motion';
 import { FONTS } from '@/constants/theme';
@@ -93,6 +95,8 @@ export default function RootLayout() {
     Figtree_700Bold,
   });
 
+  const { message: dataWaiting, trying, retry } = useDataWaiting();
+
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
@@ -108,6 +112,10 @@ export default function RootLayout() {
   // can be what opened the app).
   if (!loaded) {
     return <WorkoutNotification />;
+  }
+
+  if (dataWaiting) {
+    return <DataWaiting message={dataWaiting} trying={trying} onRetry={retry} />;
   }
 
   // The gesture root: dragging routines on the Workout tab (components/routines/RoutineDrag.tsx).

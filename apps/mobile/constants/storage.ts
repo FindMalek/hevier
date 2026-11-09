@@ -25,6 +25,7 @@ export const ASYNC_STORAGE_KEYS = {
   syncPairing: 'hevier.sync.pairing', // the PC paired with (lib/sync/pairing.ts)
   syncLast: 'hevier.sync.last', // time of the last good sync
   syncDeviceId: 'hevier.sync.deviceId', // this phone's id for the PC copy (lib/sync/deviceId.ts)
+  restoreUndone: 'hevier.sync.restoreUndone', // a restore the app was closed in was undone at start, not yet told (lib/sync/restoreNotice.ts)
 };
 
 // File names.
@@ -40,6 +41,24 @@ export const STORAGE_FOLDERS = {
   sqlite: 'SQLite', // where expo-sqlite keeps the database
   syncCache: 'sync', // in the cache: the database copy sent to the PC
   restoreCache: 'restore', // in the cache: a restore's downloads before they move in
+  restoreBackup: 'restore-backup', // the phone's own data, set aside while a restore moves in
+  restoreTrash: 'restore-trash', // a finished restore's backup, renamed here so deleting it can be cut short harmlessly
+} as const;
+
+// Files a restore leaves in restore-backup to say how far it got: with neither,
+// it was still setting the old data aside; with `setAside`, the new data was
+// moving in; with `committed`, it finished and only the backup is left to delete.
+// (Discarding renames the folder to restore-trash first, markers and all.)
+export const RESTORE_MARKERS = {
+  setAside: 'SET-ASIDE',
+  committed: 'COMMITTED',
+} as const;
+
+// The first bytes of a SQLite file (sqlite.org/fileformat2.html).
+export const SQLITE_HEADER = {
+  length: 100,
+  magic: 'SQLite format 3\0',
+  userVersionOffset: 60, // the schema version the migrations set
 } as const;
 
 // The photo folders a backup sends and a restore replaces.

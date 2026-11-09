@@ -12,3 +12,10 @@ export interface PairingWithCurrent {
   pairing: Pairing;
   current: Pairing | null;
 }
+
+export interface DataWaitingProps {
+  message: string;
+  // The Try again button shows a spinner while it asks.
+  trying: boolean;
+  onRetry: () => void;
+}
