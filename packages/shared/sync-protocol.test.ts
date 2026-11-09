@@ -18,7 +18,7 @@ describe('isValidPath', () => {
   });
 
   it('rejects anything else', () => {
-    for (const p of ['../x', 'media/../key.txt', 'catalogue/still/1.webp', 'media/', '/etc/passwd', 'media/a/b.jpg', 'media/..', '']) {
+    for (const p of ['../x', 'media/../key.txt', 'catalogue/still/1.webp', 'media/', '/etc/passwd', 'media/a/b.jpg', 'media/..', 'media/.', 'profile/.', '']) {
       expect(isValidPath(p), p).toBe(false);
     }
   });
