@@ -10,7 +10,7 @@ export const DEFAULT_PORT = 4873;
 // The database, or one file straight inside media/ or profile/. Nothing else
 // can be written or read, so a path can't reach outside the copy.
 export function isValidPath(p: string): boolean {
-  return /^(hevier\.db|(media|profile)\/[A-Za-z0-9._-]+)$/.test(p) && !p.includes('..');
+  return /^(hevier\.db|(media|profile)\/[A-Za-z0-9._-]+)$/.test(p) && !p.split('/').includes('.') && !p.includes('..');
 }
 
 // The PC keeps the newest data. Another phone's copy is never replaced
