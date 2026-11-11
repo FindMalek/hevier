@@ -51,3 +51,37 @@ export function secondsUntil(endsAt: number, now: number): number {
 export function secondsSince(startedAt: number, now: number): number {
   return Math.max(0, Math.floor((now - startedAt) / MS_PER_SECOND));
 }
+
+// The local midnight of a dayKey ("2026-10-14").
+export function dateOfDayKey(day: string): Date {
+  const [y, m, d] = day.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+export function dayKeyBefore(day: string): string {
+  const d = dateOfDayKey(day);
+  d.setDate(d.getDate() - 1);
+  return dayKey(d);
+}
+
+// The number of days in a month (monthIndex 0 = January).
+export function daysInMonth(year: number, monthIndex: number): number {
+  return new Date(year, monthIndex + 1, 0).getDate();
+}
+
+// Date wheels that stop at today.
+export function monthsUpToToday(year: number, today: Date): number {
+  return year === today.getFullYear() ? today.getMonth() + 1 : 12;
+}
+
+export function daysUpToToday(year: number, monthIndex: number, today: Date): number {
+  return year === today.getFullYear() && monthIndex === today.getMonth() ? today.getDate() : daysInMonth(year, monthIndex);
+}
+
+// The dayKey of a day picked on scroll wheels: the day is cut back to the
+// month's length, and a day after today becomes today.
+export function clampedDayKey(year: number, monthIndex: number, day: number, today: Date): string {
+  const picked = dayKey(new Date(year, monthIndex, Math.min(day, daysInMonth(year, monthIndex))));
+  const now = dayKey(today);
+  return picked > now ? now : picked;
+}

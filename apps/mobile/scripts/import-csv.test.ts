@@ -26,10 +26,10 @@ describe('importCsvToDatabase (sample CSV)', () => {
   it('imports every workout, exercise and set', async () => {
     const { one } = await importSample();
     expect(one('SELECT COUNT(*) FROM workouts')).toBe(6);
-    // 8 exercises in the CSV, but "Running" is the built-in Run; every database gets Run and Football (migrations 006, 015).
+    // 8 exercises in the CSV, but "Running" is the built-in Run; every database gets Run and Football (migrations 006, 016).
     expect(one('SELECT COUNT(*) FROM exercises')).toBe(9);
     expect(one('SELECT COUNT(*) FROM sets')).toBe(16);
-    expect(one('PRAGMA user_version')).toBe(16);
+    expect(one('PRAGMA user_version')).toBe(17);
     expect(one('SELECT COUNT(*) FROM routines')).toBe(0);
   });
 

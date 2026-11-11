@@ -40,6 +40,8 @@ describe('runMigrations', () => {
       'app_state',
       'body_weights',
       'exercises',
+      'gym_changes',
+      'gyms',
       'routine_exercises',
       'routine_folders',
       'routine_sets',
@@ -53,7 +55,7 @@ describe('runMigrations', () => {
     ]);
 
     const version = rawDb.exec('PRAGMA user_version')[0].values[0][0];
-    expect(version).toBe(16);
+    expect(version).toBe(17);
   });
 
   it('is idempotent: running twice does not error or duplicate', async () => {
@@ -64,14 +66,14 @@ describe('runMigrations', () => {
     const tables = rawDb.exec(
       "SELECT name FROM sqlite_master WHERE type='table'"
     )[0].values;
-    expect(tables.length).toBe(13);
+    expect(tables.length).toBe(15);
   });
 
-  it('migrations 015 and 016 can run again after an interrupted upgrade', async () => {
+  it('migrations 016 and 017 can run again after an interrupted upgrade', async () => {
     const rawDb = new SQL.Database();
     await runMigrations(wrap(rawDb));
     rawDb.exec("INSERT INTO run_checkins (date, created_at) VALUES ('2026-11-10', 'now')");
-    for (const m of MIGRATIONS.slice(14)) expect(() => rawDb.exec(m.sql)).not.toThrow();
+    for (const m of MIGRATIONS.slice(15)) expect(() => rawDb.exec(m.sql)).not.toThrow();
     expect(rawDb.exec('SELECT date FROM run_checkins')[0].values).toEqual([['2026-11-10']]);
     expect(rawDb.exec("SELECT COUNT(*) FROM exercises WHERE name = 'Run'")[0].values).toEqual([[1]]);
   });
@@ -86,7 +88,7 @@ describe('runMigrations', () => {
 
     const row = rawDb.exec("SELECT is_custom, catalogue_id FROM exercises WHERE id = 'e1'")[0].values[0];
     expect(row).toEqual([1, null]);
-    expect(rawDb.exec('PRAGMA user_version')[0].values[0][0]).toBe(16);
+    expect(rawDb.exec('PRAGMA user_version')[0].values[0][0]).toBe(17);
   });
 
   it('allows warm-up sets and keeps the existing sets', async () => {
@@ -192,7 +194,7 @@ describe('runMigrations', () => {
     await runMigrations(wrap(rawDb));
 
     expect(rawDb.exec("SELECT id, type FROM exercises WHERE name = 'Run'")[0].values).toEqual([['mine', 'weight_reps']]);
-    expect(rawDb.exec('PRAGMA user_version')[0].values[0][0]).toBe(16);
+    expect(rawDb.exec('PRAGMA user_version')[0].values[0][0]).toBe(17);
   });
 
   it('adds the indexes the history lookups use', async () => {

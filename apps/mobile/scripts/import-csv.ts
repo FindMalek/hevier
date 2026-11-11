@@ -59,7 +59,7 @@ export async function importCsvToDatabase(
   // top of the existing tables.
   db.exec(`PRAGMA user_version = ${MIGRATIONS[MIGRATIONS.length - 1].version}`);
 
-  // Runs go to the built-in Run exercise (migration 015) instead of a copy of their own.
+  // Runs go to the built-in Run exercise (migration 016) instead of a copy of their own.
   const runId = db.exec('SELECT id FROM exercises WHERE name = ?', [RUN])[0].values[0][0] as string;
   const isRun = (name: string) => (RUN_IMPORT_NAMES as readonly string[]).includes(name);
   const exerciseIds = new Map<string, string>();
@@ -79,7 +79,7 @@ export async function importCsvToDatabase(
 
   for (const workout of workouts) {
     const workoutId = crypto.randomUUID();
-    db.run(INSERT_WORKOUT, [workoutId, workout.title, workout.startTime, workout.endTime, workout.description]);
+    db.run(INSERT_WORKOUT, [workoutId, workout.title, workout.startTime, workout.endTime, workout.description, null]);
 
     for (const we of workout.exercises) {
       const exerciseId = exerciseIds.get(we.exerciseName);

@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { CalendarDots } from 'phosphor-react-native/src/icons/CalendarDots';
-import { CaretRight } from 'phosphor-react-native/src/icons/CaretRight';
+import { MapPin } from 'phosphor-react-native/src/icons/MapPin';
 import { X } from 'phosphor-react-native/src/icons/X';
 
 import { updateActiveWorkout, useActiveWorkout, useNow } from '@/stores/activeWorkoutStore';
+import { FormRow } from '@/components/ui/FormRow';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { NameDialog } from '@/components/ui/NameDialog';
 import { DurationSheet } from '@/components/workout/DurationSheet';
@@ -20,7 +21,12 @@ import { addBodyWeight } from '@/db/bodyWeight/bodyWeight';
 import { useBodyWeight } from '@/hooks/useBodyWeight';
 import { HIT_SLOPS, RADIUS, SPACE } from '@/constants/layout';
 import { ICON_SIZES, SAVE_WORKOUT_SIZES, SIZES } from '@/constants/sizes';
+import { GYM_LABELS } from '@/constants/labels';
+import { getGymTimeline } from '@/db/gym/gym';
 import { dateTimeLabel } from '@/lib/format/date';
+import { gymName, workoutGym } from '@/lib/gym/timeline';
+import { openGymPicker } from '@/stores/gymPickRequest';
+import type { GymTimeline } from '@/types/gym';
 import { volumeLabel } from '@/lib/format/weight';
 import { Screen } from '@/components/ui/Screen';
 import { Divider } from '@/components/ui/Divider';
@@ -35,11 +41,19 @@ import { useSaveGuard } from '@/hooks/useSaveGuard';
 // is saved before Save. With a body weight exercise done and no body weight
 // logged yet, Save asks for it first (Skip saves without).
 export default function SaveWorkout() {
+  const router = useRouter();
   const workout = useActiveWorkout();
   const now = useNow(false);
   const [timeOpen, setTimeOpen] = useState(false);
   const [discarding, setDiscarding] = useState(false);
-  const { update, closeUpdate, save, finish, discard } = useSaveGuard(workout);
+  const { update, closeUpdate, save, finish, discard, gymAsk, answerGym, closeGymAsk } = useSaveGuard(workout);
+  // For the Gym row: the gym of the workout's day, when the user has changed gym.
+  const [timeline, setTimeline] = useState<GymTimeline | null>(null);
+  useEffect(() => {
+    getGymTimeline()
+      .then(setTimeline)
+      .catch((e) => console.warn('[saveWorkout] gym load failed', e));
+  }, []);
   const { bodyWeight, reload: reloadBodyWeight } = useBodyWeight();
   const [askingBodyWeight, setAskingBodyWeight] = useState(false);
 
@@ -51,6 +65,9 @@ export default function SaveWorkout() {
     else void save(); // never rejects: useSaveGuard logs a failed save
   }
   const start = new Date(workout.startTime);
+  const gymValue =
+    workout.gym?.name ??
+    (timeline && timeline.changes.length > 0 ? gymName(timeline, workoutGym(timeline, workout.startTime, null)) : GYM_LABELS.select);
 
   return (
     <Screen>
@@ -115,13 +132,18 @@ export default function SaveWorkout() {
         />
         <Divider />
 
-        <Pressable style={styles.row} onPress={() => setTimeOpen(true)}>
-          <CalendarDots size={ICON_SIZES.xxl} color={COLORS.text} />
-          <Text style={styles.rowLabel}>Date</Text>
-          <Text style={styles.rowValue}>{dateTimeLabel(start)}</Text>
-          <CaretRight size={ICON_SIZES.sm} color={COLORS.textSecondary} />
-        </Pressable>
-        <Divider />
+        <FormRow
+          icon={<CalendarDots size={ICON_SIZES.xxl} color={COLORS.text} />}
+          label="Date"
+          value={dateTimeLabel(start)}
+          onPress={() => setTimeOpen(true)}
+        />
+        <FormRow
+          icon={<MapPin size={ICON_SIZES.xxl} color={COLORS.text} />}
+          label={GYM_LABELS.formGym}
+          value={gymValue}
+          onPress={() => openGymPicker(router, (gym) => updateActiveWorkout((w) => ({ ...w, gym })))}
+        />
 
         <Pressable style={styles.discard} onPress={() => setDiscarding(true)} hitSlop={HIT_SLOPS.md}>
           <Text style={styles.discardLabel}>Discard Workout</Text>
@@ -129,6 +151,16 @@ export default function SaveWorkout() {
       </ScrollView>
 
       <DurationSheet workout={workout} visible={timeOpen} onDismiss={() => setTimeOpen(false)} noPause />
+      <ConfirmDialog
+        visible={gymAsk !== null}
+        tone="primary"
+        message={gymAsk?.message ?? ''}
+        confirmLabel={GYM_LABELS.changedGym}
+        cancelLabel={GYM_LABELS.justThisWorkout}
+        onConfirm={() => answerGym(true)}
+        onCancel={() => answerGym(false)}
+        onDismiss={closeGymAsk}
+      />
       <UpdateRoutineSheet update={update} onUpdate={(routine) => finish(routine)} onKeep={() => finish()} onDismiss={closeUpdate} />
       <NameDialog
         visible={askingBodyWeight}
@@ -212,21 +244,6 @@ const styles = StyleSheet.create({
     padding: 0,
     minHeight: SAVE_WORKOUT_SIZES.descriptionMinHeight,
     ...TYPE.body,
-  },
-  row: {
-    height: SAVE_WORKOUT_SIZES.rowHeight,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rowLabel: {
-    flex: 1,
-    marginLeft: SPACE.md,
-    ...TYPE.row,
-  },
-  rowValue: {
-    marginRight: SPACE.xs,
-    ...TYPE.body,
-    color: COLORS.textSecondary,
   },
   discard: {
     marginTop: SPACE.xl,

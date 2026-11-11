@@ -14,8 +14,9 @@ import { sql as migration011 } from './011_body_weights';
 import { sql as migration012 } from './012_device_id_out_of_database';
 import { sql as migration013 } from './013_opengym_catalogue_update';
 import { sql as migration014 } from './014_lat_pulldown';
-import { sql as migration015 } from './015_run';
-import { sql as migration016 } from './016_run_recovery';
+import { sql as migration015 } from './015_gyms';
+import { sql as migration016 } from './016_run';
+import { sql as migration017 } from './017_run_recovery';
 import type { Migration, MigratableDb } from './types';
 
 export const MIGRATIONS: Migration[] = [
@@ -35,6 +36,7 @@ export const MIGRATIONS: Migration[] = [
   { version: 14, sql: migration014 },
   { version: 15, sql: migration015 },
   { version: 16, sql: migration016 },
+  { version: 17, sql: migration017 },
 ];
 
 async function applyMigration(db: MigratableDb, migration: Migration): Promise<void> {

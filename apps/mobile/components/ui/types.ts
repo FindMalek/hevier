@@ -137,6 +137,7 @@ export interface ConfirmDialogProps {
   tone?: 'danger' | 'primary';
   onConfirm: () => void;
   onCancel: () => void;
+  onDismiss?: () => void; // a tap outside or Back, when it isn't the same as Cancel (default onCancel)
 }
 
 export interface DialogButtonProps {
@@ -245,4 +246,19 @@ export interface Piece {
   delay: number;
   duration: number;
   spin: number; // degrees over the fall
+}
+
+export interface SearchFieldProps {
+  value: string;
+  onChangeText: (text: string) => void;
+  placeholder: string;
+  autoFocus?: boolean;
+  maxLength?: number;
+}
+
+export interface FormRowProps {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  onPress: () => void;
 }
