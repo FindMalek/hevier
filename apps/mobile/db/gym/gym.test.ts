@@ -1,0 +1,106 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fakeDb, freshDb, raw, rows } from '@/db/testDb';
+
+// db/gym/gym.ts on an in-memory sql.js database, as in appState.test.ts.
+let nextId = 0;
+
+vi.mock('@/db/client', () => ({ getDb: async () => fakeDb }));
+vi.mock('expo-crypto', () => ({ randomUUID: () => `id${++nextId}` }));
+
+const { addGymChange, deleteGymChange, getGymTimeline, moveGymChange, namePreviousGym, renameGym } = await import('./gym');
+const { FROM_START_DAY } = await import('@/constants/gym');
+
+beforeEach(async () => {
+  nextId = 0;
+  await freshDb();
+});
+
+describe('gym tables', () => {
+  it('migration 15 creates gyms, gym_changes (day UNIQUE) and workouts.gym_id', async () => {
+    const tables = rows<{ name: string }>("SELECT name FROM sqlite_master WHERE type = 'table'").map((r) => r.name);
+    expect(tables).toContain('gyms');
+    expect(tables).toContain('gym_changes');
+    expect(rows<{ name: string }>('PRAGMA table_info(workouts)').map((r) => r.name)).toContain('gym_id');
+    raw.run("INSERT INTO gyms (id, name) VALUES ('g', 'A')");
+    raw.run("INSERT INTO gym_changes (id, day, gym_id) VALUES ('c1', '2026-10-30', 'g')");
+    expect(() => raw.run("INSERT INTO gym_changes (id, day, gym_id) VALUES ('c2', '2026-10-30', 'g')")).toThrow();
+  });
+
+  it('addGymChange creates the gym and the change', async () => {
+    await addGymChange('2026-10-30', { gymId: null, name: 'Basic-Fit Nation' });
+    const t = await getGymTimeline();
+    expect([...t.gyms.values()].map((g) => g.name)).toEqual(['Basic-Fit Nation']);
+    expect(t.changes).toEqual([{ id: expect.any(String), day: '2026-10-30', gymId: [...t.gyms.keys()][0] }]);
+  });
+
+  it('addGymChange reuses a gym with the same name ignoring case and spaces', async () => {
+    await addGymChange('2026-10-30', { gymId: null, name: 'Basic-Fit Nation' });
+    await addGymChange('2026-11-05', { gymId: null, name: 'Other' });
+    await addGymChange('2026-11-08', { gymId: null, name: ' basic-fit nation ' });
+    const t = await getGymTimeline();
+    expect(t.gyms.size).toBe(2);
+    expect(t.changes).toHaveLength(3);
+    expect(t.changes[2].gymId).toBe(t.changes[0].gymId);
+  });
+
+  it('addGymChange on a day that already has one replaces its gym', async () => {
+    await addGymChange('2026-10-30', { gymId: null, name: 'A' });
+    await addGymChange('2026-10-30', { gymId: null, name: 'B' });
+    const t = await getGymTimeline();
+    expect(t.changes).toHaveLength(1);
+    expect(t.gyms.get(t.changes[0].gymId)?.name).toBe('B');
+  });
+
+  it('addGymChange is a no-op when that gym is already in effect', async () => {
+    await addGymChange('2026-10-30', { gymId: null, name: 'A' });
+    const gymId = (await getGymTimeline()).changes[0].gymId;
+    await addGymChange('2026-11-05', { gymId, name: 'A' });
+    expect((await getGymTimeline()).changes).toHaveLength(1);
+  });
+
+  it('deleteGymChange removes the gym when nothing uses it, keeps it when a visit uses it', async () => {
+    await addGymChange('2026-10-30', { gymId: null, name: 'A' });
+    await addGymChange('2026-11-05', { gymId: null, name: 'B' });
+    let t = await getGymTimeline();
+    const [a, b] = t.changes;
+    raw.run("INSERT INTO workouts (id, title, start_time, gym_id) VALUES ('w', 'x', '2026-11-06T10:00:00Z', ?)", [b.gymId]);
+    await deleteGymChange(a.id);
+    t = await getGymTimeline();
+    expect([...t.gyms.values()].map((g) => g.name)).toEqual(['B']);
+    await deleteGymChange(b.id);
+    t = await getGymTimeline();
+    expect(t.changes).toEqual([]);
+    expect([...t.gyms.values()].map((g) => g.name)).toEqual(['B']); // the visit still uses B
+  });
+
+  it('namePreviousGym inserts a change at FROM_START_DAY', async () => {
+    await addGymChange('2026-10-30', { gymId: null, name: 'New' });
+    await namePreviousGym('Old gym');
+    const t = await getGymTimeline();
+    expect(t.changes.map((c) => c.day)).toEqual([FROM_START_DAY, '2026-10-30']);
+    expect(t.gyms.get(t.changes[0].gymId)?.name).toBe('Old gym');
+  });
+
+  it('a gym change can not be on a future day', async () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const day = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+    await expect(addGymChange(day, { gymId: null, name: 'Later' })).rejects.toThrow();
+    await addGymChange('2026-10-30', { gymId: null, name: 'A' });
+    const t = await getGymTimeline();
+    await expect(moveGymChange(t.changes[0].id, day)).rejects.toThrow();
+    const after = await getGymTimeline();
+    expect([...after.gyms.values()].map((g) => g.name)).toEqual(['A']);
+    expect(after.changes.map((c) => c.day)).toEqual(['2026-10-30']);
+  });
+
+  it('renaming and moving show at once, despite the cached timeline', async () => {
+    await addGymChange('2026-10-30', { gymId: null, name: 'A' });
+    const before = await getGymTimeline();
+    await renameGym(before.changes[0].gymId, ' Gym A ');
+    await moveGymChange(before.changes[0].id, '2026-10-20');
+    const after = await getGymTimeline();
+    expect(after.gyms.get(before.changes[0].gymId)?.name).toBe('Gym A');
+    expect(after.changes[0].day).toBe('2026-10-20');
+  });
+});

@@ -1,34 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import initSqlJs, { type Database } from 'sql.js';
-import { runMigrations } from '@/db/migrations';
+import { fakeDb, freshDb, raw, rows } from '@/db/testDb';
 
 // Same in-memory database setup as db/routines/routines.test.ts.
-let raw: Database;
-function rows<T>(sqlText: string, params: unknown[] = []): T[] {
-  const stmt = raw.prepare(sqlText);
-  stmt.bind(params as never);
-  const out: T[] = [];
-  while (stmt.step()) out.push(stmt.getAsObject() as T);
-  stmt.free();
-  return out;
-}
-const fakeDb = {
-  async execAsync(sqlText: string) {
-    raw.exec(sqlText);
-  },
-  async runAsync(sqlText: string, params: unknown[] = []) {
-    raw.run(sqlText, params as never);
-  },
-  async getAllAsync<T>(sqlText: string, params: unknown[] = []) {
-    return rows<T>(sqlText, params);
-  },
-  async getFirstAsync<T>(sqlText: string, params: unknown[] = []) {
-    return rows<T>(sqlText, params)[0] ?? null;
-  },
-  async withTransactionAsync(fn: () => Promise<void>) {
-    await fn();
-  },
-};
 vi.mock('@/db/client', () => ({ getDb: async () => fakeDb }));
 let nextId = 0;
 vi.mock('expo-crypto', () => ({ randomUUID: () => `id${++nextId}` }));
@@ -37,11 +10,9 @@ const { backdatedStart, currentExerciseName, elapsedSeconds, pauseTimer, resumeT
 const { clearActiveWorkout, loadActiveWorkout, saveActiveWorkout } = await import('@/db/activeWorkout/draft');
 const { finishWorkout } = await import('@/db/workouts/write');
 const { newActiveExercise, startWorkout } = await import('@/db/activeWorkout/start');
-const SQL = await initSqlJs();
 
 beforeEach(async () => {
-  raw = new SQL.Database();
-  await runMigrations(fakeDb);
+  await freshDb({ realTransactions: true });
   raw.exec(`
     INSERT INTO exercises (id, name, type) VALUES ('squat', 'Squat', 'weight_reps'), ('warm', 'Warm Up', 'duration');
     INSERT INTO routines (id, name) VALUES ('a', 'LOWER A');
@@ -115,10 +86,37 @@ describe('active workout', () => {
     ]);
   });
 
+  it('finishWorkout stores gym_id for a visit and null otherwise', async () => {
+    raw.exec("INSERT INTO gyms (id, name) VALUES ('g', 'Gym G')");
+    const w = await startWorkout('a', new Date('2026-10-14T18:00:00Z'));
+    Object.assign(w.exercises[1].sets[0], { done: true });
+    const normal = await finishWorkout(w, new Date('2026-10-14T19:00:00Z'));
+    const visit = await finishWorkout(w, new Date('2026-10-14T19:00:00Z'), { gymId: 'g', name: 'Gym G' });
+    expect(rows<{ gym_id: string | null }>('SELECT id, gym_id FROM workouts WHERE id IN (?, ?) ORDER BY gym_id', [normal, visit]).map((r) => r.gym_id)).toEqual([null, 'g']);
+  });
+
+  it('a visit to a new gym creates the gym in the same save', async () => {
+    const w = await startWorkout('a', new Date('2026-10-14T18:00:00Z'));
+    Object.assign(w.exercises[1].sets[0], { done: true });
+    const id = await finishWorkout(w, new Date('2026-10-14T19:00:00Z'), { gymId: null, name: 'Gym New' });
+    const [saved] = rows<{ name: string }>('SELECT g.name FROM workouts w JOIN gyms g ON g.id = w.gym_id WHERE w.id = ?', [id]);
+    expect(saved?.name).toBe('Gym New');
+  });
+
+  it('a failed save leaves no new gym behind', async () => {
+    const w = await startWorkout('a', new Date('2026-10-14T18:00:00Z'));
+    Object.assign(w.exercises[1].sets[0], { done: true });
+    w.exercises[1].exerciseId = 'missing';
+    raw.exec('PRAGMA foreign_keys = ON');
+    await expect(finishWorkout(w, new Date('2026-10-14T19:00:00Z'), { gymId: null, name: 'Gym Lost' })).rejects.toThrow();
+    raw.exec('PRAGMA foreign_keys = OFF');
+    expect(rows('SELECT id FROM gyms WHERE name = ?', ['Gym Lost'])).toEqual([]);
+  });
+
   it('saves how hard a football game was in rpe, nothing when not picked', async () => {
     const w = await startWorkout(null, new Date('2026-10-14T18:00:00Z'));
     const football = { id: 'football', name: 'Football', type: 'duration' as const, catalogueId: null };
-    w.exercises = [await newActiveExercise(football), await newActiveExercise(football)];
+    w.exercises = [await newActiveExercise(football, w.startTime), await newActiveExercise(football, w.startTime)];
     expect(w.exercises[0].restSeconds).toBe(0); // rest timer OFF after a game
     Object.assign(w.exercises[0].sets[0], { done: true, time: '90:00', rating: 'hard' });
     Object.assign(w.exercises[1].sets[0], { done: true, time: '30:00' });
@@ -302,7 +300,7 @@ describe('active workout', () => {
       INSERT INTO workout_exercises (id, workout_id, exercise_id, order_index) VALUES ('we1', 'w1', 'squat', 0);
       INSERT INTO sets (id, workout_exercise_id, set_index, set_type, weight_kg, reps) VALUES ('s1', 'we1', 0, 'normal', 100, 10);
     `);
-    const e = await newActiveExercise({ id: 'squat', name: 'Squat', type: 'weight_reps', catalogueId: null }, 2);
+    const e = await newActiveExercise({ id: 'squat', name: 'Squat', type: 'weight_reps', catalogueId: null }, '2026-10-14T18:00:00Z', 2);
     expect(e).toMatchObject({ name: 'Squat', notes: '', restSeconds: null });
     expect(e.previous).toEqual([{ setType: 'normal', weightKg: 100, reps: 10, distanceKm: null, durationSeconds: null }]);
     expect(e.sets.map((x) => [x.weight, x.done])).toEqual([['', false], ['', false]]);

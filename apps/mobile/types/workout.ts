@@ -2,6 +2,7 @@ import type { SetRecord, Bests } from './records';
 import type { SET_TYPES } from '@/constants/workout';
 import type { ExerciseType } from './exercise';
 import type { FootballRating } from './football';
+import type { GymChoice } from './gym';
 import type { EditorSet } from './routine';
 
 // The kind of a set: one of SET_TYPES.
@@ -54,6 +55,9 @@ export interface ActiveExercise {
   // From the history, for the PR medals (db/records/bests.ts); null = never done.
   // Missing in drafts saved before PRs existed: filled in on load.
   bests?: Bests | null;
+  // The gym those bests are from, for the PR toast ("at Basic-Fit Nation"). Only
+  // for machine and cable exercises, and only once the user has changed gym.
+  recordsGym?: string | null;
 }
 
 // A photo or video added on the Save Workout page (lib/workoutMedia.ts).
@@ -81,6 +85,8 @@ export interface ActiveWorkout {
   // Logged afterwards for a past day (from the calendar): its clock stands
   // still (kept paused at the end), and no rest timers or notification.
   backdated?: boolean;
+  // The gym picked on Save Workout's Gym row; none = the gym of the workout's day.
+  gym?: GymChoice;
 }
 
 // What a new workout starts from: a routine id (its planned sets), a saved
@@ -122,6 +128,7 @@ export interface PrEvent {
   name: string;
   catalogueId: string | null;
   records: SetRecord[];
+  gym: string | null;
 }
 
 // A past workout with its totals (db/sessions/sessions.ts): the Profile tab and
