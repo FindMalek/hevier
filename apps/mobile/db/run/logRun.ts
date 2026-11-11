@@ -19,7 +19,7 @@ export async function logRun(run: LogRunInput): Promise<string> {
   const workoutId = Crypto.randomUUID();
   await runInTransaction(db, async () => {
     const end = new Date(run.startMs + run.seconds * MS_PER_SECOND).toISOString();
-    await db.runAsync(INSERT_WORKOUT, [workoutId, RUN_WORKOUT_TITLE, new Date(run.startMs).toISOString(), end, null]);
+    await db.runAsync(INSERT_WORKOUT, [workoutId, RUN_WORKOUT_TITLE, new Date(run.startMs).toISOString(), end, null, null]);
     await insertWorkoutExercises(db, workoutId, [
       {
         exerciseId: exercise.id,
