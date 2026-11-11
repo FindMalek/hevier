@@ -34,6 +34,7 @@ export const SIZES = {
   dayCircle: 32, // a day's circle in the calendar strips
   smallButton: 20, // little round × / ⋯ buttons
   avatarLarge: 86, // profile photo on Profile and Edit Profile
+  searchHeight: 36, // Add Exercise and Select Gym
 };
 
 // app/onboarding.tsx
@@ -53,7 +54,6 @@ export const ACTION_BAR_SIZES = {
 // app/add-exercise.tsx
 export const ADD_EXERCISE_SIZES = {
   exerciseThumb: 56,
-  searchHeight: 36,
   filterHeight: 36,
   sectionGapHeight: 16,
   rowHeight: 80,
@@ -286,6 +286,7 @@ export const PROGRESS_CHART_SIZES = {
   plotHeight: 120,
   labelRight: 47.6, // y labels end here
   xLabelGap: 5.8,
+  breakGap: 4, // line to the gym-change marker, each side
 };
 
 // components/ui/ReorderList.tsx
@@ -344,12 +345,28 @@ export const ROUTINE_PAGE_SIZES = {
   setCellWidth: 38.8,
 };
 
+// app/gym.tsx, components/gym/ (the timeline, the date sheet)
+export const GYM_SIZES = {
+  railColumn: 22, // the column the timeline's line and dots sit in
+  rail: 2, // the line
+  dot: 12,
+  menuHit: 44, // the ⋯ button
+  dayWheel: 64,
+  yearWheel: 96,
+};
+
 // app/save-workout.tsx
 export const SAVE_WORKOUT_SIZES = {
   statWidth: 126,
   descriptionMinHeight: 26,
   rowHeight: 60.6,
   updateButtonHeight: 47,
+};
+
+// app/select-gym.tsx, components/gym/GymListRow.tsx
+export const SELECT_GYM_SIZES = {
+  avatar: 46,
+  rowHeight: 66,
 };
 
 // app/settings.tsx
